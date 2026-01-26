@@ -19,7 +19,6 @@ VALID_PASS = "Min@1234"
 # =========================
 # Locators (base)
 # =========================
-URL_HOME = "https://meuminerva.com/"
 
 # Cookies / Região
 COOKIE_ACCEPT = (By.XPATH, "//*[@id='privacytools-banner-consent']//*[@title='Aceitar']")
@@ -172,23 +171,6 @@ def minicart_visible(driver) -> bool:
     except Exception:
         return False
 
-# Aceita cookies se o banner aparecer
-def accept_cookies_if_present(driver):
-    try:
-        click(driver, COOKIE_ACCEPT, timeout=3)
-        try:
-            wait(driver, 5).until(EC.invisibility_of_element_located(COOKIE_ACCEPT))
-        except Exception:
-            pass
-    except Exception:
-        pass
-
-# Seleciona região "Outras" se o modal aparecer
-def select_default_region_if_present(driver):
-    try:
-        click(driver, BTN_DEFAULT_REGION, timeout=5)
-    except Exception:
-        pass
 
 # Garante login (se já estiver logado, só fecha popups)
 def ensure_logged_in(driver, user: str, passwd: str):
@@ -317,34 +299,90 @@ def open_pdp_from_first_avise_in_plp(driver):
     driver.execute_script("arguments[0].click();", link)
     return True
 
-# Alterna Avise-me seguindo o fluxo REAL do site:
-# clicar disabled -> refresh -> clicar enabled -> refresh -> confirmar disabled voltou
-def toggle_avise_me_requires_refresh(driver, page_ready_locator, timeout=25):
-    visible(driver, page_ready_locator, timeout=timeout)
+def wait_visible_any(driver, locators, timeout=25, poll=0.2):
+    """
+    Espera até QUALQUER um dos locators ficar visível.
+    Retorna o WebElement visível encontrado.
+    """
+    end = time.time() + timeout
+    while time.time() < end:
+        for loc in locators:
+            els = driver.find_elements(*loc)
+            for el in els:
+                try:
+                    if el.is_displayed():
+                        return el
+                except Exception:
+                    pass
+        time.sleep(poll)
+    raise TimeoutException(f"Nenhum locator ficou visível: {locators}")
+
+def toggle_avise_me_requires_refresh(driver, page_ready_locator=None, timeout=25, wait_click_class=False):
+    # READY da página
+    if page_ready_locator:
+        visible(driver, page_ready_locator, timeout=timeout)
+    else:
+        wait_visible_any(driver, [AVISE_DISABLED_ANY, AVISE_ENABLED_ANY], timeout=timeout)
 
     # 1) clica no disabled
-    disabled = wait_any_visible(driver, AVISE_DISABLED_ANY, timeout=5)
+    disabled = wait_any_visible(driver, AVISE_DISABLED_ANY, timeout=timeout)
     if not disabled:
         return False
+
     scroll_and_click(driver, disabled)
+
+    # Só espera a classe mudar se você pedir (PDP)
+    if wait_click_class:
+        wait(driver, timeout).until(
+            lambda d: any(
+                ("alert-active" in (e.get_attribute("class") or "") and "clicked" in (e.get_attribute("class") or ""))
+                for e in d.find_elements(*AVISE_DISABLED_ANY)
+            )
+        )
 
     # 2) refresh e espera enabled aparecer
     driver.refresh()
-    visible(driver, page_ready_locator, timeout=timeout)
+    if page_ready_locator:
+        visible(driver, page_ready_locator, timeout=timeout)
+    else:
+        wait_visible_any(driver, [AVISE_DISABLED_ANY, AVISE_ENABLED_ANY], timeout=timeout)
 
     enabled = wait_any_visible(driver, AVISE_ENABLED_ANY, timeout=timeout)
     if not enabled:
         return False
 
-    # 3) clica no enabled (para desativar)
     scroll_and_click(driver, enabled)
+
+    if wait_click_class:
+        wait(driver, timeout).until(
+            lambda d: any(
+                ("alert-active" in (e.get_attribute("class") or "") and "clicked" in (e.get_attribute("class") or ""))
+                for e in d.find_elements(*AVISE_ENABLED_ANY)
+            )
+        )
 
     # 4) refresh e espera disabled voltar
     driver.refresh()
-    visible(driver, page_ready_locator, timeout=timeout)
+    if page_ready_locator:
+        visible(driver, page_ready_locator, timeout=timeout)
+    else:
+        wait_visible_any(driver, [AVISE_DISABLED_ANY, AVISE_ENABLED_ANY], timeout=timeout)
 
     disabled2 = wait_any_visible(driver, AVISE_DISABLED_ANY, timeout=timeout)
     return bool(disabled2)
+
+
+def wait_minicart_ready(driver, timeout=20):
+    # espera qualquer loading sumir (você já tem essa função)
+    wait_minicart_loading(driver)
+
+    # garante que o minicart esteja aberto (active), senão abre
+    if not driver.find_elements(*MINICART_ACTIVE):
+        click(driver, MINICART_ICON, timeout=10)
+        visible(driver, MINICART_ACTIVE, timeout=10)
+
+    # garante que o link "Ver carrinho" esteja visível
+    visible(driver, VIEWCART, timeout=timeout)
 
 
 # =========================
@@ -482,15 +520,17 @@ def test_3_userLogado(driver, setup_site):
 
     # PDP: abrir PDP do primeiro produto que tenha avise-me e repetir o teste
     if open_pdp_from_first_avise_in_plp(driver):
-        ok_pdp = toggle_avise_me_requires_refresh(driver, page_ready_locator=AVISE_DISABLED_ANY)
+        ok_pdp = toggle_avise_me_requires_refresh(driver, page_ready_locator=None, wait_click_class=True)
         if not ok_pdp:
             print("[WARN] PDP: não consegui alternar Avise-me.")
     else:
         print("[WARN] Não consegui abrir PDP a partir de um produto com Avise-me.")
 
     # 12) Limpar carrinho (view cart -> empty -> confirm -> ver catálogo)
+    wait_minicart_ready(driver, timeout=25)
     click(driver, VIEWCART, timeout=15)
-    visible(driver, EMPTY_CART_BTN, timeout=15)
+    # carrinho às vezes demora renderizar
+    visible(driver, EMPTY_CART_BTN, timeout=25)
     click(driver, EMPTY_CART_BTN, timeout=10)
     visible(driver, EMPTY_CART_CONFIRM, timeout=10)
     click(driver, EMPTY_CART_CONFIRM, timeout=10)
