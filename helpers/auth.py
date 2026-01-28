@@ -51,7 +51,6 @@ def ensure_logged_in(driver, user: str, passwd: str):
     )
 
 
-#TESTE_1
 def expect_login_popup(driver, wait, label="login_popup", timeout=12, retries=2, sleep_between=0.6):
     """
     Confirma que o pop-up de login do header abriu.
@@ -78,8 +77,6 @@ def expect_login_popup(driver, wait, label="login_popup", timeout=12, retries=2,
             raise TimeoutException("Popup não apareceu dentro do timeout.")
         except (TimeoutException, StaleElementReferenceException) as e:
             last_exc = e
-            # screenshot só no fim (evita poluir)
             time.sleep(sleep_between)
 
-    driver.save_screenshot(f"debug_{label}_timeout.png")
     raise last_exc

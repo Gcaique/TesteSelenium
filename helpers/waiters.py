@@ -3,7 +3,6 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import TimeoutException
 
-from locators.header import SEARCH_INPUT
 from locators.plp import SORTER_SELECT
 
 
@@ -66,7 +65,6 @@ def wait_visible_any(driver, locators, timeout=25, poll=0.2):
     )
 
 
-#TESTE_1
 def try_visible(wait, locator, timeout=3) -> bool:
     driver = wait._driver
     try:

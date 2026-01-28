@@ -53,11 +53,11 @@ def test_1_userDeslogado(driver, setup_site, wait):
 
     wait.until(EC.visibility_of_element_located(FILTER_CONSERVACAO_OPEN))
 
-    # paginação
+    # Paginação
     try_go_to_page(wait, driver, "2", timeout=6)
     try_go_to_page(wait, driver, "3", timeout=6)
 
-    # garante filtro Congelado (OBRIGATÓRIO)
+    # Garante filtro Congelado (OBRIGATÓRIO)
     aplicou_congelado = apply_filter_strict(driver, wait, FILTER_CONSERVACAO_OPEN, FILTER_CONSERVACAO_CONGELADO, timeout=12, retries=5)
 
     assert aplicou_congelado, "Busca (#4): não consegui aplicar o filtro Conservação = Congelado."
@@ -65,16 +65,16 @@ def test_1_userDeslogado(driver, setup_site, wait):
     wait.until(EC.visibility_of_element_located(SORTER_SELECT))
     wait.until(EC.visibility_of_element_located(FILTER_CLEAR_ALL))
 
-    # limpar filtros (OBRIGATÓRIO)
+    # Limpar filtros (OBRIGATÓRIO)
     limpou_busca = clear_filters_strict(driver, wait, FILTER_CLEAR_ALL, timeout=15, retries=5)
 
     assert limpou_busca, "Busca (#4): não consegui limpar os filtros (Limpar Tudo)."
 
-    # ordenação A-Z (OBRIGATÓRIO)
+    # Ordenação A-Z (OBRIGATÓRIO)
     ordenou_az = sort_strict(driver, wait, SORTER_SELECT, "name_asc", timeout=12, retries=4)
     assert ordenou_az, "Busca (#4): não consegui aplicar ordenação A-Z (name_asc)."
 
-    # ordenação Z-A (OBRIGATÓRIO)
+    # Ordenação Z-A (OBRIGATÓRIO)
     ordenou_za = sort_strict(driver, wait, SORTER_SELECT, "name_desc", timeout=12, retries=4)
     assert ordenou_za, "Busca (#4): não consegui aplicar ordenação Z-A (name_desc)."
 
@@ -89,19 +89,19 @@ def test_1_userDeslogado(driver, setup_site, wait):
     click_when_clickable(wait, CATEGORY_MENU("Promoções"))
     wait_category_loaded(wait, driver)
 
-    # garante que os filtros carregaram na sidebar (senão o click “não acontece”)
+    # Garante que os filtros carregaram na página (senão o click “não acontece”)
     wait.until(EC.visibility_of_element_located(FILTER_NACIONALIDADE))
     wait.until(EC.visibility_of_element_located(FILTER_CONSERVACAO_OPEN))
 
-    # aplica Nacionalidade (OBRIGATÓRIO) - strict
+    # Aplica Nacionalidade (OBRIGATÓRIO)
     aplicou_nat = apply_filter_strict(driver, wait, FILTER_NACIONALIDADE, FILTER_NACIONALIDADE_OPTION_1, timeout=12, retries=5)
     assert aplicou_nat, "Promoções (#5.2): não consegui aplicar filtro Nacionalidade."
 
-    # aplica Conservação = Resfriado (OBRIGATÓRIO) - strict
+    # Aplica Conservação = Resfriado (OBRIGATÓRIO)
     aplicou_cons = apply_filter_strict(driver, wait, FILTER_CONSERVACAO_OPEN, FILTER_CONSERVACAO_RESFRIADO, timeout=12, retries=5)
     assert aplicou_cons, "Promoções (#5.2): não consegui aplicar filtro Conservação (Resfriado)."
 
-    # limpar filtros (OBRIGATÓRIO) - strict
+    # Limpar filtros (OBRIGATÓRIO)
     limpou_promo = clear_filters_strict(driver, wait, FILTER_CLEAR_ALL, timeout=15, retries=5)
     assert limpou_promo, "Promoções (#5.2): não consegui limpar os filtros (Limpar Tudo)."
 
@@ -111,19 +111,19 @@ def test_1_userDeslogado(driver, setup_site, wait):
 
     wait.until(EC.visibility_of_element_located(SORTER_SELECT))
 
-    # ordenação A-Z (OBRIGATÓRIO) - strict
+    # Ordenação A-Z (OBRIGATÓRIO)
     ok_pesc_az = sort_strict(driver, wait, SORTER_SELECT, "name_asc", timeout=12, retries=4)
     assert ok_pesc_az, "Pescados (#5.3): não consegui aplicar ordenação A-Z (name_asc)."
 
-    # ordenação Z-A (OBRIGATÓRIO) - strict
+    # Ordenação Z-A (OBRIGATÓRIO)
     ok_pesc_za = sort_strict(driver, wait, SORTER_SELECT, "name_desc", timeout=12, retries=4)
     assert ok_pesc_za, "Pescados (#5.3): não consegui aplicar ordenação Z-A (name_desc)."
 
-    # 5.4 Bovinos: apenas acessar
+    # 6) Bovinos: apenas acessar
     click_when_clickable(wait, CATEGORY_MENU("Bovinos"))
     wait_category_loaded(wait, driver)
 
-    # 6) Tentativa de compra na lista (exige login) — só o 1º botão
+    # Tentativa de compra na lista (exige login)
     botoes_entrar = driver.find_elements(*BTN_ENTRAR_LISTA)
     if not botoes_entrar:
         raise AssertionError("Não encontrei botões 'Entrar' na listagem atual.")
@@ -139,10 +139,10 @@ def test_1_userDeslogado(driver, setup_site, wait):
         safe_click(driver, wait, btn)
         expect_login_popup(driver, wait, label="listagem_retry", timeout=8, retries=0)
 
-    # fecha/recolhe o dropdown/modal do header pra seguir o fluxo (mantém seu padrão)
+    # fecha/recolhe o dropdown/modal do header pra seguir o fluxo
     click_when_clickable(wait, LOGIN_NAME_SPAN)
 
-    # 7) PDP de um produto (se houver produtos suficientes)
+    # 7) PDP de um produto
     produtos = driver.find_elements(*PRODUCT_TITLES)
 
     if len(produtos) >= 10:

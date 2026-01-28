@@ -19,7 +19,6 @@ def scroll_and_confirm(wait, driver, xpath: str):
     assert element.is_displayed(), f"Elemento encontrado, mas NÃO visível após scroll. XPath: {xpath}"
 
 
-# TESTE_1
 def header_requires_login(driver, wait, locator, label="header_action"):
     """
     Clica em uma ação do header (LAST_ORDERS, LAST_ITEMS, etc)

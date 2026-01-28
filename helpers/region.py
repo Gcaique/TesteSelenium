@@ -29,13 +29,6 @@ def switch_region(driver, to: str):
     visible(driver, SEARCH_INPUT, timeout=15)
 
 
-#TESTE_1
-'''def open_region_modal(wait, driver):
-    driver.execute_script("window.scrollTo(0, 0);")
-    click_when_clickable(wait, BTN_OPEN_REGION_MODAL)
-    wait.until(EC.visibility_of_element_located(REGION_MODAL))'''
-
-
 def select_region(wait, region: str):
     if region == "default":
         click_when_clickable(wait, BTN_DEFAULT_REGION)

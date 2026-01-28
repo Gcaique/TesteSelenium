@@ -74,22 +74,13 @@ def click_when_clickable(wait, locator):
         driver.execute_script("arguments[0].click();", el)
 
 def safe_click(driver, wait, element):
-    """Clica com mais robustez (viewport + fallback JS)"""
     driver.execute_script("arguments[0].scrollIntoView({block:'center'});", element)
     try:
+        # mais forte do que displayed/enabled
         wait.until(lambda d: element.is_displayed() and element.is_enabled())
-        element.click()
+        try:
+            element.click()
+        except Exception:
+            driver.execute_script("arguments[0].click();", element)
     except (StaleElementReferenceException, ElementClickInterceptedException):
         driver.execute_script("arguments[0].click();", element)
-
-'''def try_click(wait, locator, timeout=3) -> bool:
-    driver = wait._driver
-    try:
-        WebDriverWait(driver, timeout).until(
-            EC.element_to_be_clickable(locator)
-        ).click()
-        return True
-    except (TimeoutException, StaleElementReferenceException):
-        return False'''
-
-

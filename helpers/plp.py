@@ -38,7 +38,6 @@ def try_sort(wait, driver, value: str, timeout=3) -> bool:
     return try_click(wait, option_locator, timeout=timeout)
 
 
-#TESTE_1
 def try_go_to_page(wait, driver, page_number: str, timeout=3) -> bool:
     """Tenta paginar (sem travar). Retorna True/False."""
     locator = PAGE_NUMBER(page_number)
