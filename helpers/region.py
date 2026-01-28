@@ -1,15 +1,14 @@
+from selenium.webdriver.support import expected_conditions as EC
+
 from helpers.waiters import visible
 from helpers.actions import click
+from helpers.actions import click_when_clickable
 
-from locators.common import (
-    REGION_OPEN,
-    BTN_SUL_REGION,
-    BTN_DEFAULT_REGION
-)
 
-from locators.header import (
-    SEARCH_INPUT
-)
+from locators.common import (REGION_OPEN, BTN_SUL_REGION, BTN_DEFAULT_REGION, REGION_MODAL)
+from locators.header import (SEARCH_INPUT)
+
+
 
 def open_region_modal(driver):
     click(driver, REGION_OPEN, timeout=10)
@@ -34,7 +33,7 @@ def switch_region(driver, to: str):
 '''def open_region_modal(wait, driver):
     driver.execute_script("window.scrollTo(0, 0);")
     click_when_clickable(wait, BTN_OPEN_REGION_MODAL)
-    wait.until(EC.visibility_of_element_located(REGION_MODAL))
+    wait.until(EC.visibility_of_element_located(REGION_MODAL))'''
 
 
 def select_region(wait, region: str):
@@ -45,4 +44,8 @@ def select_region(wait, region: str):
     else:
         raise ValueError("region deve ser 'default' ou 'sul'")
 
-    wait.until(EC.invisibility_of_element_located(REGION_MODAL))'''
+    # O que realmente some é o modal
+    wait.until(EC.invisibility_of_element_located(REGION_MODAL))
+
+    # (extra) garante que a página “respirou” após troca
+    wait.until(EC.visibility_of_element_located(SEARCH_INPUT))

@@ -4,6 +4,7 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import TimeoutException
 
 from locators.header import SEARCH_INPUT
+from locators.plp import SORTER_SELECT
 
 
 def wait(driver, timeout=10, poll=0.1):
@@ -79,4 +80,4 @@ def try_visible(wait, locator, timeout=3) -> bool:
 
 def wait_category_loaded(wait, driver):
     # validação simples: campo de busca visível (página carregou)
-    wait.until(EC.visibility_of_element_located(SEARCH_INPUT))
+    wait.until(EC.visibility_of_element_located(SORTER_SELECT))

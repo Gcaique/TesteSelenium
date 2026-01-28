@@ -1,6 +1,7 @@
 import time
-from selenium.common.exceptions import TimeoutException
 from selenium.webdriver.support import expected_conditions as EC
+from selenium.common.exceptions import TimeoutException, StaleElementReferenceException
+
 
 from helpers.waiters import visible
 from helpers.actions import click, fill
@@ -51,14 +52,34 @@ def ensure_logged_in(driver, user: str, passwd: str):
 
 
 #TESTE_1
-def expect_login_popup(driver, wait, label="login_popup"):
+def expect_login_popup(driver, wait, label="login_popup", timeout=12, retries=2, sleep_between=0.6):
     """
-       Confirma que o pop-up de login abriu.
-       Como você usa ID 'username', esperamos ele aparecer.
-       Se falhar, salva screenshot pra você enxergar o estado real da tela.
-       """
-    try:
-        wait.until(EC.visibility_of_element_located(USERNAME_INPUT))
-    except TimeoutException:
-        driver.save_screenshot(f"debug_{label}_timeout.png")
-        raise
+    Confirma que o pop-up de login do header abriu.
+    Critério: aparecer USERNAME_INPUT ou BTN_AVANCAR (depende do estado do modal).
+    Faz pequenas tentativas antes de falhar.
+    """
+    last_exc = None
+
+    for attempt in range(retries + 1):
+        try:
+            end = time.time() + timeout
+            while time.time() < end:
+                # qualquer um dos dois já prova que o popup abriu
+                if driver.find_elements(*USERNAME_INPUT) or driver.find_elements(*BTN_AVANCAR):
+                    # garante visibilidade real
+                    if driver.find_elements(*USERNAME_INPUT):
+                        wait.until(EC.visibility_of_element_located(USERNAME_INPUT))
+                    else:
+                        wait.until(EC.visibility_of_element_located(BTN_AVANCAR))
+                    return True
+
+                time.sleep(0.2)
+
+            raise TimeoutException("Popup não apareceu dentro do timeout.")
+        except (TimeoutException, StaleElementReferenceException) as e:
+            last_exc = e
+            # screenshot só no fim (evita poluir)
+            time.sleep(sleep_between)
+
+    driver.save_screenshot(f"debug_{label}_timeout.png")
+    raise last_exc

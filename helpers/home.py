@@ -2,6 +2,10 @@ from selenium.common.exceptions import TimeoutException
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 
+from helpers.actions import click_when_clickable
+from helpers.auth import expect_login_popup
+from locators.header import LOGIN_NAME_SPAN
+
 
 # Redireciona a pagina para os elementos da HOME PAGE (Carrossel / mapa de corte / footer)
 def scroll_and_confirm(wait, driver, xpath: str):
@@ -13,3 +17,20 @@ def scroll_and_confirm(wait, driver, xpath: str):
 
     driver.execute_script("arguments[0].scrollIntoView({block: 'center', inline: 'center'});", element)
     assert element.is_displayed(), f"Elemento encontrado, mas NÃO visível após scroll. XPath: {xpath}"
+
+
+# TESTE_1
+def header_requires_login(driver, wait, locator, label="header_action"):
+    """
+    Clica em uma ação do header (LAST_ORDERS, LAST_ITEMS, etc)
+    e valida que o popup de login foi exibido.
+    """
+
+    # Clica na ação do header
+    click_when_clickable(wait, locator)
+
+    # Espera popup de login aparecer
+    expect_login_popup(driver, wait, label=label)
+
+    # Fecha o popup (clicando novamente no header)
+    click_when_clickable(wait, LOGIN_NAME_SPAN)

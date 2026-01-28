@@ -62,7 +62,16 @@ def scroll_to(driver, element):
     driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", element)
 
 def click_when_clickable(wait, locator):
-    wait.until(EC.element_to_be_clickable(locator)).click()
+    driver = wait._driver
+    el = wait.until(EC.element_to_be_clickable(locator))
+    try:
+        el.click()
+    except (ElementClickInterceptedException, StaleElementReferenceException):
+        try:
+            driver.execute_script("arguments[0].scrollIntoView({block:'center'});", el)
+        except Exception:
+            pass
+        driver.execute_script("arguments[0].click();", el)
 
 def safe_click(driver, wait, element):
     """Clica com mais robustez (viewport + fallback JS)"""

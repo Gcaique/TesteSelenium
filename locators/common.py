@@ -9,6 +9,8 @@ COOKIE_ACCEPT = (By.XPATH, "//*[@id='privacytools-banner-consent']//*[@title='Ac
 REGION_OPEN = (By.XPATH, "//a[contains(@class,'change-region-action') and contains(@class,'hj-header_change-region-action-desktop')]")
 BTN_DEFAULT_REGION = (By.ID, "other-regions")
 BTN_SUL_REGION = (By.ID, "southern-region")
+REGION_MODAL = (By.CSS_SELECTOR, "div.modal-select-region")
+
 
 # Indicador de LOGADO (fonte da verdade)
 MINICART_WRAPPER = (By.XPATH, "//*[@data-block='minicart' and contains(@class,'minicart-wrapper')]")
