@@ -13,3 +13,12 @@ FOOTER = (By.XPATH, "//div[@class='footer-content']")
 # Refazer pedido / comprados recentemente
 LAST_ORDERS = (By.ID, "last-orders-action")
 LAST_ITEMS = (By.ID, "last-items-action")
+
+# Seções home (scroll)
+HOME_SECTIONS = [
+    "(//div[contains(@class, 'slider-products')])[1]",
+    "//div[@class='brands-carousel']",
+    "(//div[contains(@class, 'slider-products')])[2]",
+    "//*[@class='cutting-map __home-section']",
+    "//div[@class='footer-content']"
+]

@@ -1,9 +1,10 @@
 import time
 from selenium.common.exceptions import (StaleElementReferenceException, ElementClickInterceptedException,TimeoutException)
-from helpers.waiters import clickable, visible
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
+
+from helpers.waiters import clickable, visible
 
 
 def click(driver, locator, timeout=10):
@@ -58,8 +59,8 @@ def try_click(driver, locator, timeout=2.0) -> bool:
         return False
 
 #TESTE_1
-def scroll_to(driver, element):
-    driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", element)
+'''def scroll_to(driver, element):
+    driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", element)'''
 
 def click_when_clickable(wait, locator):
     driver = wait._driver
@@ -84,3 +85,11 @@ def safe_click(driver, wait, element):
             driver.execute_script("arguments[0].click();", element)
     except (StaleElementReferenceException, ElementClickInterceptedException):
         driver.execute_script("arguments[0].click();", element)
+
+
+#TESTE_2
+def scroll_to(driver, xpath):
+    """Faz scroll até uma seção específica da home."""
+    locator = (By.XPATH, xpath)
+    el = visible(driver, locator, timeout=8)
+    driver.execute_script("arguments[0].scrollIntoView({block:'center'});", el)

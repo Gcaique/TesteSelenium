@@ -2,9 +2,10 @@ from selenium.common.exceptions import TimeoutException
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 
-from helpers.actions import click_when_clickable
+from helpers.actions import click_when_clickable, click
 from helpers.auth import expect_login_popup
-from locators.header import LOGIN_NAME_SPAN
+
+from locators.header import LOGIN_MENU, LOGO
 
 
 # Redireciona a pagina para os elementos da HOME PAGE (Carrossel / mapa de corte / footer)
@@ -32,4 +33,12 @@ def header_requires_login(driver, wait, locator, label="header_action"):
     expect_login_popup(driver, wait, label=label)
 
     # Fecha o popup (clicando novamente no header)
-    click_when_clickable(wait, LOGIN_NAME_SPAN)
+    click_when_clickable(wait, LOGIN_MENU)
+
+
+# TEST_2
+def go_home(driver):
+    """Volta para a home clicando na logo."""
+    click(driver, LOGO, timeout=10)
+
+

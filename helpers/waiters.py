@@ -4,6 +4,7 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import TimeoutException
 
 from locators.plp import SORTER_SELECT
+from locators.common import MINICART_WRAPPER
 
 
 def wait(driver, timeout=10, poll=0.1):
@@ -79,3 +80,16 @@ def try_visible(wait, locator, timeout=3) -> bool:
 def wait_category_loaded(wait, driver):
     # validação simples: campo de busca visível (página carregou)
     wait.until(EC.visibility_of_element_located(SORTER_SELECT))
+
+
+# TESTE_2
+def minicart_visible(driver) -> bool:
+    # Verificar se o mini-cart é aprsentado, usamos isso para verificar se o usuário está logado
+    try:
+        el = wait(driver, 1.5).until(EC.visibility_of_element_located(MINICART_WRAPPER))
+        return el.is_displayed()
+    except Exception:
+        return False
+
+def assert_logged_out(driver, context=""):
+    assert not minicart_visible(driver), f"[{context}] Era para estar DESLOGADO, mas mini-cart está visível."

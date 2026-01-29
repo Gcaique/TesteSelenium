@@ -26,7 +26,7 @@ def test_1_userDeslogado(driver, setup_site, wait):
     """
 
     # 1) Termos de uso
-    click_when_clickable(wait, LOGIN_NAME_SPAN)
+    click_when_clickable(wait, LOGIN_MENU)
     click_when_clickable(wait, BTN_TERMS)
     click_when_clickable(wait, BTN_CLOSE_MODAL)
 
@@ -140,7 +140,7 @@ def test_1_userDeslogado(driver, setup_site, wait):
         expect_login_popup(driver, wait, label="listagem_retry", timeout=8, retries=0)
 
     # fecha/recolhe o dropdown/modal do header pra seguir o fluxo
-    click_when_clickable(wait, LOGIN_NAME_SPAN)
+    click_when_clickable(wait, LOGIN_MENU)
 
     # 7) PDP de um produto
     produtos = driver.find_elements(*PRODUCT_TITLES)
