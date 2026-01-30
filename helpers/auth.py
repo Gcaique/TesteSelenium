@@ -77,7 +77,6 @@ def expect_login_popup(driver, wait, label="login_popup", timeout=12, retries=2,
     raise last_exc
 
 
-#TEST_2
 def open_login(driver):
     """Abre o modal de login e garante que o campo username apareceu."""
     click(driver, LOGIN_MENU, timeout=10)

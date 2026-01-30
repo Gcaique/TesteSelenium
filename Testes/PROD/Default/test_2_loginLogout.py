@@ -110,7 +110,6 @@ def test_2_loginLogout(driver, setup_site):
     login_password(driver, VALID_PASS, "13) login via últimos pedidos (senha)", expect_success=True)
 
     visible(driver, EMPTY_GRID_ORDERS, timeout=20)
-    try_close_popups(driver)
     try_close_hotjar(driver)
     click(driver, EMPTY_GRID_ORDERS, timeout=10)
 

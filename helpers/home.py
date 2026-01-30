@@ -36,7 +36,7 @@ def header_requires_login(driver, wait, locator, label="header_action"):
     click_when_clickable(wait, LOGIN_MENU)
 
 
-# TEST_2
+
 def go_home(driver):
     """Volta para a home clicando na logo."""
     click(driver, LOGO, timeout=10)

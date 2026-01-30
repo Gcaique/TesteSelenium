@@ -58,9 +58,6 @@ def try_click(driver, locator, timeout=2.0) -> bool:
     except Exception:
         return False
 
-#TESTE_1
-'''def scroll_to(driver, element):
-    driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", element)'''
 
 def click_when_clickable(wait, locator):
     driver = wait._driver
@@ -87,7 +84,6 @@ def safe_click(driver, wait, element):
         driver.execute_script("arguments[0].click();", element)
 
 
-#TESTE_2
 def scroll_to(driver, xpath):
     """Faz scroll até uma seção específica da home."""
     locator = (By.XPATH, xpath)

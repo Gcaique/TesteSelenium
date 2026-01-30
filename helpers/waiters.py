@@ -82,9 +82,8 @@ def wait_category_loaded(wait, driver):
     wait.until(EC.visibility_of_element_located(SORTER_SELECT))
 
 
-# TESTE_2
 def minicart_visible(driver) -> bool:
-    # Verificar se o mini-cart é aprsentado, usamos isso para verificar se o usuário está logado
+    # Verificar se o mini-cart é apresentado, usamos isso para verificar se o usuário está logado
     try:
         el = wait(driver, 1.5).until(EC.visibility_of_element_located(MINICART_WRAPPER))
         return el.is_displayed()
