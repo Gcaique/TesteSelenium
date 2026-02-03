@@ -84,8 +84,53 @@ def safe_click(driver, wait, element):
         driver.execute_script("arguments[0].click();", element)
 
 
+def safe_click_loc(driver, wait, locator, timeout=10):
+    """
+    Pega o WebElement (clicável) e clica usando seu safe_click.
+    (já tinha sido sugerido; mantemos)
+    """
+    w = WebDriverWait(driver, timeout)
+    el = w.until(EC.element_to_be_clickable(locator))
+    safe_click(driver, w, el)
+    return el
+
+
+def scroll_and_safe_click_loc(driver, wait, locator, timeout=10):
+    """
+    1) Faz scroll até o elemento ficar visível
+    2) Clica usando seu safe_click (que recebe WebElement)
+    3) Fallback: scroll_and_click direto
+    """
+    # 1) scroll + pega elemento visível
+    el = scroll_into_view(driver, locator, timeout=timeout)
+
+    # 2) tenta clicar “do seu jeito”
+    try:
+        safe_click(driver, wait, el)
+        return el
+    except Exception:
+        # 3) fallback: scroll + click direto
+        try:
+            scroll_and_click(driver, el)
+            return el
+        except Exception:
+            # último fallback: JS click
+            driver.execute_script("arguments[0].click();", el)
+            return el
+
+
 def scroll_to(driver, xpath):
     """Faz scroll até uma seção específica da home."""
     locator = (By.XPATH, xpath)
     el = visible(driver, locator, timeout=8)
     driver.execute_script("arguments[0].scrollIntoView({block:'center'});", el)
+
+
+def fill_input(driver, wait, locator, value: str, timeout=10):
+    el = visible(driver, locator, timeout=timeout)
+    try:
+        el.clear()
+    except Exception:
+        driver.execute_script("arguments[0].value='';", el)
+    el.send_keys(value)
+

@@ -8,7 +8,6 @@ def try_close_popups(driver):
     try_click(driver, HOTJAR_CLOSE, timeout=1.5)
 
 
-#TEST_2
 def try_close_hotjar(driver):
     """Fecha popup do Hotjar se aparecer (não falha se não existir)."""
     try:

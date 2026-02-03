@@ -15,6 +15,10 @@ USERNAME_INPUT = (By.ID, "username")  # input e-mail/cnpj/cpf
 PASSWORD_INPUT = (By.XPATH, "//*[@name='login[password]']")  # input senha
 BTN_AVANCAR = (By.ID, "send2")  # botão "Avançar"
 
+#ALERTAS
+ERROR_EMAIL_NOT_FOUND = (By.XPATH, "//*[@class='message-error error message']//*[contains(normalize-space(),'Verifique o dado informado')]")
+ERROR_WRONG_PASSWORD = (By.XPATH, "//*[@class='message-error error message']//*[contains(normalize-space(),'A senha digitada')]")
+
 # Logout
 BTN_LOGOUT = (By.ID, "action-logout")
 
@@ -34,7 +38,3 @@ ERROR_LOGIN_MESSAGE = (By.XPATH, "//*[@class='message-error error message']")
 
 # LOGO
 LOGO = (By.XPATH, "//a[contains(@class,'hj-header-logo')]")
-
-
-
-

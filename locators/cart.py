@@ -8,6 +8,9 @@ MINICART_CLOSE = (By.ID, "btn-minicart-close")
 # Loading minicart
 MINICART_LOADING_1 = (By.XPATH, "//*[@class='minicart-wrapper is-loading active']") # Quando o mini-cart não está sendo apresentado na página
 MINICART_LOADING_2 = (By.XPATH, "//*[@class='minicart-wrapper active is-loading']") # Quando o mini-cart está sendo apresentado na página
+MINICART_LOADING_3 = (By.XPATH, "//*[@class='minicart-wrapper is-loading']")
+
+BTN_CHECKOUT_TOP = (By.ID, "top-cart-btn-checkout")
 
 
 # Carrinho "/checkout/cart"

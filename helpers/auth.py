@@ -2,7 +2,6 @@ import time
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import TimeoutException, StaleElementReferenceException
 
-
 from helpers.waiters import *
 from helpers.actions import *
 from helpers.popups import *
@@ -40,7 +39,6 @@ def ensure_logged_in(driver, user: str, passwd: str):
             return
         time.sleep(0.2)
 
-    driver.save_screenshot("debug_login_failed.png")
     raise TimeoutException(
         "Login não confirmou: mini-cart não ficou visível."
     )
@@ -234,3 +232,19 @@ def logout(driver):
         time.sleep(0.1)
 
     assert_logged_out(driver, "logout")
+
+
+def login_expect_email_not_found(driver, wait, email):
+    safe_click_loc(driver, wait, LOGIN_MENU, timeout=12)
+    fill_input(driver, wait, USERNAME_INPUT, email, timeout=12)
+    safe_click_loc(driver, wait, BTN_AVANCAR, timeout=12)
+    visible(driver, ERROR_EMAIL_NOT_FOUND, timeout=12)
+
+def login_expect_wrong_password(driver, wait, email, wrong_password):
+    fill_input(driver, wait, USERNAME_INPUT, email, timeout=12)
+    safe_click_loc(driver, wait, BTN_AVANCAR, timeout=12)
+
+    fill_input(driver, wait, PASSWORD_INPUT, wrong_password, timeout=12)
+    safe_click_loc(driver, wait, BTN_AVANCAR, timeout=12)
+
+    visible(driver, ERROR_WRONG_PASSWORD, timeout=12)

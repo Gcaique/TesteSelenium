@@ -1,6 +1,8 @@
 import time
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import TimeoutException
+import os
+import requests
 
 from locators.firstAcess import *
 
@@ -82,3 +84,30 @@ def create_password_invalid(driver, wait, email, password, confirm):
 def close_success_modal(driver, wait):
     wait.until(EC.visibility_of_element_located(BTN_CLOSE_MODAL_LOGIN))
     driver.find_element(*BTN_CLOSE_MODAL_LOGIN).click()
+
+
+def reset_first_access(email: str):
+    """
+    Reseta o 'primeiro acesso' do usuário via API (equivalente ao que você faz no Apidog).
+    Você precisa ajustar URL e payload conforme sua chamada real.
+    """
+    base = os.getenv("FIRST_ACCESS_API_BASE_URL", "").rstrip("/")
+    token = os.getenv("FIRST_ACCESS_API_TOKEN", "")
+
+    if not base or not token:
+        raise RuntimeError(
+            "Defina FIRST_ACCESS_API_BASE_URL e FIRST_ACCESS_API_TOKEN no .env"
+        )
+
+    url = f"{base}/first-access/reset"  # <-- ajuste conforme endpoint real
+    headers = {
+        "Authorization": f"Bearer {token}",
+        "Content-Type": "application/json",
+    }
+    payload = {"email": email}
+
+    r = requests.post(url, json=payload, headers=headers, timeout=20)
+    if r.status_code >= 400:
+        raise AssertionError(f"Falha ao resetar primeiro acesso. {r.status_code} -> {r.text}")
+
+    return True
