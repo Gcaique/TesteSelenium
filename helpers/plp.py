@@ -1,15 +1,19 @@
 import time
+from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import (TimeoutException, StaleElementReferenceException)
 from selenium.webdriver.support.ui import Select
 
-from locators.plp import FILTER_CLEAR_ALL, SORTER_SELECT, SORT_OPTION
-from locators.plp import PAGE_NUMBER, PAGES_UL
+from locators.plp import *
+from locators.wishlist import *
+from locators.header import SEARCH_INPUT, SEARCH_BUTTON,SEARCH_SUGGEST_ADD_2
 
-from helpers.actions import try_click
-from helpers.waiters import try_visible
-from helpers.actions import scroll_to, click_when_clickable
+
+from helpers.actions import try_click, safe_click_loc, scroll_to, click_when_clickable, scroll_into_view
+from helpers.waiters import try_visible, visible
+from helpers.wishlist import wait_favorite_status
+from helpers.avise_me import open_pdp_from_first_avise_in_plp
 
 
 
@@ -137,3 +141,62 @@ def sort_strict(driver, wait, select_locator, value: str, timeout=12, retries=4)
             time.sleep(0.6)
 
     return False
+
+
+# FAVORITAR ITENS (CATEGORIA/BUSCA)
+def add_favorite_from_category_first_item(driver, wait, category_locator):
+    '''Favoritar primeiro item da lista (PLP)'''
+    safe_click_loc(driver, wait, category_locator, timeout=15)
+    time.sleep(2)
+    safe_click_loc(driver, wait, PLP_WISHLIST_BTN_BY_INDEX(1), timeout=12)
+    assert wait_favorite_status(driver), "Não confirmou status de favorito na PLP categoria."
+
+
+def search_and_add_favorite_by_index(driver, wait, term: str, index: int):
+    '''Favoritar item da lista (BUSCA)'''
+    safe_click_loc(driver, wait, SEARCH_INPUT, timeout=12)
+    el = visible(driver, SEARCH_INPUT, timeout=12)
+    el.clear()
+    el.send_keys(term)
+
+    visible(driver, SEARCH_SUGGEST_ADD_2, timeout=20)
+
+    safe_click_loc(driver, wait, SEARCH_BUTTON, timeout=12)
+    time.sleep(2)
+
+    # scroll até card do índice e favorita
+    scroll_into_view(driver, (By.XPATH, f"(//*[@class='product-item-info'])[{index}]"), timeout=20)
+    safe_click_loc(driver, wait, PLP_WISHLIST_BTN_BY_INDEX(index), timeout=12)
+    assert wait_favorite_status(driver), f"Não confirmou status de favorito na busca (idx={index})."
+
+
+def open_product_with_avise_by_pagination(
+    driver,
+    wait,
+    category_locator,
+    pages=(1, 2, 3, 4, 5)
+):
+    """
+    Entra na categoria e percorre páginas
+    até encontrar produto com botão 'Avise-me'.
+    """
+
+    # entra na categoria
+    safe_click_loc(driver, wait, category_locator, timeout=15)
+    time.sleep(2)
+
+    visible(driver, SORTER_SELECT, timeout=25)
+
+    for page in pages:
+        try:
+            safe_click_loc(driver, wait, PAGINATION_BY_PAGE(page), timeout=6)
+            visible(driver, SORTER_SELECT, timeout=20)
+        except Exception:
+            pass
+
+        # reutiliza sua função existente
+        if open_pdp_from_first_avise_in_plp(driver):
+            return True
+
+    return False
+

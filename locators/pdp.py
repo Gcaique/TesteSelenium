@@ -12,5 +12,10 @@ ADDRESSES_OPT2 = (By.XPATH, "//*[@id='addresses']/option[2]")
 BTN_VERIFY_FORECAST = (By.ID, "verify-delivery-forecast")
 FORECAST_RESULT = (By.XPATH, "//*[@class='shipping-rate-result']")
 
-#Botões que exigem login
+# Botões que exigem login
 BTN_ENTRAR_PDP = (By.XPATH, "//button[contains(@class,'loggin-btn') and contains(@class,'tget-btn-buy')]")
+
+# Botão wishlist
+PDP_WISHLIST_BTN = (By.XPATH, "//button[contains(@id,'button_wishlist')]")
+WISHLIST_STATUS_FAVORITO = (By.XPATH, "//button[@title='Favorito']")
+WISHLIST_STATUS_ADDED_CLASS = (By.XPATH, "//button[contains(@class,'add-to-wishlist')]")

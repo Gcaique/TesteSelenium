@@ -2,10 +2,12 @@ from selenium.common.exceptions import TimeoutException
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 
-from helpers.actions import click_when_clickable, click
+from helpers.actions import click_when_clickable, click, scroll_and_safe_click_loc, safe_click_loc, scroll_into_view
 from helpers.auth import expect_login_popup
+from helpers.wishlist import wait_favorite_status
 
 from locators.header import LOGIN_MENU, LOGO
+from locators.home import *
 
 
 # Redireciona a pagina para os elementos da HOME PAGE (Carrossel / mapa de corte / footer)
@@ -42,3 +44,7 @@ def go_home(driver):
     click(driver, LOGO, timeout=10)
 
 
+def add_favorite_from_home_first_carousel(driver, wait):
+    scroll_into_view(driver, CAROUSEL_1, timeout=15)
+    safe_click_loc(driver, wait, HOME_WISHLIST_BTN_1, timeout=12)
+    assert wait_favorite_status(driver), "Não confirmou status de favorito na HOME."

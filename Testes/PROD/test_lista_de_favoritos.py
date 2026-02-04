@@ -10,7 +10,7 @@ import config
 # Configuração do WebDriver usando config
 driver = config.criar_driver(
     ambiente="desktop",
-    nome_teste="lista de favoritos norte_prod",
+    nome_teste="lista de favoritos",
     navegador="chrome",
     sistema_operacional="Windows 11",
     device_name=""

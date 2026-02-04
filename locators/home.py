@@ -4,6 +4,8 @@ from selenium.webdriver.common.by import By
 CAROUSEL_1 = (By.XPATH, "(//div[contains(@class, 'slider-products')])[1]")
 QTY_INPUT_FIRST = (By.XPATH, "(//*[contains(@id,'product-item-qty')])[1]")
 ADD_BTN_FIRST_CAROUSEL = (By.XPATH, "(//*[@class='slick-slide slick-current slick-active']//button[contains(@class, 'action tocart primary tget-btn-buy tocart')])[1]")
+# Icone favorito
+HOME_WISHLIST_BTN_1 = (By.XPATH, "(//button[contains(@id,'button_wishlist')])[1]")
 
 # Carrossel / Mapa de cortes / Footer - Interação com o scroll da home
 BRANDS_CAROUSEL = (By.XPATH, "//div[@class='brands-carousel']")
