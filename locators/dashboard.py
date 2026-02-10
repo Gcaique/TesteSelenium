@@ -1,9 +1,5 @@
 from selenium.webdriver.common.by import By
 
-# header + dropdown
-#LOGIN_NAME_CONTAINER = (By.ID, "login-name")
-#LINK_MINHA_CONTA = (By.XPATH, "//*[@id='login-dropdown']//a[normalize-space()='Minha conta']")
-#BTN_LOGOUT = (By.ID, "action-logout")
 
 # side menu
 NAV_MINHA_CONTA = (By.XPATH, "//*[@id='block-collapsible-nav']//a[normalize-space()='Minha conta']")

@@ -1,8 +1,6 @@
 import pytest
 
 from helpers.auth import ensure_logged_in
-from helpers.popups import try_close_popups
-
 from helpers.wishlist import *
 from helpers.home import add_favorite_from_home_first_carousel
 from helpers.plp import add_favorite_from_category_first_item, search_and_add_favorite_by_index
@@ -73,16 +71,13 @@ def test_6_lista_de_favoritos(driver, setup_site, wait):
 
     # 12) Botão favorito dentro do minicart (remove produto dos favoritos pelo minicart, favorita novamente pelo minicart)
     wishlist_toggle_remove_onwishlist(driver, wait, 1)
-    wishlist_toggle_add_towishlist(driver, wait)
+    wishlist_toggle_add_towishlist(driver, wait, 1)
 
     # 13) Remover itens da lista pelo o botão do card
-    remove_card_item_with_confirm(driver, wait, 1)
-    remove_card_item_with_confirm(driver, wait, 1)
-    remove_card_item_with_confirm(driver, wait, 1)
-    remove_card_item_with_confirm(driver, wait, 1)
+    assert remove_all_cards_wishlist(driver, wait), "Ainda existiam itens na wishlist."
 
-    # 14) Esvaziar minicart e clicar "Ver produtos"
-    wishlist_empty_and_go_products(driver, wait)
+    # 14) Esvaziar minicart
+    minicart_empty(driver, wait)
 
     # valida que segue logado
     assert minicart_visible(driver), "Era para continuar logado ao final do fluxo."

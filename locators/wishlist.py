@@ -30,7 +30,6 @@ WISHLIST_ADD_TOWISHLIST = (By.XPATH, "//*[@class='product-photo-wishilist-remove
 
 # REMOVER ITENS
 REMOVE_CARD_BTN_BY_INDEX = lambda idx: (By.XPATH, f"(//*[@class='product details product-item-details']//a[@class='btn-remove action delete'])[{idx}]",)
-REMOVE_SIMPLE_DELETE_BY_INDEX = lambda idx: (By.XPATH, f"(//*[@class='product-photo-wishilist-remove-wrapper']//a[@class='action delete'])[{idx}]",)
 CONFIRM_MODAL_ACCEPT = (By.XPATH, "//button[@class='action-primary action-accept']")
 
 # contador de itens adicionados na lista de favoritos

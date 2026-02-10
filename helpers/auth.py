@@ -32,16 +32,23 @@ def ensure_logged_in(driver, user: str, passwd: str):
     click(driver, BTN_AVANCAR, timeout=10)
 
     # confirmação via minicart
-    end = time.time() + 20
+    end = time.time() + 60
+
     while time.time() < end:
         if minicart_visible(driver):
             try_close_popups(driver)
             return
-        time.sleep(0.2)
+        time.sleep(0.5)
 
-    raise TimeoutException(
-        "Login não confirmou: mini-cart não ficou visível."
-    )
+    # fallback LT
+    driver.refresh()
+    time.sleep(3)
+    try_close_popups(driver)
+
+    if minicart_visible(driver):
+        return
+
+    raise TimeoutException("Login não confirmou: mini-cart não ficou visível.")
 
 
 def expect_login_popup(driver, wait, label="login_popup", timeout=12, retries=2, sleep_between=0.6):

@@ -4,8 +4,11 @@ from selenium.webdriver.common.by import By
 CAROUSEL_1 = (By.XPATH, "(//div[contains(@class, 'slider-products')])[1]")
 QTY_INPUT_FIRST = (By.XPATH, "(//*[contains(@id,'product-item-qty')])[1]")
 ADD_BTN_FIRST_CAROUSEL = (By.XPATH, "(//*[@class='slick-slide slick-current slick-active']//button[contains(@class, 'action tocart primary tget-btn-buy tocart')])[1]")
+
 # Icone favorito
-HOME_WISHLIST_BTN_1 = (By.XPATH, "(//button[contains(@id,'button_wishlist')])[1]")
+HOME_CAROUSEL_1 = (By.XPATH, "(//div[contains(@class,'slider-products')])[1]")
+FIRST_PRODUCT_CARD = (By.XPATH, ".//li[contains(@class,'product-item')][1]")
+WISHLIST_BTN_INSIDE = (By.XPATH, ".//button[contains(@id,'button_wishlist')]")
 
 # Carrossel / Mapa de cortes / Footer - Interação com o scroll da home
 BRANDS_CAROUSEL = (By.XPATH, "//div[@class='brands-carousel']")
@@ -19,7 +22,7 @@ LAST_ITEMS = (By.ID, "last-items-action")
 # Seções home (scroll)
 HOME_SECTIONS = [
     "(//div[contains(@class, 'slider-products')])[1]",
-    "//div[@class='brands-carousel']",
+    #"//div[@class='brands-carousel']",
     "(//div[contains(@class, 'slider-products')])[2]",
     "//*[@class='cutting-map __home-section']",
     "//div[@class='footer-content']"

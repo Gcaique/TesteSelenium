@@ -1,7 +1,7 @@
 import time
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-from selenium.common.exceptions import TimeoutException
+from selenium.common.exceptions import TimeoutException, StaleElementReferenceException
 
 from locators.plp import SORTER_SELECT
 from locators.common import MINICART_WRAPPER
@@ -92,3 +92,19 @@ def minicart_visible(driver) -> bool:
 
 def assert_logged_out(driver, context=""):
     assert not minicart_visible(driver), f"[{context}] Era para estar DESLOGADO, mas mini-cart está visível."
+
+
+def _is_stale(element) -> bool:
+    try:
+        _ = element.is_enabled()
+        return False
+    except StaleElementReferenceException:
+        return True
+
+
+def wait_removed_element_stale(driver, element, timeout=30):
+    """
+    Espera o elemento (botão) ficar stale.
+    Isso garante que o DOM realmente atualizou após a remoção.
+    """
+    WebDriverWait(driver, timeout, poll_frequency=0.2).until(lambda d: _is_stale(element))

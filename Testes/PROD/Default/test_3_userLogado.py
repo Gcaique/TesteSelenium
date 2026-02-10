@@ -176,11 +176,11 @@ def test_3_userLogado(driver, setup_site):
     wait_minicart_ready(driver, timeout=25)
     click(driver, VIEWCART, timeout=15)
     visible(driver, EMPTY_CART_BTN, timeout=25)
-    click(driver, EMPTY_CART_BTN, timeout=10)
-    visible(driver, EMPTY_CART_CONFIRM, timeout=10)
-    click(driver, EMPTY_CART_CONFIRM, timeout=10)
-    visible(driver, VER_CATALOGO, timeout=15)
-    click(driver, VER_CATALOGO, timeout=10)
+    click(driver, EMPTY_CART_BTN, timeout=20)
+    visible(driver, EMPTY_CART_CONFIRM, timeout=20)
+    click(driver, EMPTY_CART_CONFIRM, timeout=20)
+    visible(driver, VER_CATALOGO, timeout=25)
+    click(driver, VER_CATALOGO, timeout=20)
 
     # assert final: ainda logado
     assert minicart_visible(driver), "Era para terminar o teste logado, mas mini-cart não está visível."

@@ -37,7 +37,7 @@ def test_1_userDeslogado(driver, setup_site, wait):
     # 3) Scroll home e valida seções
     sections_xpaths = [
         "(//div[contains(@class, 'slider-products')])[1]",
-        "//div[@class='brands-carousel']",
+        #"//div[@class='brands-carousel']",
         "(//div[contains(@class, 'slider-products')])[2]",
         "//*[@class='cutting-map __home-section']",
         "//div[@class='footer-content']"

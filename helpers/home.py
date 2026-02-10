@@ -1,6 +1,8 @@
-from selenium.common.exceptions import TimeoutException
+import time
+from selenium.common.exceptions import TimeoutException, StaleElementReferenceException
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.common.action_chains import ActionChains
 
 from helpers.actions import click_when_clickable, click, scroll_and_safe_click_loc, safe_click_loc, scroll_into_view
 from helpers.auth import expect_login_popup
@@ -44,7 +46,44 @@ def go_home(driver):
     click(driver, LOGO, timeout=10)
 
 
-def add_favorite_from_home_first_carousel(driver, wait):
-    scroll_into_view(driver, CAROUSEL_1, timeout=15)
-    safe_click_loc(driver, wait, HOME_WISHLIST_BTN_1, timeout=12)
-    assert wait_favorite_status(driver), "Não confirmou status de favorito na HOME."
+def add_favorite_from_home_first_carousel(driver, wait, timeout=25):
+
+    # 1) Espera o carrossel existir
+    carousel = wait.until(EC.presence_of_element_located(HOME_CAROUSEL_1))
+    driver.execute_script("arguments[0].scrollIntoView({block:'center'});", carousel)
+
+    end = time.time() + timeout
+
+    while time.time() < end:
+        try:
+            # 2) Re-encontra o carrossel (evita stale)
+            carousel = driver.find_element(*HOME_CAROUSEL_1)
+
+            # 3) Pega o primeiro card REAL
+            card = carousel.find_element(*FIRST_PRODUCT_CARD)
+
+            driver.execute_script("arguments[0].scrollIntoView({block:'center'});", card)
+
+            # 4) HOVER (essencial no seu layout)
+            ActionChains(driver).move_to_element(card).perform()
+
+            time.sleep(0.5)  # pequeno tempo pro botão aparecer
+
+            # 5) Agora busca o botão dentro do card
+            btn = card.find_element(*WISHLIST_BTN_INSIDE)
+
+            # 6) Clique seguro
+            try:
+                wait.until(lambda d: btn.is_displayed() and btn.is_enabled())
+                btn.click()
+            except Exception:
+                driver.execute_script("arguments[0].click();", btn)
+
+            return True
+
+        except StaleElementReferenceException:
+            time.sleep(0.3)
+
+    raise TimeoutError("Não consegui clicar no botão wishlist do primeiro produto.")
+
+

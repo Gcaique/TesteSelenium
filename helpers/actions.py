@@ -87,12 +87,33 @@ def safe_click(driver, wait, element):
 def safe_click_loc(driver, wait, locator, timeout=10):
     """
     Pega o WebElement (clicável) e clica usando seu safe_click.
-    (já tinha sido sugerido; mantemos)
     """
     w = WebDriverWait(driver, timeout)
     el = w.until(EC.element_to_be_clickable(locator))
     safe_click(driver, w, el)
     return el
+
+
+def safe_click_loc_retry(driver, locator, timeout=10, retries=4, sleep_between=0.25):
+    """
+    Clica em um locator com retry REAL contra Stale/Intercept.
+    Diferença do safe_click_loc: ele re-encontra o elemento a cada tentativa.
+    """
+    last_exc = None
+    for _ in range(retries):
+        try:
+            w = WebDriverWait(driver, timeout)
+            el = w.until(EC.element_to_be_clickable(locator))
+            safe_click(driver, w, el)  # usa seu safe_click atual
+            return el
+        except (StaleElementReferenceException, ElementClickInterceptedException) as e:
+            last_exc = e
+            time.sleep(sleep_between)
+
+    # última tentativa: deixa estourar como timeout "limpo"
+    if last_exc:
+        raise last_exc
+    raise TimeoutException(f"Falha ao clicar (retry): {locator}")
 
 
 def scroll_and_safe_click_loc(driver, wait, locator, timeout=10):
@@ -119,11 +140,44 @@ def scroll_and_safe_click_loc(driver, wait, locator, timeout=10):
             return el
 
 
-def scroll_to(driver, xpath):
-    """Faz scroll até uma seção específica da home."""
-    locator = (By.XPATH, xpath)
-    el = visible(driver, locator, timeout=8)
+def scroll_and_click_loc_stable(driver, locator, timeout=10, retries=5, sleep=0.25):
+    """
+    Scroll + click por LOCATOR com retry.
+    Não altera safe_click_loc nem safe_click.
+    """
+    last = None
+    for _ in range(retries):
+        try:
+            el = WebDriverWait(driver, timeout).until(EC.presence_of_element_located(locator))
+            driver.execute_script("arguments[0].scrollIntoView({block:'center'});", el)
+
+            # espera ficar clicável (em grids isso ajuda)
+            el = WebDriverWait(driver, timeout).until(EC.element_to_be_clickable(locator))
+            try:
+                el.click()
+            except Exception:
+                driver.execute_script("arguments[0].click();", el)
+            return el
+        except (StaleElementReferenceException, ElementClickInterceptedException) as e:
+            last = e
+            time.sleep(sleep)
+
+    raise last or TimeoutError(f"Não consegui clicar no locator: {locator}")
+
+
+def _normalize_locator(locator_or_xpath):
+    # aceita ("//div...") ou (By.XPATH, "//div...")
+    if isinstance(locator_or_xpath, tuple):
+        return locator_or_xpath
+    if isinstance(locator_or_xpath, str):
+        return (By.XPATH, locator_or_xpath)
+    raise TypeError(f"Locator inválido: {type(locator_or_xpath)} -> {locator_or_xpath}")
+
+def scroll_to(driver, locator_or_xpath, timeout=8):
+    loc = _normalize_locator(locator_or_xpath)
+    el = visible(driver, loc, timeout=timeout)
     driver.execute_script("arguments[0].scrollIntoView({block:'center'});", el)
+    return el
 
 
 def fill_input(driver, wait, locator, value: str, timeout=10):

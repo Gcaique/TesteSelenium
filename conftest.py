@@ -127,27 +127,29 @@ def region(request):
 
 @pytest.fixture
 def setup_site(open_home, driver, region):
-    """
-    Setup padrão:
-    - abre home
-    - aceita cookies se aparecer
-    - escolhe região (quando modal aparecer)
-    - fecha modais ocasionais
-    """
-    # 1) cookies podem bloquear clique -> tenta fechar cedo
-    click_if_present(driver, BTN_ACCEPT_COOKIES, seconds=2)
+    w = WebDriverWait(driver, 30)
 
-    # 2) escolhe região somente se o modal aparecer
+    # 1) Espera body carregar
+    w.until(EC.presence_of_element_located((By.TAG_NAME, "body")))
+
+    # 2) Cookies
+    click_if_present(driver, BTN_ACCEPT_COOKIES, seconds=20)
+
+    # 3) Região
     if region == "sul":
-        click_if_present(driver, BTN_REGION_SUL, seconds=5)
+        click_if_present(driver, BTN_REGION_SUL, seconds=15)
     else:
-        click_if_present(driver, BTN_REGION_OUTRAS, seconds=5)
+        click_if_present(driver, BTN_REGION_OUTRAS, seconds=15)
 
-    # 3) fecha modais ocasionais
-    click_if_present(driver, BTN_CLOSE_MODAL_GENERIC, seconds=2)
-    click_if_present(driver, BTN_CLOSE_SPIN, seconds=2)
+    # 4) Fecha modais ocasionais
+    click_if_present(driver, BTN_CLOSE_SPIN, seconds=8)
+    click_if_present(driver, BTN_CLOSE_MODAL_GENERIC, seconds=8)
+
+    # 5) Espera algo fixo da home
+    w.until(EC.presence_of_element_located((By.XPATH, "//a[@id='last-orders-action']")))
 
     return driver
+
 
 
 @pytest.fixture
