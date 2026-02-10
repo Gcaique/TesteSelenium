@@ -42,7 +42,7 @@ def try_sort(wait, driver, value: str, timeout=3) -> bool:
     return try_click(wait, option_locator, timeout=timeout)
 
 
-def try_go_to_page(wait, driver, page_number: str, timeout=5) -> bool:
+def try_go_to_page(wait, driver, page_number: str, timeout=10) -> bool:
     """Tenta paginar (sem travar). Retorna True/False."""
     locator = PAGE_NUMBER(page_number)
     try:
@@ -147,7 +147,7 @@ def sort_strict(driver, wait, select_locator, value: str, timeout=12, retries=4)
 def add_favorite_from_category_first_item(driver, wait, category_locator):
     '''Favoritar primeiro item da lista (PLP)'''
     safe_click_loc(driver, wait, category_locator, timeout=15)
-    time.sleep(2)
+    time.sleep(5)
     safe_click_loc(driver, wait, PLP_WISHLIST_BTN_BY_INDEX(1), timeout=12)
     assert wait_favorite_status(driver), "Não confirmou status de favorito na PLP categoria."
 

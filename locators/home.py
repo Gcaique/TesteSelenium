@@ -22,7 +22,7 @@ LAST_ITEMS = (By.ID, "last-items-action")
 # Seções home (scroll)
 HOME_SECTIONS = [
     "(//div[contains(@class, 'slider-products')])[1]",
-    #"//div[@class='brands-carousel']",
+    "//div[@class='brands-carousel']",
     "(//div[contains(@class, 'slider-products')])[2]",
     "//*[@class='cutting-map __home-section']",
     "//div[@class='footer-content']"

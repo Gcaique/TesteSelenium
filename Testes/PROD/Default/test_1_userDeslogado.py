@@ -37,7 +37,7 @@ def test_1_userDeslogado(driver, setup_site, wait):
     # 3) Scroll home e valida seções
     sections_xpaths = [
         "(//div[contains(@class, 'slider-products')])[1]",
-        #"//div[@class='brands-carousel']",
+        "//div[@class='brands-carousel']",
         "(//div[contains(@class, 'slider-products')])[2]",
         "//*[@class='cutting-map __home-section']",
         "//div[@class='footer-content']"
@@ -54,8 +54,8 @@ def test_1_userDeslogado(driver, setup_site, wait):
     wait.until(EC.visibility_of_element_located(FILTER_CONSERVACAO_OPEN))
 
     # Paginação
-    try_go_to_page(wait, driver, "2", timeout=6)
-    try_go_to_page(wait, driver, "3", timeout=6)
+    try_go_to_page(wait, driver, "2", timeout=10)
+    try_go_to_page(wait, driver, "3", timeout=10)
 
     # Garante filtro Congelado (OBRIGATÓRIO)
     aplicou_congelado = apply_filter_strict(driver, wait, FILTER_CONSERVACAO_OPEN, FILTER_CONSERVACAO_CONGELADO, timeout=12, retries=5)
