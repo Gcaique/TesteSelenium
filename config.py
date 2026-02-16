@@ -155,20 +155,41 @@ def driver_desktop(nome_teste, navegador, sistema_operacional, resolucao="1920x1
 def driver_mobile(nome_teste, navegador, sistema_operacional, device_name):
     lt_user, lt_key = _get_lt_credentials()
 
-    if navegador == "chrome":
+    so = (sistema_operacional or "").strip().lower()
+    nav_in = (navegador or "").strip().lower()
+
+    # --- normalização de nomes (LambdaTest mobile) ---
+    # LT não aceita browserName="chrome" nesse modo; use "chromium"
+    # iOS normalmente é Safari.
+    if so == "ios":
+        browser_name = "safari" if nav_in in ("", "chrome", "chromium", "safari") else nav_in
+    else:
+        # Android: padrão chromium; mapear aliases
+        if nav_in in ("", "chrome", "edge"):
+            browser_name = "chromium"
+        else:
+            browser_name = nav_in
+
+    # --- escolher Options compatível com o browser ---
+    if browser_name in ("chromium", "brave", "duckduckgo"):
         options = ChromeOptions()
-    elif navegador == "safari":
+    elif browser_name == "firefox":
+        options = FirefoxOptions()
+    elif browser_name == "safari":
         options = webdriver.SafariOptions()
     else:
-        raise Exception("Navegador mobile não suportado")
+        raise Exception(
+            f"Navegador mobile não suportado: {browser_name}. "
+            "Use: chromium|firefox|safari|brave|duckduckgo"
+        )
 
-    options.set_capability("browserName", navegador)
+    options.set_capability("browserName", browser_name)
     options.set_capability("browserVersion", "latest")
 
     options.set_capability("LT:Options", {
-        "platformName": sistema_operacional,
-        "deviceName": device_name,
-        "isRealMobile": False,
+        "platformName": sistema_operacional,   # ex.: "Android" ou "iOS"
+        "deviceName": device_name,            # ex.: "iPhone 15 Pro"
+        "isRealMobile": False,                # mantém como está (do seu setup)
         "build": "Smoke - Mobile",
         "name": nome_teste,
         "selenium_version": "4.21.0",
@@ -178,3 +199,4 @@ def driver_mobile(nome_teste, navegador, sistema_operacional, device_name):
         command_executor=f"https://{lt_user}:{lt_key}@hub.lambdatest.com/wd/hub",
         options=options
     )
+

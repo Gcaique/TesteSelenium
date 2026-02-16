@@ -1,7 +1,7 @@
 from selenium.webdriver.common.by import By
 
 # Dropdown do usuário (links)
-DD_MINHA_CONTA = (By.XPATH, "//*[@id='login-dropdown']//a[normalize-space(text())='Minha conta']")
+DD_MINHA_CONTA = (By.XPATH, "//*[@id='login-dropdown']//*[normalize-space(text())='Minha conta']")
 DD_COMPARAR = (By.XPATH, "//*[@id='login-dropdown']//a[normalize-space(text())='Comparar produtos']")
 DD_MEUS_PEDIDOS = (By.XPATH, "//*[@id='login-dropdown']//a[normalize-space(text())='Meus pedidos']")
 DD_FAVORITOS = (By.XPATH, "//*[@id='login-dropdown']//a[normalize-space(text())='Lista de favoritos']")
@@ -38,3 +38,13 @@ ERROR_LOGIN_MESSAGE = (By.XPATH, "//*[@class='message-error error message']")
 
 # LOGO
 LOGO = (By.XPATH, "//a[contains(@class,'hj-header-logo')]")
+
+
+#---------------------------------------------------------------
+# 📱 MOBILE
+#---------------------------------------------------------------
+
+# LOGIN DROPDOWN
+MOBILE_LOGIN_NAME = (By.XPATH, "//div[@id='login-name']//span[contains(@class,'login-name')]")
+MOBILE_LOGIN_ACESSO = (By.ID, "login-form-opener")                 # “Acesso”
+MOBILE_QUERO_SER_CLIENTE = (By.ID, "first-acess-register-modal-opener")     # “Quero ser cliente”

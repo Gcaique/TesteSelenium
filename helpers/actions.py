@@ -1,5 +1,5 @@
 import time
-from selenium.common.exceptions import (StaleElementReferenceException, ElementClickInterceptedException,TimeoutException)
+from selenium.common.exceptions import (StaleElementReferenceException, ElementClickInterceptedException,TimeoutException, WebDriverException)
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
@@ -177,3 +177,31 @@ def fill_input(driver, wait, locator, value: str, timeout=10):
         driver.execute_script("arguments[0].value='';", el)
     el.send_keys(value)
 
+
+#---------------------------------------------------------------
+# 📱 MOBILE
+#---------------------------------------------------------------
+def mobile_click(driver, wait, locator, timeout=20, retries=3):
+    last = None
+    for _ in range(retries):
+        try:
+            el = WebDriverWait(driver, timeout, poll_frequency=0.3).until(EC.presence_of_element_located(locator))
+            driver.execute_script("arguments[0].scrollIntoView({block:'center'});", el)
+            time.sleep(0.2)
+            WebDriverWait(driver, timeout, poll_frequency=0.3).until(EC.element_to_be_clickable(locator))
+            el = driver.find_element(*locator)  # re-find (evita stale)
+            el.click()
+            return True
+        except (StaleElementReferenceException, ElementClickInterceptedException) as e:
+            last = e
+            try:
+                el = driver.find_element(*locator)
+                driver.execute_script("arguments[0].click();", el)
+                return True
+            except Exception as e2:
+                last = e2
+                time.sleep(0.5)
+        except Exception as e:
+            last = e
+            time.sleep(0.5)
+    raise last

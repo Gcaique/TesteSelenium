@@ -20,7 +20,7 @@ PAGINATION_NEXT = (By.CSS_SELECTOR, "a.action.next, .pages a.action.next")
 # Filtros
 #---------------------------------------------------------------
 FILTER_CONSERVACAO_OPEN = (By.XPATH, "//*[@id='narrow-by-list']/div[1]/div[1]/span")
-FILTER_CONSERVACAO_RESFRIADO = (By.XPATH, "//*[@id='narrow-by-list']/div[1]/div[2]/div/ol/li[2]/a/label/span[1]")
+FILTER_CONSERVACAO_RESFRIADO = (By.XPATH, "//*[@id='narrow-by-list']/div[1]/div[2]/div/ol/li[1]/a/label")
 FILTER_CONSERVACAO_CONGELADO = (By.XPATH, "//*[@id='narrow-by-list']/div[1]/div[2]/div/ol/li[2]/a/label")
 FILTER_MARCA_OPEN = (By.XPATH, "//*[@id='narrow-by-list']/div[2]/div[1]")
 FILTER_MARCA_OPT1 = (By.XPATH, "//*[@id='narrow-by-list']/div[2]/div[2]/div/ol/li[1]/a/label/span[1]")
@@ -74,3 +74,38 @@ PLP_PRODUCT_IMAGE_WRAPPER_BY_INDEX = lambda idx: (By.XPATH, f"(//*[contains(@id,
 
 # Botão do favorito
 PLP_WISHLIST_BTN_BY_INDEX = lambda idx: (By.XPATH, f"(//button[contains(@id,'button_wishlist')])[{idx}]",)
+
+
+#---------------------------------------------------------------
+# 📱 MOBILE
+#---------------------------------------------------------------
+
+# Header / Menu
+MOBILE_MENU_HAMBURGER = (By.CSS_SELECTOR, "span#toggle-menu") # botão hambúrguer
+MOBILE_MENU_NAV = (By.CSS_SELECTOR, "nav#custom-menu") # nav do menu (seu HTML mostra nav#custom-menu)
+MOBILE_MENU_WRAPPER_OPENED = (By.CSS_SELECTOR, "html.mm-wrapper_opened, body.mm-wrapper_opened") # Estado "menu aberto" costuma refletir no wrapper
+MOBILE_MENU_SEE_ALL = (By.XPATH, "//nav[@id='custom-menu']//a[normalize-space()='Ver todos' or normalize-space()='Ver Todos']") # (se existir) botão "Ver todos" dentro do submenu/nível 2
+
+# abrir submenu (setinha) pelo slug (usa o <a class="mm-btn mm-btn_next ... href='#mm-8'>)
+def MOBILE_MENU_PARENT_NEXT(slug: str):
+    return (By.XPATH, f"//nav[@id='custom-menu']//li[a[contains(@href,'/{slug}.html')]]//a[contains(@class,'mm-btn_next')]")
+
+# clicar direto na categoria pelo href do slug
+def MOBILE_MENU_CATEGORY_LINK(slug: str):
+    return (By.XPATH, f"//nav[@id='custom-menu']//a[contains(@href,'/{slug}.html') and contains(@class,'mm-listitem__text')] | "
+                      f"//nav[@id='custom-menu']//a[contains(@href,'/{slug}.html') and contains(@class,'mm-menu-item-wrapper')]")
+
+
+# Paginação
+MOBILE_PAGINATION_CONTAINER = (By.CSS_SELECTOR, "ul.pages-items")
+def MOBILE_PAGE_NUMBER(page_number: str):
+    return (By.XPATH, f"//ul[contains(@class,'pages-items')]" f"//a[contains(@class,'hj-pagination-page_{page_number}')]")
+
+def MOBILE_PAGE_ACTIVE(page: str):
+    # exemplos comuns: aria-current, current, active
+    return (By.XPATH, f"//ul[contains(@class,'pages-items')]//*[normalize-space()='{page}' and (@aria-current='page' or contains(@class,'current') or contains(@class,'active'))]")
+
+# Filtros
+MOBILE_FILTER_OPEN_PANEL = (By.XPATH, "//strong[contains(.,'Filtro')]")
+MOBILE_FILTER_CONSERVACAO_OPEN = (By.XPATH, "//*[@id='narrow-by-list']/div[1]/div[1]")
+MOBILE_FILTER_CONSERVACAO_CONGELADO = (By.XPATH, "//span[@class='attribute-value' and contains(.,'Congelado')]")

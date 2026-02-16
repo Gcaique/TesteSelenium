@@ -67,7 +67,29 @@ def driver(request):
     grid = request.config.getoption("--grid")
     headless = request.config.getoption("--headless")
 
-    # nome do teste = nodeid (ajuda nos relatórios)
+    # 🔥 MOBILE INTELIGENTE
+    if ambiente == "mobile":
+        grid = "lt"  # mobile sempre no Lambda
+
+        # Se não informou SO, define padrão Android
+        if sistema_operacional == "Windows 11":
+            sistema_operacional = "Android"
+
+        # Se não informou device, define padrão por SO
+        if not device_name:
+            if sistema_operacional.lower() == "android":
+                device_name = "Samsung Galaxy S20 Ultra"
+            elif sistema_operacional.lower() == "ios":
+                device_name = "iPhone 14 Pro"
+
+        # Se não informou navegador (ou deixou default), define por SO
+        # (mesmo que você passe "chrome", o config.py normaliza pra chromium)
+        if not navegador or navegador == "chrome":
+            if sistema_operacional.lower() == "ios":
+                navegador = "safari"
+            else:
+                navegador = "chromium"
+
     worker = os.environ.get("PYTEST_XDIST_WORKER", "gw0")
     raw_name = f"{worker}::{request.node.nodeid}"
     nome_teste = sanitize_test_name(raw_name)
@@ -78,8 +100,8 @@ def driver(request):
         navegador=navegador,
         sistema_operacional=sistema_operacional,
         device_name=device_name,
-        grid = grid,
-        headless = headless
+        grid=grid,
+        headless=headless
     )
 
     yield driver

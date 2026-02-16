@@ -57,7 +57,7 @@ def test_1_userDeslogado(driver, setup_site, wait):
     try_go_to_page(wait, driver, "2", timeout=10)
     try_go_to_page(wait, driver, "3", timeout=10)
 
-    # Garante filtro Congelado (OBRIGATÓRIO)
+    # Garante filtro Congelado
     aplicou_congelado = apply_filter_strict(driver, wait, FILTER_CONSERVACAO_OPEN, FILTER_CONSERVACAO_CONGELADO, timeout=12, retries=5)
 
     assert aplicou_congelado, "Busca (#4): não consegui aplicar o filtro Conservação = Congelado."
@@ -65,59 +65,55 @@ def test_1_userDeslogado(driver, setup_site, wait):
     wait.until(EC.visibility_of_element_located(SORTER_SELECT))
     wait.until(EC.visibility_of_element_located(FILTER_CLEAR_ALL))
 
-    # Limpar filtros (OBRIGATÓRIO)
+    # Limpar filtros
     limpou_busca = clear_filters_strict(driver, wait, FILTER_CLEAR_ALL, timeout=15, retries=5)
 
     assert limpou_busca, "Busca (#4): não consegui limpar os filtros (Limpar Tudo)."
 
-    # Ordenação A-Z (OBRIGATÓRIO)
+    # Ordenação A-Z
     ordenou_az = sort_strict(driver, wait, SORTER_SELECT, "name_asc", timeout=12, retries=4)
     assert ordenou_az, "Busca (#4): não consegui aplicar ordenação A-Z (name_asc)."
 
-    # Ordenação Z-A (OBRIGATÓRIO)
+    # Ordenação Z-A
     ordenou_za = sort_strict(driver, wait, SORTER_SELECT, "name_desc", timeout=12, retries=4)
     assert ordenou_za, "Busca (#4): não consegui aplicar ordenação Z-A (name_desc)."
 
-    # 5) Cenários por categoria
-    # 5.1 Bovinos Premium: paginação 2 e 3 (sem travar)
+    # 5 Acessar categoria:
+    # Paginação 2 e 3 (sem travar)
     click_when_clickable(wait, CATEGORY_MENU("Bovinos Premium"))
     wait_category_loaded(wait, driver)
     try_go_to_page(wait, driver, "2", timeout=6)
     try_go_to_page(wait, driver, "3", timeout=6)
 
-    # 5.2 Promoções: aplicar filtros Nacionalidade + Conservação (OBRIGATÓRIO)
-    click_when_clickable(wait, CATEGORY_MENU("Promoções"))
-    wait_category_loaded(wait, driver)
-
-    # Garante que os filtros carregaram na página (senão o click “não acontece”)
+    # Garante que os filtros carregaram na página
     wait.until(EC.visibility_of_element_located(FILTER_NACIONALIDADE))
     wait.until(EC.visibility_of_element_located(FILTER_CONSERVACAO_OPEN))
 
-    # Aplica Nacionalidade (OBRIGATÓRIO)
+    # Aplica Nacionalidade
     aplicou_nat = apply_filter_strict(driver, wait, FILTER_NACIONALIDADE, FILTER_NACIONALIDADE_OPTION_1, timeout=12, retries=5)
     assert aplicou_nat, "Promoções (#5.2): não consegui aplicar filtro Nacionalidade."
 
-    # Aplica Conservação = Resfriado (OBRIGATÓRIO)
+    # Aplica Conservação
     aplicou_cons = apply_filter_strict(driver, wait, FILTER_CONSERVACAO_OPEN, FILTER_CONSERVACAO_RESFRIADO, timeout=12, retries=5)
     assert aplicou_cons, "Promoções (#5.2): não consegui aplicar filtro Conservação (Resfriado)."
 
-    # Limpar filtros (OBRIGATÓRIO)
+    # Limpar filtros
     limpou_promo = clear_filters_strict(driver, wait, FILTER_CLEAR_ALL, timeout=15, retries=5)
     assert limpou_promo, "Promoções (#5.2): não consegui limpar os filtros (Limpar Tudo)."
 
-    # 5.3 Pescados: ordenação (OBRIGATÓRIO)
+    # Pescados: ordenação
     click_when_clickable(wait, CATEGORY_MENU("Pescados"))
     wait_category_loaded(wait, driver)
 
     wait.until(EC.visibility_of_element_located(SORTER_SELECT))
 
-    # Ordenação A-Z (OBRIGATÓRIO)
+    # Ordenação A-Z
     ok_pesc_az = sort_strict(driver, wait, SORTER_SELECT, "name_asc", timeout=12, retries=4)
-    assert ok_pesc_az, "Pescados (#5.3): não consegui aplicar ordenação A-Z (name_asc)."
+    assert ok_pesc_az, "Pescados: não consegui aplicar ordenação A-Z (name_asc)."
 
-    # Ordenação Z-A (OBRIGATÓRIO)
+    # Ordenação Z-A
     ok_pesc_za = sort_strict(driver, wait, SORTER_SELECT, "name_desc", timeout=12, retries=4)
-    assert ok_pesc_za, "Pescados (#5.3): não consegui aplicar ordenação Z-A (name_desc)."
+    assert ok_pesc_za, "Pescados: não consegui aplicar ordenação Z-A (name_desc)."
 
     # 6) Bovinos: apenas acessar
     click_when_clickable(wait, CATEGORY_MENU("Bovinos"))
