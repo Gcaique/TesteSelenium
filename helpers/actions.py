@@ -181,27 +181,53 @@ def fill_input(driver, wait, locator, value: str, timeout=10):
 #---------------------------------------------------------------
 # 📱 MOBILE
 #---------------------------------------------------------------
-def mobile_click(driver, wait, locator, timeout=20, retries=3):
+def mobile_click(driver, wait, locator, timeout=20, retries=3, use_js_fallback=True):
     last = None
+    w = WebDriverWait(driver, timeout, poll_frequency=0.2,
+                      ignored_exceptions=(StaleElementReferenceException,))
+
     for _ in range(retries):
         try:
-            el = WebDriverWait(driver, timeout, poll_frequency=0.3).until(EC.presence_of_element_located(locator))
-            driver.execute_script("arguments[0].scrollIntoView({block:'center'});", el)
-            time.sleep(0.2)
-            WebDriverWait(driver, timeout, poll_frequency=0.3).until(EC.element_to_be_clickable(locator))
-            el = driver.find_element(*locator)  # re-find (evita stale)
-            el.click()
-            return True
-        except (StaleElementReferenceException, ElementClickInterceptedException) as e:
-            last = e
+            # 1) aguarda visível (melhor que presence)
+            el = w.until(EC.visibility_of_element_located(locator))
+
+            # 2) traz pro viewport
+            driver.execute_script("arguments[0].scrollIntoView({block:'center', inline:'center'});", el)
+            time.sleep(0.15)
+
+            # 3) aguarda realmente clicável
+            el = w.until(EC.element_to_be_clickable(locator))
+
+            # 4) re-find pra evitar stale e clicar
+            el = driver.find_element(*locator)
             try:
+                el.click()
+            except (ElementClickInterceptedException, StaleElementReferenceException) as e:
+                if not use_js_fallback:
+                    raise
+                # 5) fallback JS click
                 el = driver.find_element(*locator)
                 driver.execute_script("arguments[0].click();", el)
-                return True
-            except Exception as e2:
-                last = e2
-                time.sleep(0.5)
+
+            return True
+
+        except (StaleElementReferenceException, ElementClickInterceptedException, TimeoutException) as e:
+            last = e
+            if use_js_fallback:
+                try:
+                    # fallback mais agressivo: re-find + JS click
+                    el = driver.find_element(*locator)
+                    driver.execute_script("arguments[0].scrollIntoView({block:'center', inline:'center'});", el)
+                    time.sleep(0.1)
+                    driver.execute_script("arguments[0].click();", el)
+                    return True
+                except Exception as e2:
+                    last = e2
+
+            time.sleep(0.4)
+
         except Exception as e:
             last = e
-            time.sleep(0.5)
+            time.sleep(0.4)
+
     raise last

@@ -5,7 +5,7 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.action_chains import ActionChains
 
 from helpers.actions import click_when_clickable, click, scroll_and_safe_click_loc, safe_click_loc, scroll_into_view
-from helpers.auth import expect_login_popup
+from helpers.auth import expect_login_popup, expect_login_popup_mobile
 from helpers.wishlist import wait_favorite_status
 
 from locators.header import LOGIN_MENU, LOGO
@@ -87,3 +87,20 @@ def add_favorite_from_home_first_carousel(driver, wait, timeout=25):
     raise TimeoutError("Não consegui clicar no botão wishlist do primeiro produto.")
 
 
+#---------------------------------------------------------------
+# 📱 MOBILE
+#---------------------------------------------------------------
+def header_requires_login_mobile(driver, wait, locator, label="header_action"):
+    """
+    Clica em uma ação do header (LAST_ORDERS, LAST_ITEMS, etc)
+    e valida que o popup de login foi exibido.
+    """
+
+    # Clica na ação do header
+    click_when_clickable(wait, locator)
+
+    # Espera popup de login aparecer
+    expect_login_popup_mobile(driver, wait, timeout=8)
+
+    # Fecha o popup (clicando novamente no header)
+    click_when_clickable(wait, LOGIN_MENU)

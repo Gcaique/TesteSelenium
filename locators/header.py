@@ -46,5 +46,6 @@ LOGO = (By.XPATH, "//a[contains(@class,'hj-header-logo')]")
 
 # LOGIN DROPDOWN
 MOBILE_LOGIN_NAME = (By.XPATH, "//div[@id='login-name']//span[contains(@class,'login-name')]")
-MOBILE_LOGIN_ACESSO = (By.ID, "login-form-opener")                 # “Acesso”
-MOBILE_QUERO_SER_CLIENTE = (By.ID, "first-acess-register-modal-opener")     # “Quero ser cliente”
+MOBILE_LOGIN_ACESSO = (By.ID, "login-form-opener") # “Acesso”
+MOBILE_QUERO_SER_CLIENTE = (By.ID, "first-acess-register-modal-opener") # “Quero ser cliente”
+MOBILE_LOGIN_DROPDOWN_OPENED = (By.XPATH, "//*[@class='customer-dropdown login-name active']") # Dropdown do Faça seu login aberto

@@ -81,20 +81,13 @@ PLP_WISHLIST_BTN_BY_INDEX = lambda idx: (By.XPATH, f"(//button[contains(@id,'but
 #---------------------------------------------------------------
 
 # Header / Menu
-MOBILE_MENU_HAMBURGER = (By.CSS_SELECTOR, "span#toggle-menu") # botão hambúrguer
-MOBILE_MENU_NAV = (By.CSS_SELECTOR, "nav#custom-menu") # nav do menu (seu HTML mostra nav#custom-menu)
-MOBILE_MENU_WRAPPER_OPENED = (By.CSS_SELECTOR, "html.mm-wrapper_opened, body.mm-wrapper_opened") # Estado "menu aberto" costuma refletir no wrapper
-MOBILE_MENU_SEE_ALL = (By.XPATH, "//nav[@id='custom-menu']//a[normalize-space()='Ver todos' or normalize-space()='Ver Todos']") # (se existir) botão "Ver todos" dentro do submenu/nível 2
+MOBILE_MENU_HAMBURGER = (By.XPATH, "//span[@id='toggle-menu']") # botão hambúrguer
+MM_PAGE = (By.CSS_SELECTOR, "div.mm-page")
+MOBILE_MENU_SEE_ALL = (By.XPATH, "//*[@class='mm-panel mm-panel_opened']//a[normalize-space()='Ver todos' or normalize-space()='Ver Todos']") # (se existir) botão "Ver todos" dentro do submenu/nível 2
 
 # abrir submenu (setinha) pelo slug (usa o <a class="mm-btn mm-btn_next ... href='#mm-8'>)
 def MOBILE_MENU_PARENT_NEXT(slug: str):
     return (By.XPATH, f"//nav[@id='custom-menu']//li[a[contains(@href,'/{slug}.html')]]//a[contains(@class,'mm-btn_next')]")
-
-# clicar direto na categoria pelo href do slug
-def MOBILE_MENU_CATEGORY_LINK(slug: str):
-    return (By.XPATH, f"//nav[@id='custom-menu']//a[contains(@href,'/{slug}.html') and contains(@class,'mm-listitem__text')] | "
-                      f"//nav[@id='custom-menu']//a[contains(@href,'/{slug}.html') and contains(@class,'mm-menu-item-wrapper')]")
-
 
 # Paginação
 MOBILE_PAGINATION_CONTAINER = (By.CSS_SELECTOR, "ul.pages-items")
@@ -109,3 +102,7 @@ def MOBILE_PAGE_ACTIVE(page: str):
 MOBILE_FILTER_OPEN_PANEL = (By.XPATH, "//strong[contains(.,'Filtro')]")
 MOBILE_FILTER_CONSERVACAO_OPEN = (By.XPATH, "//*[@id='narrow-by-list']/div[1]/div[1]")
 MOBILE_FILTER_CONSERVACAO_CONGELADO = (By.XPATH, "//span[@class='attribute-value' and contains(.,'Congelado')]")
+MOBILE_FILTER_CONSERVACAO_RESFRIADO = (By.XPATH, "//span[@class='attribute-value' and contains(.,'Resfriado')]")
+
+# Botões que exigem login
+MOBILE_BTN_ENTRAR_LISTA = lambda idx: (By.XPATH, f"(//a[contains(@class,'loggin-btn') and .//span[normalize-space()='Entrar']])[{idx}]",)

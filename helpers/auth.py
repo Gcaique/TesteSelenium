@@ -255,3 +255,20 @@ def login_expect_wrong_password(driver, wait, email, wrong_password):
     safe_click_loc(driver, wait, BTN_AVANCAR, timeout=12)
 
     visible(driver, ERROR_WRONG_PASSWORD, timeout=12)
+
+
+#---------------------------------------------------------------
+# 📱 MOBILE
+#---------------------------------------------------------------
+def expect_login_popup_mobile(driver, wait, timeout=8):
+    """
+    Mobile: apenas confirma que o popup apareceu após 1 clique.
+    Critério: USERNAME_INPUT OU BTN_AVANCAR visível.
+    """
+
+    WebDriverWait(driver, timeout).until(
+        lambda d: d.find_elements(*MOBILE_LOGIN_DROPDOWN_OPENED)
+    )
+
+    return True
+

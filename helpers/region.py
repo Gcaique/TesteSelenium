@@ -5,7 +5,7 @@ from helpers.actions import click
 from helpers.actions import click_when_clickable
 
 
-from locators.common import (REGION_OPEN, BTN_SUL_REGION, BTN_DEFAULT_REGION, REGION_MODAL)
+from locators.common import (REGION_OPEN, BTN_SUL_REGION, BTN_DEFAULT_REGION, REGION_MODAL, MOBILE_REGION_OPEN)
 from locators.header import (SEARCH_INPUT)
 
 
@@ -42,3 +42,8 @@ def select_region(wait, region: str):
 
     # (extra) garante que a página “respirou” após troca
     wait.until(EC.visibility_of_element_located(SEARCH_INPUT))
+
+
+def open_region_modal_mobile(driver):
+    click(driver, MOBILE_REGION_OPEN, timeout=10)
+    visible(driver, BTN_SUL_REGION, timeout=10)

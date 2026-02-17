@@ -91,15 +91,15 @@ def test_1_userDeslogado(driver, setup_site, wait):
 
     # Aplica Nacionalidade
     aplicou_nat = apply_filter_strict(driver, wait, FILTER_NACIONALIDADE, FILTER_NACIONALIDADE_OPTION_1, timeout=12, retries=5)
-    assert aplicou_nat, "Promoções (#5.2): não consegui aplicar filtro Nacionalidade."
+    assert aplicou_nat, "Não consegui aplicar filtro Nacionalidade."
 
     # Aplica Conservação
     aplicou_cons = apply_filter_strict(driver, wait, FILTER_CONSERVACAO_OPEN, FILTER_CONSERVACAO_RESFRIADO, timeout=12, retries=5)
-    assert aplicou_cons, "Promoções (#5.2): não consegui aplicar filtro Conservação (Resfriado)."
+    assert aplicou_cons, "Não consegui aplicar filtro Conservação (Resfriado)."
 
     # Limpar filtros
     limpou_promo = clear_filters_strict(driver, wait, FILTER_CLEAR_ALL, timeout=15, retries=5)
-    assert limpou_promo, "Promoções (#5.2): não consegui limpar os filtros (Limpar Tudo)."
+    assert limpou_promo, "Não consegui limpar os filtros (Limpar Tudo)."
 
     # Pescados: ordenação
     click_when_clickable(wait, CATEGORY_MENU("Pescados"))

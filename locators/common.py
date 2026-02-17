@@ -18,3 +18,11 @@ MINICART_WRAPPER = (By.XPATH, "//*[@data-block='minicart' and contains(@class,'m
 # Roleta / Hotjar
 SPIN_CLOSE = (By.CSS_SELECTOR, "button.action-close.hj-spintowin-close_button")
 HOTJAR_CLOSE = (By.XPATH, "//dialog//button") # fallback (se aparecer)
+
+
+#---------------------------------------------------------------
+# 📱 MOBILE
+#---------------------------------------------------------------
+
+# Região
+MOBILE_REGION_OPEN = (By.XPATH, "//a[contains(@class,'change-region-action') and contains(@class,'hj-header_change-region-action-mobile')]")
