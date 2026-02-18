@@ -230,6 +230,7 @@ def login_password(driver, password, context, expect_success: bool):
 def logout(driver):
     """Faz logout e espera mini-cart sumir."""
     click(driver, LOGIN_NAME_CONTAINER, timeout=10)
+    time.sleep(1)
     click(driver, BTN_LOGOUT, timeout=10)
 
     end = time.time() + 15
@@ -272,3 +273,18 @@ def expect_login_popup_mobile(driver, wait, timeout=8):
 
     return True
 
+
+def logout_mobile(driver):
+    """Faz logout e espera mini-cart sumir."""
+    safe_click_loc_retry(driver, LOGIN_NAME_CONTAINER, 10, 4, 0.25)
+    time.sleep(2)
+    safe_click_loc_retry(driver, BTN_LOGOUT, 10, 4, 0.25)
+    time.sleep(2)
+
+    end = time.time() + 15
+    while time.time() < end:
+        if not minicart_visible(driver):
+            return
+        time.sleep(0.1)
+
+    assert_logged_out(driver, "logout")

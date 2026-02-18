@@ -91,12 +91,10 @@ def MOBILE_MENU_PARENT_NEXT(slug: str):
 
 # Paginação
 MOBILE_PAGINATION_CONTAINER = (By.CSS_SELECTOR, "ul.pages-items")
+
 def MOBILE_PAGE_NUMBER(page_number: str):
     return (By.XPATH, f"//ul[contains(@class,'pages-items')]" f"//a[contains(@class,'hj-pagination-page_{page_number}')]")
 
-def MOBILE_PAGE_ACTIVE(page: str):
-    # exemplos comuns: aria-current, current, active
-    return (By.XPATH, f"//ul[contains(@class,'pages-items')]//*[normalize-space()='{page}' and (@aria-current='page' or contains(@class,'current') or contains(@class,'active'))]")
 
 # Filtros
 MOBILE_FILTER_OPEN_PANEL = (By.XPATH, "//strong[contains(.,'Filtro')]")

@@ -88,7 +88,7 @@ def driver(request):
             if sistema_operacional.lower() == "ios":
                 navegador = "safari"
             else:
-                navegador = "chromium"
+                navegador = "chrome"
 
     worker = os.environ.get("PYTEST_XDIST_WORKER", "gw0")
     raw_name = f"{worker}::{request.node.nodeid}"
