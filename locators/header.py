@@ -52,3 +52,4 @@ MOBILE_LOGIN_DROPDOWN_OPENED = (By.XPATH, "//*[@class='customer-dropdown login-n
 
 # Busca
 MOBILE_SEARCH_BUTTON = (By.XPATH, "//button[@title='Buscar']")
+MOBILE_SEARCH_SUGGEST_ADD_1 = (By.XPATH, "(//div[@class='product-add-to-cart ']//button)[1]")

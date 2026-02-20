@@ -10,7 +10,7 @@ from locators.wishlist import *
 from locators.header import SEARCH_INPUT, SEARCH_BUTTON,SEARCH_SUGGEST_ADD_2
 
 
-from helpers.actions import try_click, safe_click_loc, scroll_to, click_when_clickable, scroll_into_view, mobile_click
+from helpers.actions import try_click, safe_click_loc, scroll_to, click_when_clickable, scroll_into_view, mobile_click_strict
 from helpers.waiters import try_visible, visible
 from helpers.wishlist import wait_favorite_status
 from helpers.avise_me import open_pdp_from_first_avise_in_plp
@@ -226,7 +226,7 @@ def apply_filter_conservacao_resfriado_mobile(driver, wait):
 
     return True
 
-def try_go_to_page_mobile(driver, wait, page_number: str, timeout=15, retries=3):
+def try_go_to_page_mobile(driver, wait, page_number: str, retries=3):
     locator = MOBILE_PAGE_NUMBER(page_number)
 
     for _ in range(retries):
@@ -243,3 +243,21 @@ def try_go_to_page_mobile(driver, wait, page_number: str, timeout=15, retries=3)
             time.sleep(1)
 
     return False
+
+def open_filter_panel_mobile(driver, timeout=20, retries=4):
+    wait = WebDriverWait(driver, timeout, poll_frequency=0.2)
+
+    last = None
+    for _ in range(retries):
+        try:
+            # 1) clica no botão abrir filtros
+            mobile_click_strict(driver, MOBILE_FILTER_OPEN_PANEL, timeout=timeout, retries=2)
+
+            # 2) CONFIRMA que o painel abriu
+            wait.until(EC.visibility_of_element_located(MOBILE_FILTER_OPEN_PANEL))
+            return True
+
+        except Exception as e:
+            last = e
+
+    raise last if last else TimeoutException("Não consegui abrir o painel de filtros no mobile.")

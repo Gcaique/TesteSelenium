@@ -1,8 +1,8 @@
 ## Como rodar (Passos para iniciar o projeto)
 
-python -m venv .venv
+python -m venv .venv 
 
-.\.venv\Scripts\activate
+.\.venv\Scripts\activate 
 
 pip install -r requirements.txt
 

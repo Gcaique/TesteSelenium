@@ -97,10 +97,20 @@ def MOBILE_PAGE_NUMBER(page_number: str):
 
 
 # Filtros
-MOBILE_FILTER_OPEN_PANEL = (By.XPATH, "//strong[contains(.,'Filtro')]")
-MOBILE_FILTER_CONSERVACAO_OPEN = (By.XPATH, "//*[@id='narrow-by-list']/div[1]/div[1]")
-MOBILE_FILTER_CONSERVACAO_CONGELADO = (By.XPATH, "//span[@class='attribute-value' and contains(.,'Congelado')]")
-MOBILE_FILTER_CONSERVACAO_RESFRIADO = (By.XPATH, "//span[@class='attribute-value' and contains(.,'Resfriado')]")
+MOBILE_FILTER_OPEN_PANEL = (By.XPATH, "//*[@id='layered-filter-block']//*[@data-role='title' and normalize-space()='Filtro']")
+MOBILE_FILTER_PANEL_OPENED = (By.XPATH, "//*[@id='layered-filter-block']//*[@data-role='title' and normalize-space()='Filtro' and @aria-expanded='true']") # Filtro aberto (estado)
+MOBILE_FILTER_CONSERVACAO_OPEN = (By.XPATH, "//*[@id='narrow-by-list']"
+    "//div[@data-bind=\"scope: 'conservacaoFilter'\"]"
+    "/ancestor::div[contains(@class,'filter-options-item')][1]"
+    "//div[contains(@class,'filter-options-title')]")
+MOBILE_FILTER_CONSERVACAO_CONGELADO = (By.XPATH, "//*[@id='narrow-by-list']"
+    "//div[@data-bind=\"scope: 'conservacaoFilter'\"]"
+    "//span[contains(@class,'attribute-value') and normalize-space()='Congelado']"
+    "/ancestor::label[1]")
+MOBILE_FILTER_CONSERVACAO_RESFRIADO = (By.XPATH, "//*[@id='narrow-by-list']"
+    "//div[@data-bind=\"scope: 'conservacaoFilter'\"]"
+    "//span[contains(@class,'attribute-value') and normalize-space()='Resfriado']"
+    "/ancestor::label[1]")
 
 # Botões que exigem login
 MOBILE_BTN_ENTRAR_LISTA = lambda idx: (By.XPATH, f"(//a[contains(@class,'loggin-btn') and .//span[normalize-space()='Entrar']])[{idx}]",)

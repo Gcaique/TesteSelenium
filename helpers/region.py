@@ -1,7 +1,7 @@
 from selenium.webdriver.support import expected_conditions as EC
 
 from helpers.waiters import visible
-from helpers.actions import click
+from helpers.actions import click, mobile_click_strict
 from helpers.actions import click_when_clickable
 
 
@@ -44,6 +44,22 @@ def select_region(wait, region: str):
     wait.until(EC.visibility_of_element_located(SEARCH_INPUT))
 
 
+#---------------------------------------------------------------
+# 📱 MOBILE
+#---------------------------------------------------------------
 def open_region_modal_mobile(driver):
-    click(driver, MOBILE_REGION_OPEN, timeout=10)
-    visible(driver, BTN_SUL_REGION, timeout=10)
+    mobile_click_strict(driver, MOBILE_REGION_OPEN, timeout=10, retries=4, sleep_between=0.25)
+    visible(driver, BTN_SUL_REGION, timeout=15)
+
+def switch_region_mobile(driver, to: str):
+    if to not in ["sul", "default"]:
+        raise ValueError("to deve ser 'sul' ou 'default'")
+
+    open_region_modal_mobile(driver)
+
+    if to == "sul":
+        mobile_click_strict(driver, BTN_SUL_REGION, timeout=10, retries=4, sleep_between=0.25)
+    else:
+        mobile_click_strict(driver, BTN_DEFAULT_REGION, timeout=10, retries=4, sleep_between=0.25)
+
+    visible(driver, SEARCH_INPUT, timeout=15)

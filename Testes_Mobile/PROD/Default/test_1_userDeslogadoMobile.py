@@ -6,9 +6,9 @@ from selenium.webdriver.support import expected_conditions as EC
 from locators.header import *
 from locators.home import LAST_ORDERS, LAST_ITEMS
 from locators.plp import *
-from locators.pdp import BTN_ENTRAR_PDP, PRODUCT_TITLES
+from locators.pdp import BTN_ENTRAR_PDP
 
-from helpers.actions import safe_click, click_when_clickable, safe_click_loc_retry, scroll_into_view
+from helpers.actions import click_when_clickable, safe_click_loc_retry, scroll_into_view
 from helpers.waiters import visible, wait_category_loaded
 from helpers.plp import clear_filters_strict, sort_strict, apply_filter_conservacao_congelado_mobile, try_go_to_page_mobile
 from helpers.region import open_region_modal_mobile, select_region

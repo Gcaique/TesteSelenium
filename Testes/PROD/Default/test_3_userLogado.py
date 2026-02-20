@@ -1,5 +1,6 @@
 import pytest
 from selenium.webdriver.common.by import By
+import time
 
 from helpers.waiters import visible
 from helpers.actions import click, fill, scroll_into_view
@@ -26,6 +27,8 @@ from locators.header import (
     DD_MINHA_CONTA, DD_COMPARAR, DD_MEUS_PEDIDOS,
     DD_FAVORITOS, DD_MEUS_PONTOS, DD_MEUS_CUPONS, DD_MINHAS_MISSOES
 )
+from locators.dashboard import BTN_MAIN_ADDRESS_DASHBOARD, BTN_FILTER, REWARD_FILTER_SELECT, COUPON_FILTER_SELECT, MISSIONS_READY
+from locators.productCompare import INPUT_COMPARE
 
 # =========================
 # Credenciais
@@ -56,14 +59,19 @@ def test_3_userLogado(driver, setup_site):
 
     # 2) Dropdown do usuário (seus itens)
     open_dropdown_item(driver, DD_MINHA_CONTA, timeout=15)
-    visible(driver, SEARCH_INPUT, timeout=20)
-
+    visible(driver, BTN_MAIN_ADDRESS_DASHBOARD, timeout=20)
     open_dropdown_item(driver, DD_COMPARAR, timeout=15)
+    visible(driver, INPUT_COMPARE, timeout=15)
     open_dropdown_item(driver, DD_MEUS_PEDIDOS, timeout=15)
+    visible(driver, BTN_FILTER, timeout=15)
     open_dropdown_item(driver, DD_FAVORITOS, timeout=15)
+    time.sleep(5)
     open_dropdown_item(driver, DD_MEUS_PONTOS, timeout=15)
+    visible(driver, REWARD_FILTER_SELECT, timeout=15)
     open_dropdown_item(driver, DD_MEUS_CUPONS, timeout=15)
+    visible(driver, COUPON_FILTER_SELECT, timeout=15)
     open_dropdown_item(driver, DD_MINHAS_MISSOES, timeout=15)
+    visible(driver, MISSIONS_READY, timeout=15)
 
     # 3) Troca de região: default -> sul -> default
     switch_region(driver, "sul")

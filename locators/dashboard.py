@@ -50,12 +50,15 @@ REWARD_EARNINGS = (By.ID, "reward-earnings")
 REWARD_USED = (By.ID, "reward-used")
 REWARD_EXPIRED = (By.ID, "reward-expired")
 REWARD_CANCELED = (By.ID, "reward-canceled")
+REWARD_FILTER_SELECT = (By.ID, "reward-filter-select")
 
 # RELATÓRIOS PONTOS
 BTN_POINTS_REPORT = (By.XPATH, "//a[@class='report-action']")
 POINTS_REPORT_FILTER = (By.XPATH, "//select[@class='rewardquests__filter__dropdown']")
 POINTS_REPORT_FILTER_OPT2 = (By.XPATH, "(//select[@class='rewardquests__filter__dropdown']/option)[2]")
 LINK_BACK_TO_MISSIONS = (By.XPATH, "//a[@class='rewardquests__go-to-missions__link']")
+
+#MINHAS MISSÕES
 MISSIONS_READY = (By.XPATH, "//*[@class='rewardquests __see-rules hj-fidelity_see-rules']//span")
 
 # CADASTRO DE REDES
@@ -69,6 +72,7 @@ COUPON_FIRST = (By.XPATH, "(//*[@class='coupon-info']//span[@class='coupon-name'
 COUPON_VER_MAIS_1 = (By.XPATH, "(//*[@class='coupon-info']//a[contains(@class,'hj-my_coupons-action')])[1]")
 COUPON_COPY_1 = (By.XPATH, "(//*[@class='coupon-content']//span[@class='code-copy'])[1]")
 TAB_UNAVAILABLE = (By.XPATH, "//li[contains(@class,'unavailable')]/a")
+COUPON_FILTER_SELECT = (By.XPATH, "//*[@class='filter-select']")
 
 # INFORMAÇÕES DA CONTA (editar email/senha)
 BTN_EDIT_EMAIL = (By.XPATH, "//label[@for='change-email']//span[normalize-space()='Editar']")

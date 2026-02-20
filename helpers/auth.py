@@ -14,10 +14,6 @@ from locators.header import *
 def ensure_logged_in(driver, user: str, passwd: str):
     """Garante login (idempotente)"""
 
-    if minicart_visible(driver):
-        try_close_popups(driver)
-        return
-
     # abre login
     click(driver, LOGIN_MENU, timeout=10)
     visible(driver, USERNAME_INPUT, timeout=10)
@@ -273,7 +269,6 @@ def expect_login_popup_mobile(driver, wait, timeout=8):
 
     return True
 
-
 def logout_mobile(driver):
     """Faz logout e espera mini-cart sumir."""
     safe_click_loc_retry(driver, LOGIN_NAME_CONTAINER, 10, 4, 0.25)
@@ -288,3 +283,40 @@ def logout_mobile(driver):
         time.sleep(0.1)
 
     assert_logged_out(driver, "logout")
+
+def ensure_logged_in_mobile(driver, user: str, passwd: str):
+    """Garante login (idempotente)"""
+
+    # abre login
+    click(driver, LOGIN_MENU, timeout=10)
+    visible(driver, MOBILE_LOGIN_DROPDOWN_OPENED)
+    click(driver, MOBILE_LOGIN_ACESSO)
+    visible(driver, USERNAME_INPUT, timeout=10)
+
+    # username
+    fill(driver, USERNAME_INPUT, user)
+    click(driver, BTN_AVANCAR, timeout=10)
+
+    # senha
+    visible(driver, PASSWORD_INPUT, timeout=10)
+    fill(driver, PASSWORD_INPUT, passwd)
+    click(driver, BTN_AVANCAR, timeout=10)
+
+    # confirmação via minicart
+    end = time.time() + 60
+
+    while time.time() < end:
+        if minicart_visible(driver):
+            try_close_popups(driver)
+            return
+        time.sleep(0.5)
+
+    # fallback LT
+    driver.refresh()
+    time.sleep(3)
+    try_close_popups(driver)
+
+    if minicart_visible(driver):
+        return
+
+    raise TimeoutException("Login não confirmou: mini-cart não ficou visível.")
