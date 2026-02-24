@@ -2,15 +2,16 @@ import time
 
 import pytest
 from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.support.ui import WebDriverWait
 
 from locators.header import *
 from locators.home import LAST_ORDERS, LAST_ITEMS
 from locators.plp import *
 from locators.pdp import BTN_ENTRAR_PDP
 
-from helpers.actions import click_when_clickable, safe_click_loc_retry, scroll_into_view
+from helpers.actions import click_when_clickable, safe_click_loc_retry, scroll_into_view, mobile_click_strict
 from helpers.waiters import visible, wait_category_loaded
-from helpers.plp import clear_filters_strict, sort_strict, apply_filter_conservacao_congelado_mobile, try_go_to_page_mobile
+from helpers.plp import clear_filters_strict, sort_strict, apply_filter_conservacao_congelado_mobile, try_go_to_page_mobile, open_filter_panel_mobile
 from helpers.region import open_region_modal_mobile, select_region
 from helpers.auth import expect_login_popup_mobile
 from helpers.home import header_requires_login_mobile, go_home
@@ -55,7 +56,13 @@ def test_1_userDeslogado_mobile(driver, setup_site, wait):
     assert try_go_to_page_mobile(driver, wait, "3")
 
     # no mobile, antes de aplicar filtros, abre o painel “Filtro”
-    assert apply_filter_conservacao_congelado_mobile(driver, wait)
+    ok = open_filter_panel_mobile(driver, timeout=20, tries=4)
+    if not ok:
+        raise AssertionError("Não consegui abrir o painel de filtros no mobile")
+    mobile_click_strict(driver, MOBILE_FILTER_CONSERVACAO_OPEN, timeout=20, retries=4)
+    visible(driver, MOBILE_FILTER_CONSERVACAO_CONGELADO, timeout=20)
+    mobile_click_strict(driver, MOBILE_FILTER_CONSERVACAO_CONGELADO, timeout=20, retries=4)
+    WebDriverWait(driver, 20).until(EC.url_contains("conservacao=Congelado"))
 
     wait.until(EC.visibility_of_element_located(SORTER_SELECT))
     wait.until(EC.visibility_of_element_located(FILTER_CLEAR_ALL))
@@ -67,10 +74,10 @@ def test_1_userDeslogado_mobile(driver, setup_site, wait):
     # Ordenação A-Z / Z-A
     assert sort_strict(driver, wait, SORTER_SELECT, "name_asc", timeout=12, retries=4), \
         "Busca: não consegui ordenação A-Z."
-    time.sleep(3)
+    WebDriverWait(driver, 20).until(EC.url_contains("product_list_order=name_asc"))
     assert sort_strict(driver, wait, SORTER_SELECT, "name_desc", timeout=12, retries=4), \
         "Busca: não consegui ordenação Z-A."
-    time.sleep(3)
+    WebDriverWait(driver, 20).until(EC.url_contains("product_list_order=name_desc"))
 
     # 5) Categoria Bovinos Premium (mobile: hambúrguer -> categoria -> Ver todos)
     go_home(driver)
@@ -87,7 +94,13 @@ def test_1_userDeslogado_mobile(driver, setup_site, wait):
     assert try_go_to_page_mobile(driver, wait, "3")
 
     # abre painel “Filtro” no mobile antes de filtrar
-    assert apply_filter_conservacao_congelado_mobile(driver, wait)
+    ok = open_filter_panel_mobile(driver, timeout=20, tries=4)
+    if not ok:
+        raise AssertionError("Não consegui abrir o painel de filtros no mobile")
+    mobile_click_strict(driver, MOBILE_FILTER_CONSERVACAO_OPEN, timeout=20, retries=4)
+    visible(driver, MOBILE_FILTER_CONSERVACAO_CONGELADO, timeout=20)
+    mobile_click_strict(driver, MOBILE_FILTER_CONSERVACAO_CONGELADO, timeout=20, retries=4)
+    WebDriverWait(driver, 20).until(EC.url_contains("conservacao=Congelado"))
 
     wait.until(EC.visibility_of_element_located(SORTER_SELECT))
     wait.until(EC.visibility_of_element_located(FILTER_CLEAR_ALL))

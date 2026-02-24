@@ -12,52 +12,72 @@ from selenium.webdriver.firefox.service import Service as FirefoxService
 from webdriver_manager.firefox import GeckoDriverManager
 
 
-def _sanitize_lt_name(s: str, max_len: int = 180) -> str:
+# ============================
+# ✅ Utils
+# ============================
+def _sanitize_test_name(s: str, max_len: int = 180) -> str:
     """
-    Garante que o nome do teste enviado ao LambdaTest não vai quebrar encoding.
-    Remove surrogates e normaliza caracteres.
+    Sanitiza o nome do teste (evita caracteres que quebram encoding/serviços remotos).
     """
     if not s:
         return "test"
-
     s = s.encode("utf-8", "ignore").decode("utf-8", "ignore")
     s = re.sub(r"[^\w\-.]+", "_", s, flags=re.UNICODE)
     return s[:max_len]
 
 
 # ============================
-# 🔐 CREDENCIAIS LAMBDATEST
+# 🔐 Credenciais (LT + BS)
 # ============================
-load_dotenv()  # carrega o .env automaticamente
+load_dotenv()  # carrega .env automaticamente
 
 
 def _get_lt_credentials():
     """
-    Busca credenciais apenas quando necessário.
-    Isso permite rodar local sem ter .env configurado.
+    Lê LT_USERNAME e LT_ACCESS_KEY do ambiente (.env).
     """
     lt_user = os.getenv("LT_USERNAME")
     lt_key = os.getenv("LT_ACCESS_KEY")
     if not lt_user or not lt_key:
-        raise RuntimeError("Variáveis de ambiente LT_USERNAME e LT_ACCESS_KEY não definidas.")
+        raise RuntimeError("Variáveis LT_USERNAME e LT_ACCESS_KEY não definidas.")
     return lt_user, lt_key
 
 
+def _get_bs_credentials():
+    """
+    Lê BROWSERSTACK_USERNAME e BROWSERSTACK_ACCESS_KEY do ambiente (.env).
+    """
+    user = os.getenv("BROWSERSTACK_USERNAME")
+    key = os.getenv("BROWSERSTACK_ACCESS_KEY")
+    if not user or not key:
+        raise RuntimeError("Variáveis BROWSERSTACK_USERNAME e BROWSERSTACK_ACCESS_KEY não definidas.")
+    return user, key
+
+
+def _get_bs_hub():
+    """
+    HUB Selenium do BrowserStack.
+    """
+    return "https://hub-cloud.browserstack.com/wd/hub"
+
+
 # ======================
-# LOCAL
+# 🖥️ Local
 # ======================
 def driver_local(navegador="chrome", headless=False):
-    if navegador == "chrome":
-        options = ChromeOptions()
+    """
+    Cria driver local (Chrome/Firefox).
+    """
+    nav = (navegador or "").strip().lower()
 
-        # Flags importantes para estabilidade
+    if nav == "chrome":
+        options = ChromeOptions()
         options.add_argument("--disable-gpu")
         options.add_argument("--no-sandbox")
         options.add_argument("--disable-dev-shm-usage")
 
         if headless:
             options.add_argument("--headless=new")
-            # ESSENCIAL: define tamanho da janela no headless
             options.add_argument("--window-size=1920,1080")
         else:
             options.add_argument("--start-maximized")
@@ -66,12 +86,10 @@ def driver_local(navegador="chrome", headless=False):
             service=ChromeService(ChromeDriverManager().install()),
             options=options
         )
-
-        # Garantia extra (caso headless ignore maximize)
         driver.set_window_size(1920, 1080)
         return driver
 
-    if navegador == "firefox":
+    if nav == "firefox":
         options = FirefoxOptions()
         if headless:
             options.add_argument("-headless")
@@ -80,15 +98,14 @@ def driver_local(navegador="chrome", headless=False):
             service=FirefoxService(GeckoDriverManager().install()),
             options=options
         )
-
         driver.set_window_size(1920, 1080)
         return driver
 
-    raise Exception("Navegador local não suportado")
+    raise Exception("Navegador local não suportado (use chrome|firefox).")
 
 
 # ============================
-# 🚀 DRIVER PRINCIPAL (LOCAL + LT)
+# 🚀 Driver principal (local + LT + BS)
 # ============================
 def criar_driver(
     ambiente,
@@ -96,43 +113,67 @@ def criar_driver(
     navegador,
     sistema_operacional,
     device_name="",
-    grid="lt",          # <- novo (conftest passa isso)
-    headless=False      # <- novo (conftest passa isso)
+    grid="lt",
+    headless=False
 ):
     """
+    Decide qual provedor usar.
+
     grid:
-      - "local"      -> webdriver local
-      - "lt" / "lambdatest" -> LambdaTest remoto
+      - local -> roda na sua máquina
+      - lt    -> LambdaTest
+      - bs    -> BrowserStack
+    ambiente:
+      - desktop
+      - mobile
     """
-    nome_teste = _sanitize_lt_name(nome_teste)
+    nome_teste = _sanitize_test_name(nome_teste)
     grid = (grid or "lt").strip().lower()
+    ambiente = (ambiente or "desktop").strip().lower()
 
     if grid == "local":
         return driver_local(navegador=navegador, headless=headless)
 
+    if grid in ("browserstack", "bs"):
+        if ambiente == "desktop":
+            return driver_desktop_browserstack(nome_teste, navegador, sistema_operacional)
+        else:
+            # Mobile web REAL (Safari real iOS, Chrome real Android)
+            so = (sistema_operacional or "").strip().lower()
+            if so == "ios":
+                return driver_mobile_browserstack_ios_safari(nome_teste, device_name)
+            else:
+                return driver_mobile_browserstack_android_chrome(nome_teste, device_name)
+
     # default: LambdaTest
     if ambiente == "desktop":
-        return driver_desktop(nome_teste, navegador, sistema_operacional)
+        return driver_desktop_lambdatest(nome_teste, navegador, sistema_operacional)
     else:
-        return driver_mobile(nome_teste, navegador, sistema_operacional, device_name)
+        return driver_mobile_lambdatest(nome_teste, navegador, sistema_operacional, device_name)
 
 
 # ============================
-# 💻 DESKTOP (LAMBDATEST)
+# 💻 Desktop (LambdaTest)
 # ============================
-def driver_desktop(nome_teste, navegador, sistema_operacional, resolucao="1920x1080"):
+def driver_desktop_lambdatest(nome_teste, navegador, sistema_operacional, resolucao="1920x1080"):
+    """
+    Desktop remoto no LambdaTest.
+    """
     lt_user, lt_key = _get_lt_credentials()
+    nav = (navegador or "chrome").strip().lower()
 
-    if navegador == "chrome":
+    if nav == "chrome":
         options = ChromeOptions()
-    elif navegador == "firefox":
+    elif nav == "firefox":
         options = FirefoxOptions()
-    elif navegador == "safari":
+    elif nav == "edge":
+        options = webdriver.EdgeOptions()
+    elif nav == "safari":
         options = webdriver.SafariOptions()
     else:
-        raise Exception("Navegador desktop não suportado")
+        raise Exception("Navegador desktop não suportado no LT (chrome|firefox|edge|safari).")
 
-    options.set_capability("browserName", navegador)
+    options.set_capability("browserName", nav)
     options.set_capability("browserVersion", "latest")
 
     options.set_capability("LT:Options", {
@@ -150,20 +191,20 @@ def driver_desktop(nome_teste, navegador, sistema_operacional, resolucao="1920x1
 
 
 # ============================
-# 📱 MOBILE (LAMBDATEST)
+# 📱 Mobile web (LambdaTest)
 # ============================
-def driver_mobile(nome_teste, navegador, sistema_operacional, device_name):
+def driver_mobile_lambdatest(nome_teste, navegador, sistema_operacional, device_name):
+    """
+    Mobile web remoto no LambdaTest (geralmente emulado / device cloud conforme conta).
+    """
     lt_user, lt_key = _get_lt_credentials()
 
     so = (sistema_operacional or "").strip().lower()
     nav_in = (navegador or "").strip().lower()
 
-    # --- normalização de nomes (LambdaTest mobile) ---
     if so == "ios":
-        # iOS: Safari
         browser_name = "safari" if nav_in in ("", "chrome", "chromium", "safari") else nav_in
     else:
-        # Android: LambdaTest NÃO aceita "chromium" aqui -> use "chrome"
         if nav_in in ("", "chromium"):
             browser_name = "chrome"
         elif nav_in in ("edge", "microsoftedge"):
@@ -171,7 +212,6 @@ def driver_mobile(nome_teste, navegador, sistema_operacional, device_name):
         else:
             browser_name = nav_in
 
-    # --- escolher Options compatível com o browser ---
     if browser_name in ("chrome", "brave", "duckduckgo"):
         options = ChromeOptions()
     elif browser_name == "firefox":
@@ -179,16 +219,13 @@ def driver_mobile(nome_teste, navegador, sistema_operacional, device_name):
     elif browser_name == "safari":
         options = webdriver.SafariOptions()
     else:
-        raise Exception(
-            f"Navegador mobile não suportado: {browser_name}. "
-            "Use: chrome|firefox|safari|brave|duckduckgo|MicrosoftEdge"
-        )
+        raise Exception("Navegador mobile não suportado no LT (chrome|firefox|safari|edge).")
 
     options.set_capability("browserName", browser_name)
     options.set_capability("browserVersion", "latest")
 
     options.set_capability("LT:Options", {
-        "platformName": sistema_operacional,   # "Android" ou "iOS"
+        "platformName": sistema_operacional,
         "deviceName": device_name,
         "isRealMobile": False,
         "build": "Smoke - Mobile",
@@ -198,5 +235,131 @@ def driver_mobile(nome_teste, navegador, sistema_operacional, device_name):
 
     return webdriver.Remote(
         command_executor=f"https://{lt_user}:{lt_key}@hub.lambdatest.com/wd/hub",
+        options=options
+    )
+
+
+# ============================
+# 💻 Desktop (BrowserStack)
+# ============================
+def driver_desktop_browserstack(nome_teste, navegador, sistema_operacional):
+    """
+    Desktop web no BrowserStack (Windows/macOS + Chrome/Firefox/Edge/Safari).
+    """
+    bs_user, bs_key = _get_bs_credentials()
+    hub = _get_bs_hub()
+
+    nav = (navegador or "chrome").strip().lower()
+    if nav == "chrome":
+        options = ChromeOptions()
+    elif nav == "firefox":
+        options = FirefoxOptions()
+    elif nav == "edge":
+        options = webdriver.EdgeOptions()
+    elif nav == "safari":
+        options = webdriver.SafariOptions()
+    else:
+        raise Exception("Navegador desktop não suportado no BS (chrome|firefox|edge|safari).")
+
+    # BuildName dinâmico (você pode setar no .env)
+    build_name = os.getenv("BS_BUILD_NAME", "Smoke - Desktop")
+    project_name = os.getenv("BS_PROJECT_NAME", "MeuMinerva")
+
+    options.set_capability("browserName", nav)
+    options.set_capability("browserVersion", "latest")
+
+    # bstack:options é o padrão W3C do BrowserStack
+    options.set_capability("bstack:options", {
+        "os": "Windows" if "windows" in (sistema_operacional or "").lower() else "OS X",
+        "osVersion": "11" if "windows" in (sistema_operacional or "").lower() else "Sonoma",
+        "sessionName": nome_teste,
+        "buildName": build_name,
+        "projectName": project_name,
+        "seleniumVersion": "4.21.0",
+        "debug": True,
+        "networkLogs": False,
+        "consoleLogs": "errors",
+    })
+
+    return webdriver.Remote(
+        command_executor=f"https://{bs_user}:{bs_key}@hub-cloud.browserstack.com/wd/hub",
+        options=options
+    )
+
+
+# ============================
+# 📱 iOS REAL + Safari (BrowserStack)
+# ============================
+def driver_mobile_browserstack_ios_safari(nome_teste, device_name):
+    """
+    iOS REAL DEVICE + Safari (BrowserStack Automate Mobile Web).
+    device_name: ex "iPhone 14", "iPhone 15", etc.
+    """
+    bs_user, bs_key = _get_bs_credentials()
+    hub = _get_bs_hub()
+
+    if not device_name:
+        raise Exception('No BrowserStack iOS real, informe --device (ex: "iPhone 14").')
+
+    build_name = os.getenv("BS_BUILD_NAME", "Smoke - iOS Safari")
+    project_name = os.getenv("BS_PROJECT_NAME", "MeuMinerva")
+    ios_version = os.getenv("BS_IOS_VERSION", "17")
+
+    options = webdriver.SafariOptions()
+    options.set_capability("browserName", "safari")
+
+    options.set_capability("bstack:options", {
+        "deviceName": device_name,
+        "osVersion": ios_version,
+        "realMobile": True,
+        "sessionName": nome_teste,
+        "buildName": build_name,
+        "projectName": project_name,
+        "debug": True,
+        "networkLogs": False,
+        "consoleLogs": "errors",
+    })
+
+    return webdriver.Remote(
+        command_executor=f"https://{bs_user}:{bs_key}@hub-cloud.browserstack.com/wd/hub",
+        options=options
+    )
+
+
+# ============================
+# 📱 Android REAL + Chrome (BrowserStack)
+# ============================
+def driver_mobile_browserstack_android_chrome(nome_teste, device_name):
+    """
+    Android REAL DEVICE + Chrome (BrowserStack Automate Mobile Web).
+    device_name: ex "Samsung Galaxy S23", "Google Pixel 7", etc.
+    """
+    bs_user, bs_key = _get_bs_credentials()
+    hub = _get_bs_hub()
+
+    if not device_name:
+        raise Exception('No BrowserStack Android real, informe --device (ex: "Google Pixel 7").')
+
+    build_name = os.getenv("BS_BUILD_NAME", "Smoke - Android Chrome")
+    project_name = os.getenv("BS_PROJECT_NAME", "MeuMinerva")
+    android_version = os.getenv("BS_ANDROID_VERSION", "13")
+
+    options = ChromeOptions()
+    options.set_capability("browserName", "chrome")
+
+    options.set_capability("bstack:options", {
+        "deviceName": device_name,
+        "osVersion": android_version,
+        "realMobile": True,
+        "sessionName": nome_teste,
+        "buildName": build_name,
+        "projectName": project_name,
+        "debug": True,
+        "networkLogs": False,
+        "consoleLogs": "errors",
+    })
+
+    return webdriver.Remote(
+        command_executor=f"https://{bs_user}:{bs_key}@hub-cloud.browserstack.com/wd/hub",
         options=options
     )

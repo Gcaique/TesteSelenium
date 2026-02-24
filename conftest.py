@@ -1,6 +1,8 @@
 import os
 import re
 import pytest
+import json
+
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
@@ -8,88 +10,135 @@ from selenium.webdriver.support import expected_conditions as EC
 import config
 
 
-# ---------- util: deixa nome do teste "seguro" p/ xdist/execnet no Windows ----------
+# =============================================================================
+# Utils
+# =============================================================================
 def sanitize_test_name(s: str, max_len: int = 180) -> str:
     """
-    Remove caracteres que podem quebrar encoding no Windows/xdist (surrogates, acentos estranhos, etc.)
-    e deixa um identificador estável para relatórios.
+    O que faz:
+    - Gera um nome "seguro" para sessão/teste em grids remotos e xdist no Windows.
+    - Remove caracteres problemáticos (surrogates/acentos estranhos que quebram encoding).
+    - Troca separadores por underscore e limita o tamanho.
+
+    Por que existe:
+    - Alguns grids (e o xdist) podem falhar com caracteres fora do padrão.
+    - Também evita nomes muito longos em providers.
     """
     if not s:
         return "test"
 
-    # 1) remove caracteres surrogate (causa do erro \udc81 etc)
+    # Remove caracteres surrogate/ inválidos para evitar erros do tipo \udc81
     s = s.encode("utf-8", "ignore").decode("utf-8", "ignore")
 
-    # 2) troca espaços e separadores por underscore e remove o resto que pode dar dor de cabeça
+    # Substitui qualquer coisa que não seja letra/número/_/./- por underscore
     s = re.sub(r"[^\w\-.]+", "_", s, flags=re.UNICODE)
 
-    # 3) evita nomes gigantes (alguns grids/serviços têm limite)
+    # Limita o tamanho do nome para evitar limites de providers
     return s[:max_len]
 
 
-# ---------- CLI options ----------
+# =============================================================================
+# CLI Options (pytest)
+# =============================================================================
 def pytest_addoption(parser):
+    """
+    O que faz:
+    - Adiciona parâmetros via linha de comando para controlar ambiente/driver
+      sem precisar alterar o código.
+    """
     parser.addoption("--ambiente", action="store", default="desktop", help="desktop|mobile")
-    parser.addoption("--navegador", action="store", default="chrome", help="chrome|firefox|edge")
-    parser.addoption("--so", action="store", default="Windows 11", help="Sistema operacional para grid/LT")
-    parser.addoption("--device", action="store", default="", help="Device name (se mobile)")
+    parser.addoption("--navegador", action="store", default="chrome", help="chrome|firefox|edge|safari")
+    parser.addoption("--so", action="store", default="Windows 11", help="Sistema operacional (LT/BS)")
+    parser.addoption("--device", action="store", default="", help='Device name (mobile). Ex: "iPhone 14"')
     parser.addoption("--base-url", action="store", default="https://meuminerva.com/", help="URL base")
     parser.addoption("--region", action="store", default="outras", help="outras|sul")
     parser.addoption("--username", action="store", default=os.getenv("USERNAME", ""), help="Login")
     parser.addoption("--password", action="store", default=os.getenv("PASSWORD", ""), help="Senha")
     parser.addoption("--timeout", action="store", default=10, type=int, help="Timeout padrão do WebDriverWait")
-    parser.addoption("--grid", action="store", default="lt", help="lt|local")
+    parser.addoption("--grid", action="store", default="lt", help="lt|bs|local")
     parser.addoption("--headless", action="store_true", help="Executa browser local em modo headless")
 
 
-# ---------- fixtures base ----------
+# =============================================================================
+# Fixtures base
+# =============================================================================
 @pytest.fixture(scope="session")
 def base_url(request):
+    """
+    O que faz:
+    - Disponibiliza a URL base para os testes.
+    """
     return request.config.getoption("--base-url")
 
 
 @pytest.fixture(scope="session")
 def timeout(request):
+    """
+    O que faz:
+    - Disponibiliza o timeout padrão do WebDriverWait.
+    """
     return request.config.getoption("--timeout")
 
 
 @pytest.fixture
 def wait(driver, timeout):
+    """
+    O que faz:
+    - Cria um WebDriverWait padrão para o driver atual.
+    """
     return WebDriverWait(driver, timeout)
 
 
 @pytest.fixture
 def driver(request):
+    """
+    O que faz:
+    - Cria o driver (local/LambdaTest/BrowserStack) baseado nos parâmetros CLI.
+    - Aplica lógica "mobile inteligente":
+        - se ambiente == mobile e navegador não informado -> define chrome ou safari (iOS).
+        - NÃO força plataforma Android automaticamente (isso era do pCloudy).
+    - Gera nome de sessão seguro.
+    - Faz cleanup (quit) no final.
+    """
     ambiente = request.config.getoption("--ambiente")
     navegador = request.config.getoption("--navegador")
     sistema_operacional = request.config.getoption("--so")
     device_name = request.config.getoption("--device")
-    grid = request.config.getoption("--grid")
+    grid = (request.config.getoption("--grid") or "lt").strip().lower()
     headless = request.config.getoption("--headless")
 
-    # 🔥 MOBILE INTELIGENTE
+    # -------------------------
+    # MOBILE "inteligente"
+    # -------------------------
     if ambiente == "mobile":
-        grid = "lt"  # mobile sempre no Lambda
+        # Se usuário não especificou --so direito, ele precisa escolher:
+        # - iOS (Safari real): --so ios --device "iPhone 14" --navegador safari
+        # - Android (Chrome): --so android --device "Pixel 7" --navegador chrome
+        # Aqui a gente só ajusta defaults para reduzir erro de CLI.
 
-        # Se não informou SO, define padrão Android
-        if sistema_operacional == "Windows 11":
+        so_norm = (sistema_operacional or "").strip().lower()
+
+        # Se o cara deixou default "Windows 11" mas quer mobile, não dá pra inferir.
+        # Então escolhemos um padrão prático: Android (porque Safari real exige iOS + device).
+        if so_norm in ("windows 11", "windows", "win11", "win"):
             sistema_operacional = "Android"
+            so_norm = "android"
 
-        # Se não informou device, define padrão por SO
+        # Device padrão (opcional) — você pode deixar vazio e passar via CLI sempre
         if not device_name:
-            if sistema_operacional.lower() == "android":
-                device_name = "Samsung Galaxy S20 Ultra"
-            elif sistema_operacional.lower() == "ios":
-                device_name = "iPhone 14 Pro"
+            if so_norm == "ios":
+                device_name = "iPhone 14"
+            else:
+                device_name = "Pixel 7"
 
-        # Se não informou navegador (ou deixou default), define por SO
-        # (mesmo que você passe "chrome", o config.py normaliza pra chromium)
+        # Navegador padrão conforme SO
         if not navegador or navegador == "chrome":
-            if sistema_operacional.lower() == "ios":
+            if so_norm == "ios":
                 navegador = "safari"
             else:
                 navegador = "chrome"
 
+    # Nome de sessão/teste (bom para provider e para log)
     worker = os.environ.get("PYTEST_XDIST_WORKER", "gw0")
     raw_name = f"{worker}::{request.node.nodeid}"
     nome_teste = sanitize_test_name(raw_name)
@@ -108,7 +157,9 @@ def driver(request):
     driver.quit()
 
 
-# ---------- helpers (sem POM, mas padronizados) ----------
+# =============================================================================
+# Helpers (locators e funções utilitárias de página)
+# =============================================================================
 BTN_ACCEPT_COOKIES = (By.XPATH, "//*[@id='privacytools-banner-consent']//*[@title='Aceitar']")
 BTN_REGION_SUL = (By.XPATH, "//button[@id='southern-region']")
 BTN_REGION_OUTRAS = (By.XPATH, "//button[@id='other-regions']")
@@ -122,6 +173,16 @@ BTN_SEND2 = (By.XPATH, "//*[@class='secondary login-name']//button[@id='send2']"
 
 
 def click_if_present(driver, locator, seconds=2):
+    """
+    O que faz:
+    - Tenta clicar em um elemento se ele aparecer e estiver clicável.
+    - Se não aparecer dentro do tempo, ignora (não quebra o teste).
+
+    Usos típicos:
+    - cookies banner
+    - modal eventual
+    - popups intermitentes
+    """
     try:
         WebDriverWait(driver, seconds).until(EC.element_to_be_clickable(locator)).click()
         return True
@@ -131,15 +192,32 @@ def click_if_present(driver, locator, seconds=2):
 
 @pytest.fixture
 def open_home(driver, base_url):
-    """Abre a home sempre que chamado."""
+    """
+    O que faz:
+    - Abre a URL base.
+    - (Opcional) Se você quiser tratar prompts do Chrome aqui,
+      basta descomentar o dismiss_chrome_prompts quando seu driver suportar.
+    """
     driver.get(base_url)
+
+    # Se você usar isso para BrowserStack mobile web (Selenium) pode dar erro
+    # porque não existe contexto NATIVE_APP (isso é Appium).
+    # Então só habilite se você tiver implementado com segurança.
+    # dismiss_chrome_prompts(driver, timeout=3)
+
     return driver
 
 
 @pytest.fixture
 def region(request):
-    """Região padrão via --region, mas pode ser sobrescrita por marker."""
-    # marker tem prioridade
+    """
+    O que faz:
+    - Define a região padrão do site.
+    - Prioridade:
+        1) marker @pytest.mark.sul
+        2) marker @pytest.mark.default
+        3) opção CLI --region
+    """
     if request.node.get_closest_marker("sul"):
         return "sul"
     if request.node.get_closest_marker("default"):
@@ -149,6 +227,15 @@ def region(request):
 
 @pytest.fixture
 def setup_site(open_home, driver, region):
+    """
+    O que faz:
+    - Executa o "setup" padrão do site para começar um teste de forma estável:
+        1) espera body
+        2) aceita cookies
+        3) seleciona região (sul/outras)
+        4) fecha modais ocasionais
+        5) espera um elemento fixo da home para garantir que carregou
+    """
     w = WebDriverWait(driver, 30)
 
     # 1) Espera body carregar
@@ -173,9 +260,12 @@ def setup_site(open_home, driver, region):
     return driver
 
 
-
 @pytest.fixture
 def creds(request):
+    """
+    O que faz:
+    - Lê credenciais de login a partir da CLI (--username/--password).
+    """
     username = request.config.getoption("--username")
     password = request.config.getoption("--password")
     return username, password
@@ -184,8 +274,12 @@ def creds(request):
 @pytest.fixture
 def login(driver, setup_site, creds):
     """
-    Faz login (quando o teste precisar).
-    Uso: def test_x(login): ...
+    O que faz:
+    - Realiza login no site, quando o teste precisar.
+    - Se não tiver credenciais, pula o teste para não falhar à toa.
+
+    Como usar:
+    - def test_x(login): ...
     """
     username, password = creds
     if not username or not password:
@@ -197,3 +291,56 @@ def login(driver, setup_site, creds):
     WebDriverWait(driver, 10).until(EC.element_to_be_clickable(BTN_SEND2)).click()
 
     return driver
+
+
+@pytest.hookimpl(hookwrapper=True)
+def pytest_runtest_makereport(item, call):
+    outcome = yield
+    rep = outcome.get_result()
+
+    driver = item.funcargs.get("driver")
+    if not driver:
+        return
+
+    caps = getattr(driver, "capabilities", {}) or {}
+
+    # Detecta BrowserStack de forma bem robusta:
+    # 1) chave bstack:options
+    # 2) user do browserstack
+    # 3) URL do hub contém browserstack
+    hub_url = ""
+    try:
+        hub_url = getattr(getattr(driver, "command_executor", None), "_url", "") or ""
+    except Exception:
+        pass
+
+    is_bs = (
+        ("bstack:options" in caps)
+        or ("browserstack.user" in caps)
+        or ("browserstack" in hub_url.lower())
+    )
+
+    # DEBUG (uma vez por teste) — você pode remover depois
+    # print(f"[DEBUG] is_bs={is_bs} hub={hub_url} keys={list(caps.keys())[:15]}")
+
+    if not is_bs:
+        return
+
+    # Marca status no final do CALL (quando o teste realmente passou/falhou)
+    if rep.when != "call":
+        return
+
+    status = "passed" if rep.passed else "failed"
+    reason = "OK" if rep.passed else (rep.longreprtext[:250] if hasattr(rep, "longreprtext") else "Falha")
+
+    payload = {
+        "action": "setSessionStatus",
+        "arguments": {"status": status, "reason": reason}
+    }
+
+    try:
+        driver.execute_script("browserstack_executor: " + json.dumps(payload))
+    except Exception as e:
+        print(f"[WARN] Não consegui marcar status no BrowserStack: {e}")
+        print(f"[WARN] hub_url={hub_url}")
+        print(f"[WARN] caps_keys={list(caps.keys())}")

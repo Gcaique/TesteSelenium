@@ -18,13 +18,18 @@ def visible(driver, locator, timeout=10):
         EC.visibility_of_element_located(locator)
     )
 
+def ensure_web_context(driver):
+    try:
+        for ctx in driver.contexts:
+            if "CHROM" in ctx.upper() or "WEBVIEW" in ctx.upper():
+                driver.switch_to.context(ctx)
+                return
+    except Exception:
+        pass
 
 def clickable(driver, locator, timeout=10):
-    """Espera elemento ficar clicável"""
-    return wait(driver, timeout).until(
-        EC.element_to_be_clickable(locator)
-    )
-
+    ensure_web_context(driver)
+    return wait(driver, timeout).until(EC.element_to_be_clickable(locator))
 
 def wait_any_visible(driver, locator, timeout=20):
     """
@@ -42,7 +47,6 @@ def wait_any_visible(driver, locator, timeout=20):
                 pass
         time.sleep(0.2)
     return None
-
 
 def wait_visible_any(driver, locators, timeout=25, poll=0.2):
     """
