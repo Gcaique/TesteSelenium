@@ -29,8 +29,52 @@ BTN_CHECKOUT_TOP = (By.ID, "top-cart-btn-checkout")
 #-----------------------------------------------------------------------
 # Carrinho "/checkout/cart"
 #-----------------------------------------------------------------------
-EMPTY_CART_BTN = (By.XPATH, "//button[@id='empty_cart_button']/span")
+EMPTY_CART_BTN = (By.XPATH, "//button[@id='empty_cart_button']")
 EMPTY_CART_CONFIRM = (By.XPATH, "//button[@class='action-primary action-accept']")
 VER_CATALOGO = (By.XPATH, "//a[@class='action primary']")
 SUMARY_EXPAND = (By.XPATH, "//*[@class='summary-floating __expand']")
 SUMARY_EXPAND_ARROW = (By.XPATH, "//*[@class='summary-floating __expand']/img")
+
+
+#---------------------------------------------------------------
+# 📱 MOBILE
+#---------------------------------------------------------------
+
+# Mini-cart
+
+# ÍCONE do mini-cart (para ABRIR)
+MOBILE_MINICART_ICON = (
+    By.XPATH,
+    "//div[contains(@class,'minicart-wrapper')]"
+    "//a[@id='open-minicart' and contains(@class,'showcart') and contains(@class,'hj-header-minicart')]"
+)
+
+# Estado ABERTO
+MOBILE_MINICART_OPENED = (
+    By.XPATH,
+    "//div[contains(@class,'minicart-wrapper') and contains(@class,'active')]"
+    "//a[@id='open-minicart' and contains(@class,'showcart') and contains(@class,'active')]"
+)
+
+# BOTÃO FECHAR (X)
+MOBILE_MINICART_CLOSE = (
+    By.XPATH,
+    "//div[contains(@class,'minicart-wrapper') and contains(@class,'active')]"
+    "//*[self::button or self::a]"
+    "["
+    "(@id='btn-minicart-close')"
+    " or (contains(@class,'action') and contains(@class,'close'))"
+    " or contains(@class,'minicart-close')"
+    " or translate(@aria-label,'FECHARCLOSE','fecharclose')='fechar'"
+    " or translate(@aria-label,'FECHARCLOSE','fecharclose')='close'"
+    " or translate(@title,'FECHARCLOSE','fecharclose')='fechar'"
+    " or translate(@title,'FECHARCLOSE','fecharclose')='close'"
+    "]"
+)
+
+# Estado FECHADO (wrapper sem active) - útil pra validar que fechou
+MOBILE_MINICART_CLOSED = (
+    By.XPATH,
+    "//div[contains(@class,'minicart-wrapper') and not(contains(@class,'active'))]"
+    "//a[@id='open-minicart' and contains(@class,'showcart') and contains(@class,'hj-header-minicart')]"
+)

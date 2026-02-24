@@ -9,7 +9,7 @@ from helpers.actions import safe_click_loc, mobile_click_strict
 from locators.plp import (
     SORTER_SELECT,
     AVISE_DISABLED_ANY,
-    AVISE_ENABLED_ANY,
+    AVISE_ENABLED_ANY, MOBILE_PAGE_NUMBER
 )
 
 
@@ -121,39 +121,35 @@ def toggle_avise_me_requires_refresh(driver, page_ready_locator=None, timeout=25
 #---------------------------------------------------------------
 # 📱 MOBILE
 #---------------------------------------------------------------
-def toggle_avise_me_requires_refresh_mobile(driver, page_ready_locator=None, timeout=25, wait_click_class=False,):
-    # garante página pronta
-    if page_ready_locator:
+def find_avise_me_plp_mobile(driver, page_ready_locator, max_pages=5, timeout=20):
+    """Diferente de desktop, esse helper só garante achar o botão do avise-me na plp"""
+
+    for page in range(1, max_pages + 1):
+
+        # garante que a página carregou
         visible(driver, page_ready_locator, timeout=timeout)
-    else:
-        wait_visible_any(driver, [AVISE_DISABLED_ANY, AVISE_ENABLED_ANY], timeout=timeout)
 
-    # encontra o botão DESATIVADO
-    w = wait(driver, timeout)
-    w.until(EC.presence_of_element_located(AVISE_DISABLED_ANY))
+        # procura botões avise-me na página
+        buttons = driver.find_elements(*AVISE_DISABLED_ANY)
 
-    # clica no botão do avise-me
-    mobile_click_strict(driver, AVISE_DISABLED_ANY, timeout=timeout, retries=4, sleep_between=0.25)
+        for btn in buttons:
+            if btn.is_displayed():
+                driver.execute_script(
+                    "arguments[0].scrollIntoView({block:'center'});", btn
+                )
+                return True
 
-    # 3) espera AJAX: virar "alert-active clicked" no botão disabled
-    _wait_class_contains(driver, AVISE_DISABLED_ANY, timeout, "alert-active", "clicked")
+        # tenta ir para próxima página
+        try:
+            next_page = MOBILE_PAGE_NUMBER(str(page + 1))
+            mobile_click_strict(
+                driver,
+                next_page,
+                timeout=10,
+                retries=3,
+                sleep_between=0.25
+            )
+        except Exception:
+            break  # não tem próxima página ou falhou navegação
 
-    # 4) refresh
-    driver.refresh()
-
-    # 5) aguarda página pronta de novo
-    if page_ready_locator:
-        visible(driver, page_ready_locator, timeout=timeout)
-    else:
-        w.until(EC.presence_of_element_located(AVISE_ENABLED_ANY))
-
-    # 6) valida que o ENABLED está ativo após refresh
-    _wait_class_contains(driver, AVISE_ENABLED_ANY, timeout, "alert-active", "clicked")
-
-    # 7) clica para desativar
-    mobile_click_strict(driver, AVISE_ENABLED_ANY, timeout=timeout, retries=4, sleep_between=0.25)
-
-    # 8) espera AJAX: remover "alert-active clicked"
-    _wait_class_not_contains(driver, AVISE_ENABLED_ANY, timeout, "alert-active", "clicked")
-
-    return True
+    return False

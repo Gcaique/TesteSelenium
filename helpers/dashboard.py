@@ -1,7 +1,8 @@
 import time
 from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.support.ui import WebDriverWait
 
-from helpers.actions import safe_click_loc, scroll_into_view, fill_input, try_click, scroll_and_safe_click_loc
+from helpers.actions import safe_click_loc, scroll_into_view, fill_input, try_click, scroll_and_safe_click_loc, mobile_click_strict, _first_displayed, _tap_center
 from helpers.waiters import visible
 
 from helpers.minicart import wait_minicart_loading
@@ -269,3 +270,71 @@ def change_password_flow(driver, wait, current_password, new_password):
 
     scroll_and_safe_click_loc(driver, wait, BTN_SAVE_ACCOUNT_INFO, timeout=12)
     visible(driver, ALERT_SUCCESS, timeout=20)
+
+
+#---------------------------------------------------------------
+# 📱 MOBILE
+#---------------------------------------------------------------
+
+def click_continuar_shipping_mobile(driver, timeout=40):
+    # garante que o botão existe no DOM
+    WebDriverWait(driver, timeout, poll_frequency=0.2).until(
+        EC.presence_of_element_located(MOBILE_BTN_CONTINUAR_SHIPPING)
+    )
+
+    # garante que está clicável (não disabled / não coberto)
+    WebDriverWait(driver, timeout, poll_frequency=0.2).until(
+        EC.element_to_be_clickable(MOBILE_BTN_CONTINUAR_SHIPPING)
+    )
+
+    # clica usando seu helper (que já faz scroll + retries + js + tap)
+    mobile_click_strict(driver, MOBILE_BTN_CONTINUAR_SHIPPING, timeout=timeout, retries=4, sleep_between=0.25)
+
+    # valida que avançou para a etapa de pagamento
+    WebDriverWait(driver, timeout, poll_frequency=0.2).until(
+        EC.presence_of_element_located((By.CSS_SELECTOR, ".payment-methods"))
+    )
+
+def buy_first_product_and_checkout_pix_mobile(driver, wait):
+    # acesso categoria
+    mobile_click_strict(driver, MOBILE_MENU_HAMBURGER, timeout=10, retries=4, sleep_between=0.25)
+    time.sleep(2)
+    mobile_click_strict(driver, MOBILE_MENU_PARENT_NEXT("bovinos"), timeout=10, retries=4, sleep_between=0.25)
+    time.sleep(1)
+    mobile_click_strict(driver, MOBILE_MENU_SEE_ALL, timeout=10, retries=4, sleep_between=0.25)
+    visible(driver, SORTER_SELECT, timeout=20)
+
+    # garante listagem carregada + scroll
+    visible(driver, BTN_INCREMENT_QTY, timeout=20)
+    scroll_into_view(driver, TOOLBAR_AMOUNT, timeout=12)
+
+    # incrementa e adiciona
+    mobile_click_strict(driver, BTN_INCREMENT_QTY, timeout=12, retries=4, sleep_between=0.25)
+    mobile_click_strict(driver, BTN_ADD_TO_CART, timeout=12, retries=4, sleep_between=0.25)
+
+    # espera minicart atualizar
+    wait_minicart_loading(driver)
+
+    mobile_click_strict(driver, MOBILE_MINICART_ICON, timeout=20, retries=4, sleep_between=0.25)
+    visible(driver, MOBILE_MINICART_OPENED, timeout=20)
+
+    mobile_click_strict(driver, BTN_CHECKOUT_TOP, timeout=12, retries=4, sleep_between=0.25)
+
+    # shipping -> continuar
+    click_continuar_shipping_mobile(driver, timeout=40)
+    print("URL:", driver.current_url)
+    print("HTML contém shipping-method-buttons-container:",
+          "shipping-method-buttons-container" in driver.page_source)
+
+    # payment -> PIX + termos + finalizar
+    visible(driver, PIX, timeout=30)
+    mobile_click_strict(driver, MOBILE_PIX, timeout=12, retries=4, sleep_between=0.25)
+
+    visible(driver, TERMS_PIX, timeout=25)
+    mobile_click_strict(driver, TERMS_PIX, timeout=12,retries=4, sleep_between=0.25)
+
+    visible(driver, BTN_FINALIZAR_COMPRA, timeout=25)
+    mobile_click_strict(driver, MOBILE_BTN_FINALIZAR_COMPRA, timeout=12,retries=4, sleep_between=0.25)
+
+    # aguarda retorno
+    time.sleep(6)

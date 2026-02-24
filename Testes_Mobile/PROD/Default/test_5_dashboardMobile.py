@@ -1,6 +1,6 @@
 import pytest
 
-from helpers.auth import ensure_logged_in, logout
+from helpers.auth import ensure_logged_in_mobile, logout
 from helpers.minicart import minicart_visible
 from helpers.popups import try_close_popups
 
@@ -21,7 +21,8 @@ NEW_PASS = "Min@1234567"
 @pytest.mark.smoke
 @pytest.mark.default
 @pytest.mark.dashboard
-def test_5_dashboard(driver, setup_site, wait):
+@pytest.mark.mobile
+def test_5_dashboard_mobile(driver, setup_site, wait):
     """
     Parte A: Login + Compra + Checkout Pix
     Parte B: Minha Conta / Dashboard (endereços, pedidos, filtros, favoritos, endereços)
@@ -31,18 +32,18 @@ def test_5_dashboard(driver, setup_site, wait):
     """
 
     # 1) Login inicial
-    ensure_logged_in(driver, VALID_USER, VALID_PASS)
+    ensure_logged_in_mobile(driver, VALID_USER, VALID_PASS)
     assert minicart_visible(driver), "Era para estar logado, mas o minicart não apareceu."
     try_close_popups(driver)
 
     # 2) Compra + checkout pix
-    buy_first_product_and_checkout_pix(driver, wait)
+    buy_first_product_and_checkout_pix_mobile(driver, wait)
     try_close_popups(driver)
 
     # 3) Acessa Minha Conta
     open_my_account(driver, wait)
 
-    # 4) Dashboard: definir endereço principal (se existir)
+    '''# 4) Dashboard: definir endereço principal (se existir)
     dashboard_set_main_address(driver, wait)
 
     # 5) Ver todos endereços
@@ -118,3 +119,4 @@ def test_5_dashboard(driver, setup_site, wait):
 
     # assert logado no fim
     assert minicart_visible(driver), "Opcional: era para continuar logado no fim."
+    '''

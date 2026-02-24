@@ -53,3 +53,13 @@ MOBILE_LOGIN_DROPDOWN_OPENED = (By.XPATH, "//*[@class='customer-dropdown login-n
 # Busca
 MOBILE_SEARCH_BUTTON = (By.XPATH, "//button[@title='Buscar']")
 MOBILE_SEARCH_SUGGEST_ADD_1 = (By.XPATH, "(//div[@class='product-add-to-cart ']//button)[1]")
+
+# Dropdown do usuário (links)
+MOBILE_DD_MINHA_CONTA = (By.CSS_SELECTOR, "#login-dropdown a.hj-header__dropdown-customer_account")
+MOBILE_DD_COMPARAR = (By.CSS_SELECTOR, "#login-dropdown a[href*='/catalog/product_compare/']")
+MOBILE_DD_MEUS_PEDIDOS = (By.CSS_SELECTOR, "#login-dropdown a.hj-header__dropdown-order_history")
+MOBILE_DD_FAVORITOS = (By.CSS_SELECTOR, "#login-dropdown a.hj-header__dropdown-customer_wishlist")
+MOBILE_DD_MEUS_PONTOS = (By.CSS_SELECTOR, "#login-dropdown a.hj-header__dropdown-customer_rewards")
+MOBILE_DD_MEUS_CUPONS = (By.CSS_SELECTOR, "#login-dropdown a.hj-header__dropdown-customer_coupons")
+MOBILE_DD_MINHAS_MISSOES = (By.CSS_SELECTOR, "#login-dropdown a.hj-header__dropdown-customer_rewardquests")
+MOBILE_DD_SAIR = (By.CSS_SELECTOR, "#login-dropdown a#action-logout.hj-header__dropdown-customer_logout")

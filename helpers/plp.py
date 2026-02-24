@@ -244,20 +244,81 @@ def try_go_to_page_mobile(driver, wait, page_number: str, retries=3):
 
     return False
 
-def open_filter_panel_mobile(driver, timeout=20, retries=4):
-    wait = WebDriverWait(driver, timeout, poll_frequency=0.2)
+def open_filter_panel_mobile(driver, timeout=20, tries=4):
+    w = WebDriverWait(driver, timeout, poll_frequency=0.2)
 
-    last = None
-    for _ in range(retries):
-        try:
-            # 1) clica no botão abrir filtros
-            mobile_click_strict(driver, MOBILE_FILTER_OPEN_PANEL, timeout=timeout, retries=2)
+    # garante que o toggle existe
+    w.until(EC.presence_of_element_located(MOBILE_FILTER_TOGGLE))
 
-            # 2) CONFIRMA que o painel abriu
-            wait.until(EC.visibility_of_element_located(MOBILE_FILTER_OPEN_PANEL))
+    for _ in range(tries):
+        # se já estiver aberto, ok
+        if driver.find_elements(*MOBILE_FILTER_PANEL_OPENED):
             return True
 
-        except Exception as e:
-            last = e
+        # tenta clicar no wrapper
+        try:
+            mobile_click_strict(driver, MOBILE_FILTER_TOGGLE, timeout=timeout, retries=2, sleep_between=0.2)
+        except Exception:
+            pass
 
-    raise last if last else TimeoutException("Não consegui abrir o painel de filtros no mobile.")
+        # espera abrir rapidinho
+        try:
+            WebDriverWait(driver, 2, poll_frequency=0.2).until(
+                EC.presence_of_element_located(MOBILE_FILTER_PANEL_OPENED)
+            )
+            return True
+        except Exception:
+            pass
+
+        # fallback: clica no strong/tab
+        try:
+            mobile_click_strict(driver, MOBILE_FILTER_TOGGLE_TAB, timeout=timeout, retries=2, sleep_between=0.2)
+        except Exception:
+            pass
+
+        try:
+            WebDriverWait(driver, 2, poll_frequency=0.2).until(
+                EC.presence_of_element_located(MOBILE_FILTER_PANEL_OPENED)
+            )
+            return True
+        except Exception:
+            pass
+
+        # fallback final: click via JS no tab (muito forte em iOS)
+        try:
+            el = driver.find_element(*MOBILE_FILTER_TOGGLE_TAB)
+            driver.execute_script("arguments[0].scrollIntoView({block:'center'});", el)
+            driver.execute_script("arguments[0].click();", el)
+        except Exception:
+            pass
+
+        try:
+            WebDriverWait(driver, 2, poll_frequency=0.2).until(
+                EC.presence_of_element_located(MOBILE_FILTER_PANEL_OPENED)
+            )
+            return True
+        except Exception:
+            pass
+
+    return False
+
+def _first_visible(driver, locator):
+    els = driver.find_elements(*locator)
+    for el in els:
+        try:
+            if el.is_displayed():
+                return el
+        except:
+            continue
+    return None
+
+def scroll_to_avise(driver, locator):
+    wai = WebDriverWait(driver, 25)
+    wai.until(EC.presence_of_element_located(locator))
+
+    el = _first_visible(driver, locator)
+    if not el:
+        return None
+
+    driver.execute_script("arguments[0].scrollIntoView({block:'center'});", el)
+    return el

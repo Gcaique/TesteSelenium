@@ -97,8 +97,13 @@ def MOBILE_PAGE_NUMBER(page_number: str):
 
 
 # Filtros
-MOBILE_FILTER_OPEN_PANEL = (By.XPATH, "//*[@id='layered-filter-block']//*[@data-role='title' and normalize-space()='Filtro']")
+MOBILE_FILTER_OPEN_PANEL = (By.XPATH, "//*[@class='toolbar toolbar-products custom-toolbar']//*[@id='layered-filter-block']")
 MOBILE_FILTER_PANEL_OPENED = (By.XPATH, "//*[@id='layered-filter-block']//*[@data-role='title' and normalize-space()='Filtro' and @aria-expanded='true']") # Filtro aberto (estado)
+MOBILE_FILTER_TOGGLE = (By.CSS_SELECTOR, "#layered-filter-block .block-title.filter-title") # alvo principal: wrapper (normalmente tem o handler)
+MOBILE_FILTER_TOGGLE_TAB = (By.CSS_SELECTOR, "#layered-filter-block .block-title.filter-title strong[data-role='title'][role='tab']") # alvo alternativo: o strong/tab
+MOBILE_FILTER_OPENED = (By.CSS_SELECTOR, "#layered-filter-block .block-title.filter-title strong[data-role='title'][aria-expanded='true']") # estados para validar (isso é o mais importante!)
+MOBILE_FILTER_CLOSED = (By.CSS_SELECTOR, "#layered-filter-block .block-title.filter-title strong[data-role='title'][aria-expanded='false']")
+
 MOBILE_FILTER_CONSERVACAO_OPEN = (By.XPATH, "//*[@id='narrow-by-list']"
     "//div[@data-bind=\"scope: 'conservacaoFilter'\"]"
     "/ancestor::div[contains(@class,'filter-options-item')][1]"
@@ -112,5 +117,28 @@ MOBILE_FILTER_CONSERVACAO_RESFRIADO = (By.XPATH, "//*[@id='narrow-by-list']"
     "//span[contains(@class,'attribute-value') and normalize-space()='Resfriado']"
     "/ancestor::label[1]")
 
+
+
 # Botões que exigem login
 MOBILE_BTN_ENTRAR_LISTA = lambda idx: (By.XPATH, f"(//a[contains(@class,'loggin-btn') and .//span[normalize-space()='Entrar']])[{idx}]",)
+
+# Botão AVISE-ME
+
+# Qualquer botão Avise-me na PLP (disabled ou enabled)
+MOBILE_AVISE_BTN_ANY = (By.XPATH,
+    "//div[contains(@class,'product') and contains(@class,'alert') and contains(@class,'stock')]"
+    "//a[contains(@class,'action') and contains(@class,'alert') and contains(@class,'primary') "
+    "and (starts-with(@id,'button_disabled_') or starts-with(@id,'button_enabled_'))]"
+)
+
+# Estado "desativado" (antes de clicar)
+MOBILE_AVISE_BTN_DISABLED = lambda idx: (By.XPATH,
+    f"//div[contains(@class,'product') and contains(@class,'alert') and contains(@class,'stock')]//a[starts-with(@id,'button_disabled_') and contains(@class,'action') and contains(@class,'alert')and contains(@class,'primary') and not(contains(@class,'alert-active'))][{idx}]")
+
+# Estado "ativado" sem refresh (continua button_disabled_, mas ganha alert-active clicked)
+MOBILE_AVISE_BTN_ACTIVE_NO_REFRESH = (By.XPATH,
+    "//div[contains(@class,'product') and contains(@class,'alert') and contains(@class,'stock')]//a[starts-with(@id,'button_disabled_') and contains(@class,'alert-active') and contains(@class,'clicked')]")
+
+# Estado "ativado" após refresh (vira button_enabled_ e segue alert-active clicked)
+MOBILE_AVISE_BTN_ACTIVE_AFTER_REFRESH = (By.XPATH,
+    "//div[contains(@class,'product') and contains(@class,'alert') and contains(@class,'stock')]//a[starts-with(@id,'button_enabled_') and contains(@class,'alert-active') and contains(@class,'clicked')]")
