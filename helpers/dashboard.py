@@ -1,13 +1,15 @@
 import time
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support.ui import Select
+from selenium.common.exceptions import WebDriverException, TimeoutException
 
-from helpers.actions import safe_click_loc, scroll_into_view, fill_input, try_click, scroll_and_safe_click_loc, mobile_click_strict, _first_displayed, _tap_center
+from helpers.actions import safe_click_loc, scroll_into_view, fill_input, try_click, scroll_and_safe_click_loc, mobile_click_strict
 from helpers.waiters import visible
-
 from helpers.minicart import wait_minicart_loading
 from helpers.popups import try_close_popups
 from helpers.dropdown import open_user_dropdown
+from helpers.checkout import select_pix_payment
 
 from locators.plp import *
 from locators.cart import *
@@ -190,7 +192,7 @@ def cupons_flow(driver, wait):
     safe_click_loc(driver, wait, TAB_UNAVAILABLE, timeout=12)
     time.sleep(0.8)
 
-    # ✅ GARANTIA: ainda estou na página de cupons
+    # GARANTIA: ainda estou na página de cupons
     visible(driver, COUPON_FIRST, timeout=10)
 
 
@@ -328,13 +330,250 @@ def buy_first_product_and_checkout_pix_mobile(driver, wait):
 
     # payment -> PIX + termos + finalizar
     visible(driver, PIX, timeout=30)
-    mobile_click_strict(driver, MOBILE_PIX, timeout=12, retries=4, sleep_between=0.25)
+    select_pix_payment(driver, timeout=25)
 
     visible(driver, TERMS_PIX, timeout=25)
     mobile_click_strict(driver, TERMS_PIX, timeout=12,retries=4, sleep_between=0.25)
 
-    visible(driver, BTN_FINALIZAR_COMPRA, timeout=25)
-    mobile_click_strict(driver, MOBILE_BTN_FINALIZAR_COMPRA, timeout=12,retries=4, sleep_between=0.25)
+    visible(driver, MOBILE_BTN_FINALIZAR_COMPRA_PIX, timeout=25)
+    mobile_click_strict(driver, MOBILE_BTN_FINALIZAR_COMPRA_PIX, timeout=12,retries=4, sleep_between=0.25)
 
     # aguarda retorno
     time.sleep(6)
+
+def open_minha_conta_mobile(driver, timeout=15):
+    wait = WebDriverWait(driver, timeout)
+
+    el = wait.until(EC.presence_of_element_located(MOBILE_DROPDOWN_MINHA_CONTA))
+
+    driver.execute_script("arguments[0].scrollIntoView({block:'center'});", el)
+
+    try:
+        wait.until(EC.element_to_be_clickable(MOBILE_DROPDOWN_MINHA_CONTA)).click()
+    except Exception:
+        driver.execute_script("arguments[0].click();", el)
+
+def orders_open_first_and_copy_pix_mobile(driver, wait):
+    # Em vez de só "visible", scroll ajuda bastante em grids
+    scroll_into_view(driver, MOBILE_FIRST_ORDER_DETAILS, timeout=25)
+
+    scroll_and_safe_click_loc(driver, wait, MOBILE_FIRST_ORDER_DETAILS, timeout=12)
+    time.sleep(5)
+
+    mobile_click_strict(driver, MOBILE_BTN_COPY_PIX)
+    time.sleep(2)
+
+def orders_filters_flow_mobile(driver, wait):
+    # período 7 dias + filtrar
+    scroll_and_safe_click_loc(driver, wait, SEL_PERIOD, timeout=12)
+    scroll_and_safe_click_loc(driver, wait, OPT_PERIOD_7D, timeout=12)
+
+    scroll_into_view(driver, BTN_FILTER, timeout=12)
+    scroll_and_safe_click_loc(driver, wait, BTN_FILTER, timeout=12)
+    time.sleep(1)
+
+    # status pedido + status pagamento + filtrar
+    scroll_and_safe_click_loc(driver, wait, SEL_ORDER_STATUS, timeout=12)
+    scroll_and_safe_click_loc(driver, wait, OPT_ORDER_STATUS_FATURADO, timeout=12)
+    time.sleep(0.5)
+
+    scroll_and_safe_click_loc(driver, wait, SEL_PAYMENT_STATUS, timeout=12)
+    scroll_and_safe_click_loc(driver, wait, OPT_PAYMENT_STATUS_AGUARDANDO, timeout=12)
+    time.sleep(0.5)
+
+    scroll_and_safe_click_loc(driver, wait, BTN_FILTER_ACTIVE, timeout=12)
+    time.sleep(4)
+
+    scroll_and_safe_click_loc(driver, wait, MOBILE_BTN_CLEAR_FILTER, timeout=12)
+    time.sleep(4)
+
+def addresses_set_second_as_main_mobile(driver, wait):
+    visible(driver, BTN_MAIN_ADDRESS_DEFAULT_2, timeout=25)
+
+    scroll_into_view(driver, SECOND_ADDRESS_BOX, timeout=12)
+    safe_click_loc(driver, wait, BTN_MAIN_ADDRESS_DEFAULT_2, timeout=12)
+
+    visible(driver, BTN_ACCEPT_MODAL, timeout=12)
+    safe_click_loc(driver, wait, BTN_ACCEPT_MODAL, timeout=12)
+    visible(driver, BTN_MAIN_ADDRESS_DEFAULT_2, timeout=25)
+    time.sleep(2)
+
+def apply_reward_filter_mobile(driver, wait, value: str, retries: int = 3) -> bool:
+    """
+    Mobile (Meus Pontos):
+    - seleciona o filtro no <select id="reward-filter-select">
+    - clica no botão 'Filtrar' (id="reward-filter-btn") para aplicar
+    value esperado: all | earnings | used | expired | canceled
+    """
+    for _ in range(retries):
+        try:
+            # garante select visível/clicável
+            select_el = wait.until(EC.presence_of_element_located(MOBILE_REWARD_FILTER_SELECT))
+            driver.execute_script("arguments[0].scrollIntoView({block:'center'});", select_el)
+
+            # tenta selecionar pelo Selenium Select
+            try:
+                Select(select_el).select_by_value(value)
+            except WebDriverException:
+                # fallback forte
+                driver.execute_script("""
+                    const sel = document.getElementById('reward-filter-select');
+                    sel.value = arguments[0];
+                    sel.dispatchEvent(new Event('change', { bubbles: true }));
+                """, value)
+
+            # clicar no botão Filtrar (aplica)
+            btn = wait.until(EC.element_to_be_clickable(MOBILE_REWARD_FILTER_BTN))
+            driver.execute_script("arguments[0].scrollIntoView({block:'center'});", btn)
+
+            # clique normal + fallback JS (pra intercept em mobile)
+            try:
+                btn.click()
+            except WebDriverException:
+                driver.execute_script("arguments[0].click();", btn)
+
+            # espera a tela refletir o filtro
+            time.sleep(0.8)
+            return True
+
+        except TimeoutException:
+            time.sleep(1)
+        except Exception:
+            time.sleep(1)
+
+    return False
+
+def apply_cadastro_redes_filter_mobile(driver, wait, value: str, retries: int = 3) -> bool:
+    """
+    Cadastro de redes (mobile):
+    - Seleciona a option no select de abas/steps
+    value: assigned-grid | new-assign | info | rules
+    """
+    for _ in range(retries):
+        try:
+            sel = wait.until(EC.presence_of_element_located(MOBILE_TAB_SELECT))
+            driver.execute_script("arguments[0].scrollIntoView({block:'center'});", sel)
+
+            # tenta Select() primeiro
+            try:
+                Select(sel).select_by_value(value)
+            except WebDriverException:
+                # fallback forte (iOS Safari / grid pode falhar no select nativo)
+                driver.execute_script("""
+                    const sel = document.querySelector('select.hj-network_grouping-mobile-tab_switcher');
+                    sel.value = arguments[0];
+                    sel.dispatchEvent(new Event('change', { bubbles: true }));
+                """, value)
+
+            # valida que o value foi aplicado
+            time.sleep(0.8)
+            return True
+
+        except TimeoutException:
+            time.sleep(1)
+        except Exception:
+            time.sleep(1)
+
+    return False
+
+def apply_meus_cupons_filter_mobile(driver, wait, value: str, retries: int = 3) -> bool:
+    """
+    Meus Cupons (mobile):
+    - seleciona o filtro no <select class="filter-select">
+    - clica no botão <button class="filter-button">Filtrar</button>
+    value esperado: active | unavailable
+    """
+    for _ in range(retries):
+        try:
+            sel = wait.until(EC.presence_of_element_located(MOBILE_CUPONS_FILTER_SELECT))
+            driver.execute_script("arguments[0].scrollIntoView({block:'center'});", sel)
+
+            # tenta Select() primeiro
+            try:
+                Select(sel).select_by_value(value)
+            except WebDriverException:
+                # fallback forte (iOS Safari / grid pode falhar no select nativo)
+                driver.execute_script("""
+                    const sel = document.querySelector('select.filter-select');
+                    sel.value = arguments[0];
+                    sel.dispatchEvent(new Event('change', { bubbles: true }));
+                """, value)
+
+            # clica no botão Filtrar (aplica)
+            btn = wait.until(EC.element_to_be_clickable(MOBILE_CUPONS_FILTER_BUTTON))
+            driver.execute_script("arguments[0].scrollIntoView({block:'center'});", btn)
+
+            try:
+                btn.click()
+            except WebDriverException:
+                driver.execute_script("arguments[0].click();", btn)
+
+            # valida que o value ficou setado
+            time.sleep(0.8)
+            return True
+
+        except TimeoutException:
+            time.sleep(1)
+        except Exception:
+            time.sleep(1)
+
+    return False
+
+def account_whatsapp_toggle_flow_mobile(driver, wait):
+    """
+    - Clica em 'Definir como principal'
+    - Confirma modal 'Definir'
+    - Aguarda mensagem de sucesso
+    - Alterna o WhatsApp 2x aguardando loader AJAX sumir
+    """
+    # definir como principal
+    visible(driver, BTN_DEFINIR_COMO_PRINCIPAL, timeout=15)
+    safe_click_loc(driver, wait, BTN_DEFINIR_COMO_PRINCIPAL, timeout=12)
+
+    # confirmar modal
+    visible(driver, BTN_MODAL_DEFINIR, timeout=15)
+    safe_click_loc(driver, wait, BTN_MODAL_DEFINIR, timeout=12)
+
+    # aguarda sucesso
+    visible(driver, ALERT_SUCCESS_PHONE, timeout=20)
+    time.sleep(0.6)
+
+    # WhatsApp toggle 2x
+    visible(driver, WHATSAPP_SWITCH, timeout=15)
+
+    safe_click_loc(driver, wait, WHATSAPP_SWITCH, timeout=12)
+    wait.until(EC.invisibility_of_element_located(BODY_AJAX_LOADING))
+
+    safe_click_loc(driver, wait, WHATSAPP_SWITCH, timeout=12)
+    wait.until(EC.invisibility_of_element_located(BODY_AJAX_LOADING))
+
+def account_change_email_flow_mobile(driver, wait, new_email, current_password):
+    """
+    - Edita e-mail (e confirma)
+    - Informa senha atual
+    - Salva e valida alerta de sucesso
+    """
+    mobile_click_strict(driver, BTN_EDIT_EMAIL, timeout=12, retries=4, sleep_between=0.25)
+    visible(driver, CURRENT_PASSWORD, timeout=12)
+
+    fill_input(driver, wait, CURRENT_EMAIL, new_email, timeout=12)
+    fill_input(driver, wait, CONFIRM_EMAIL, new_email, timeout=12)
+    fill_input(driver, wait, CURRENT_PASSWORD, current_password, timeout=12)
+
+    mobile_click_strict(driver, BTN_SAVE_ACCOUNT_INFO, timeout=12, retries=4, sleep_between=0.25)
+    time.sleep(5)
+
+    # cancelar (volta estado)
+    mobile_click_strict(driver, BTN_CANCEL_ACCOUNT, timeout=12, retries=4, sleep_between=0.25)
+    visible(driver, BTN_EDIT_PASSWORD, timeout=12)
+
+def change_password_flow_mobile(driver, wait, current_password, new_password):
+    mobile_click_strict(driver, BTN_EDIT_PASSWORD, timeout=12, retries=4, sleep_between=0.25)
+    visible(driver, CURRENT_PASSWORD, timeout=12)
+
+    fill_input(driver, wait, CURRENT_PASSWORD, current_password, timeout=12)
+    fill_input(driver, wait, NEW_PASSWORD, new_password, timeout=12)
+    fill_input(driver, wait, CONFIRM_NEW_PASSWORD, new_password, timeout=12)
+
+    mobile_click_strict(driver, BTN_SAVE_ACCOUNT_INFO, timeout=12, retries=4, sleep_between=0.25)
+    visible(driver, ALERT_SUCCESS, timeout=20)

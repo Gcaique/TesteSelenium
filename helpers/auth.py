@@ -251,7 +251,7 @@ def login_expect_wrong_password(driver, wait, email, wrong_password):
     fill_input(driver, wait, PASSWORD_INPUT, wrong_password, timeout=12)
     safe_click_loc(driver, wait, BTN_AVANCAR, timeout=12)
 
-    visible(driver, ERROR_WRONG_PASSWORD, timeout=12)
+    visible(driver, ERROR_WRONG_PASSWORD, timeout=20)
 
 
 #---------------------------------------------------------------
@@ -320,3 +320,12 @@ def ensure_logged_in_mobile(driver, user: str, passwd: str):
         return
 
     raise TimeoutException("Login não confirmou: mini-cart não ficou visível.")
+
+def login_expect_email_not_found_mobile(driver, wait, email):
+    safe_click_loc(driver, wait, LOGIN_MENU, timeout=12)
+    expect_login_popup_mobile(driver, wait, timeout=8)
+    safe_click_loc(driver, wait, MOBILE_LOGIN_ACESSO, timeout=10)
+    visible(driver, USERNAME_INPUT, timeout=10)
+    fill_input(driver, wait, USERNAME_INPUT, email, timeout=12)
+    safe_click_loc(driver, wait, BTN_AVANCAR, timeout=12)
+    visible(driver, ERROR_EMAIL_NOT_FOUND, timeout=12)

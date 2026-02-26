@@ -4,6 +4,9 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.remote.webelement import WebElement
+from selenium.webdriver.common.actions.action_builder import ActionBuilder
+from selenium.webdriver.common.actions.pointer_input import PointerInput
+from selenium.webdriver.common.actions import interaction
 
 from helpers.waiters import clickable, visible
 
@@ -181,20 +184,6 @@ def fill_input(driver, wait, locator, value: str, timeout=10):
 #---------------------------------------------------------------
 # 📱 MOBILE
 #---------------------------------------------------------------
-import time
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
-from selenium.common.exceptions import (
-    TimeoutException,
-    StaleElementReferenceException,
-    ElementClickInterceptedException,
-    ElementNotVisibleException,
-)
-
-from selenium.webdriver.common.action_chains import ActionChains
-from selenium.webdriver.common.actions.pointer_input import PointerInput
-
-
 def _first_displayed(driver, locator):
     els = driver.find_elements(*locator)
     for e in els:
@@ -206,18 +195,14 @@ def _first_displayed(driver, locator):
     return None
 
 
-def _tap_center(driver, el):
-    rect = el.rect
-    x = rect["x"] + rect["width"] / 2
-    y = rect["y"] + rect["height"] / 2
+def tap_element(driver, element):
+    finger = PointerInput(interaction.POINTER_TOUCH, "finger")
+    actions = ActionBuilder(driver, mouse=finger)
 
-    finger = PointerInput(PointerInput.TOUCH, "finger")
-    actions = ActionChains(driver)
-    actions.w3c_actions.devices = [finger]
-
-    finger.create_pointer_move(duration=0, x=int(x), y=int(y), origin="viewport")
-    finger.create_pointer_down()
-    finger.create_pointer_up()
+    actions.pointer_action.move_to(element)   # <- em vez de move_to_location(x,y)
+    actions.pointer_action.pointer_down()
+    actions.pointer_action.pause(0.06)
+    actions.pointer_action.pointer_up()
     actions.perform()
 
 
@@ -227,36 +212,33 @@ def mobile_click_strict(driver, locator, timeout=12, retries=4, sleep_between=0.
 
     for _ in range(retries):
         try:
-            # 1) pega o primeiro elemento VISÍVEL (não apenas presente)
             el = wait.until(lambda d: _first_displayed(d, locator))
 
-            # 2) scroll pro elemento
             try:
                 driver.execute_script("arguments[0].scrollIntoView({block:'center'});", el)
-                time.sleep(0.15)
+                time.sleep(0.2)
             except Exception:
                 pass
 
-            # 3) re-pega o visível (evita stale/DOM reflow)
             el = wait.until(lambda d: _first_displayed(d, locator))
 
-            # 4) click normal
+            # 1) CLICK normal primeiro (como era antes)
             try:
                 el.click()
                 return True
-            except (ElementClickInterceptedException, StaleElementReferenceException, ElementNotVisibleException) as e:
+            except Exception as e:
                 last = e
 
-            # 5) click via JS (às vezes ajuda em webviews)
+            # 2) CLICK via JS
             try:
                 driver.execute_script("arguments[0].click();", el)
                 return True
             except Exception as e:
                 last = e
 
-            # 6) tap real por coordenadas (mais forte no iOS)
+            # 3) TAP real por elemento (mais forte no iOS)
             try:
-                _tap_center(driver, el)
+                tap_element(driver, el)
                 return True
             except Exception as e:
                 last = e
@@ -266,4 +248,4 @@ def mobile_click_strict(driver, locator, timeout=12, retries=4, sleep_between=0.
 
         time.sleep(sleep_between)
 
-    raise last if last else TimeoutException(f"Falha ao clicar em {locator}")
+    raise last

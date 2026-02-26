@@ -11,9 +11,9 @@ from helpers.actions import click, fill, scroll_into_view, safe_click_loc_retry,
 from helpers.auth import ensure_logged_in_mobile
 from helpers.dropdown import open_dropdown_item_mobile
 from helpers.region import switch_region_mobile
-from helpers.minicart import wait_minicart_loading, wait_minicart_ready, minicart_visible
-from helpers.avise_me import open_pdp_from_first_avise_in_plp, find_avise_me_plp_mobile, toggle_avise_me_requires_refresh, _wait_class_not_contains
-from helpers.plp import open_filter_panel_mobile, _first_visible, scroll_to_avise
+from helpers.minicart import wait_minicart_loading
+from helpers.avise_me import open_pdp_from_first_avise_in_plp, find_avise_me_plp_mobile
+from helpers.plp import open_filter_panel_mobile, _first_visible, scroll_to_avise, clear_filters_strict
 
 from locators.header import SEARCH_INPUT, SEE_ALL_LINK, MOBILE_SEARCH_SUGGEST_ADD_1
 from locators.home import CAROUSEL_1, QTY_INPUT_FIRST, ADD_BTN_FIRST_CAROUSEL
@@ -36,7 +36,7 @@ VALID_PASS = "Min@1234"
 @pytest.mark.default
 @pytest.mark.logado
 @pytest.mark.mobile
-def test_3_userLogado_mobile(driver, setup_site):
+def test_3_userLogado_mobile(driver, setup_site, wait):
     """
     Usuário LOGADO (default):
     - login
@@ -119,8 +119,8 @@ def test_3_userLogado_mobile(driver, setup_site):
     WebDriverWait(driver, 20).until(EC.url_contains("conservacao=Resfriado"))
 
     # limpar filtros
-    visible(driver, FILTER_CLEAR_ALL, timeout=20)
-    mobile_click_strict(driver, FILTER_CLEAR_ALL, timeout=15, retries=4, sleep_between=0.25)
+    assert clear_filters_strict(driver, wait, FILTER_CLEAR_ALL, timeout=15, retries=5), \
+        "Não consegui limpar os filtros."
 
     # ordenação (low -> high -> high -> low)
     mobile_click_strict(driver, SORTER_SELECT, 10, 4, 0.25)

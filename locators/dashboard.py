@@ -59,7 +59,7 @@ POINTS_REPORT_FILTER_OPT2 = (By.XPATH, "(//select[@class='rewardquests__filter__
 LINK_BACK_TO_MISSIONS = (By.XPATH, "//a[@class='rewardquests__go-to-missions__link']")
 
 #MINHAS MISSÕES
-MISSIONS_READY = (By.XPATH, "//*[@class='rewardquests __see-rules hj-fidelity_see-rules']//span")
+MISSIONS_READY = (By.XPATH, "//*[@class='rewardquests __see-rules hj-fidelity_see-rules']")
 
 # CADASTRO DE REDES
 GRID_ASSIGNED_READY = (By.XPATH, "//*[@id='assigned-grid']//button[normalize-space()='Agrupar outro CNPJ']")
@@ -93,3 +93,43 @@ BTN_MODAL_DEFINIR = (By.XPATH, "//button[contains(@class,'action-primary') and c
 ALERT_SUCCESS_PHONE = (By.XPATH, "//*[@class='message-success success message']")
 WHATSAPP_SWITCH = (By.XPATH, "//*[@class='content sequence-1-1']//span[contains(@class,'slider')]")
 BODY_AJAX_LOADING = (By.XPATH, "//body[contains(@class,'ajax-loading')]")
+
+
+#---------------------------------------------------------------
+# 📱 MOBILE
+#---------------------------------------------------------------
+MOBILE_DROPDOWN_MINHA_CONTA = (By.CSS_SELECTOR, "div.block.block-collapsible-nav div.title.block-collapsible-nav-title")
+
+# Container do menu lateral (mobile)
+MOBILE_MINHA_CONTA_MENU = (By.ID, "block-collapsible-nav")
+
+# side menu
+MOBILE_NAV_MINHA_CONTA = (By.CSS_SELECTOR, "#block-collapsible-nav ul.nav.items li.nav.item a[href$='/customer/account/']")
+MOBILE_NAV_MEUS_PEDIDOS = (By.CSS_SELECTOR, "#block-collapsible-nav ul.nav.items li.nav.item a[href$='/sales/order/history/']")
+MOBILE_NAV_LISTA_FAVORITOS = (By.CSS_SELECTOR, "#block-collapsible-nav ul.nav.items li.nav.item a[href$='/wishlist/']")
+MOBILE_NAV_ENDERECOS = (By.CSS_SELECTOR, "#block-collapsible-nav ul.nav.items li.nav.item a[href$='/customer/address/']")
+MOBILE_NAV_INFO_CONTA = (By.CSS_SELECTOR, "#block-collapsible-nav ul.nav.items li.nav.item a[href$='/customer/account/edit/']")
+MOBILE_NAV_MEUS_PONTOS = (By.CSS_SELECTOR, "#block-collapsible-nav ul.nav.items li.nav.item a[href$='/reward/customer/info/']")
+MOBILE_NAV_CADASTRO_REDES = (By.CSS_SELECTOR, "#block-collapsible-nav ul.nav.items li.nav.item a[href$='/customergrouping/customer/index/']")
+MOBILE_NAV_MEUS_CUPONS = (By.CSS_SELECTOR, "#block-collapsible-nav ul.nav.items li.nav.item a[href$='/mycoupons/customer/coupons/']")
+MOBILE_NAV_MINHAS_MISSOES = (By.CSS_SELECTOR, "#block-collapsible-nav ul.nav.items li.nav.item a[href$='/rewardquests/customer/missions/']")
+
+# MEUS PEDIDOS (Pedidos)
+MOBILE_FIRST_ORDER_DETAILS = (By.XPATH, "(//tr[contains(@class,'mobile-only')]//a[contains(@class,'view')])[1]")
+MOBILE_BT_BACK = (By.XPATH, "//*[@class='actions-toolbar mobile-only']/a[@class='back']")
+MOBILE_BTN_COPY_PIX = (By.XPATH,
+    "//div[contains(@class,'dux-pix-customer-area')]"
+    "//button[.//span[contains(normalize-space(.),'Copiar código PIX')]]"
+)
+MOBILE_BTN_CLEAR_FILTER = (By.XPATH, "//*[@class='order-filter __item __clear __mobile']/a")
+
+# MEUS PONTOS
+MOBILE_REWARD_FILTER_SELECT = (By.ID, "reward-filter-select")
+MOBILE_REWARD_FILTER_BTN = (By.ID, "reward-filter-btn")
+
+# CADASTRO DE REDES
+MOBILE_TAB_SELECT = (By.CSS_SELECTOR, "select.hj-network_grouping-mobile-tab_switcher")
+
+# MEUS CUPONS
+MOBILE_CUPONS_FILTER_SELECT = (By.CSS_SELECTOR, ".coupons-filter select.filter-select")
+MOBILE_CUPONS_FILTER_BUTTON = (By.CSS_SELECTOR, ".coupons-filter button.filter-button")
