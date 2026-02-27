@@ -167,3 +167,55 @@ def remove_all_cards_wishlist(driver, wait, max_cycles=80):
             return True
 
     raise AssertionError("Não conseguiu remover todos os itens da wishlist (max_cycles excedido).")
+
+
+#---------------------------------------------------------------
+# 📱 MOBILE
+#---------------------------------------------------------------
+# Interações nos cards da Lista de favoritos
+def wishlist_increment_by_index_mobile(driver, wait, idx: int):
+    mobile_click_strict(driver, WISHLIST_INCREMENT_BY_INDEX(idx), timeout=12, retries=4, sleep_between=0.25)
+
+def wishlist_decrement_by_index_mobile(driver, wait, idx: int):
+    mobile_click_strict(driver, WISHLIST_DECREMENT_BY_INDEX(idx), timeout=12, retries=4, sleep_between=0.25)
+
+def wishlist_add_all_to_cart_mobile(driver, wait):
+    '''Interação com o botão Adicionar todos ao carrinho'''
+    mobile_click_strict(driver, WISHLIST_ADD_ALL_TO_CART, timeout=12, retries=4, sleep_between=0.25)
+    wait_minicart_loading(driver)
+    time.sleep(1.5)
+
+def wishlist_add_item_to_cart_by_index_mobile(driver, wait, idx: int):
+    '''Interação com botão de Adicionar do card de produto'''
+    mobile_click_strict(driver, WISHLIST_TOCART_BTN_BY_INDEX(idx), timeout=15, retries=4, sleep_between=0.25)
+    wait_minicart_loading(driver)
+    time.sleep(1.5)
+
+def wishlist_avise_me_flow_mobile(driver, wait):
+    """
+      - clica Avise-me (disabled)
+      - espera o botão virar enabled
+      - dá refresh
+      - valida que continua enabled
+      - clica Avise-me (enabled)
+    """
+
+    # clica no Avise-me (estado "disabled")
+    mobile_click_strict(driver, BTN_AVISE_DISABLED, timeout=20, retries=4, sleep_between=0.25)
+
+    # espera trocar para enabled
+    time.sleep(5)
+
+    # refresh na página
+    driver.refresh()
+
+    # após refresh, valida que o botão segue enabled
+    WebDriverWait(driver, 30).until(
+        EC.visibility_of_element_located(BTN_AVISE_ENABLED)
+    )
+
+    # clica no Avise-me enabled
+    mobile_click_strict(driver, BTN_AVISE_ENABLED, timeout=20, retries=4, sleep_between=0.25)
+
+    # aguarda alguma mudança/feedback pós clique
+    time.sleep(4)

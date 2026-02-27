@@ -136,7 +136,7 @@ def test_3_userLogado_mobile(driver, setup_site, wait):
 
     # 8) Promoções: adicionar item
     mobile_click_strict(driver, MOBILE_MENU_HAMBURGER, timeout=10, retries=4, sleep_between=0.25)
-    time.sleep(2)
+    time.sleep(1)
     mobile_click_strict(driver, MOBILE_MENU_PARENT_NEXT("promocoes"), timeout=10, retries=4, sleep_between=0.25)
     time.sleep(1)
     mobile_click_strict(driver, MOBILE_MENU_SEE_ALL, timeout=10, retries=4, sleep_between=0.25)

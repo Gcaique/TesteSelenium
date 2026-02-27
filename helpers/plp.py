@@ -2,15 +2,15 @@ import time
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-from selenium.common.exceptions import (TimeoutException, StaleElementReferenceException)
+from selenium.common.exceptions import (TimeoutException, StaleElementReferenceException, WebDriverException)
 from selenium.webdriver.support.ui import Select
 
 from locators.plp import *
 from locators.wishlist import *
-from locators.header import SEARCH_INPUT, SEARCH_BUTTON,SEARCH_SUGGEST_ADD_2
+from locators.header import SEARCH_INPUT, SEARCH_BUTTON, SEARCH_SUGGEST_ADD_2, MOBILE_SEARCH_SUGGEST_ADD_1, MOBILE_SEARCH_BUTTON
 
 
-from helpers.actions import try_click, safe_click_loc, scroll_to, click_when_clickable, scroll_into_view, mobile_click_strict
+from helpers.actions import try_click, safe_click_loc, scroll_to, click_when_clickable, scroll_into_view, mobile_click_strict, scroll_into_view_loc_mobile
 from helpers.waiters import try_visible, visible
 from helpers.wishlist import wait_favorite_status
 from helpers.avise_me import open_pdp_from_first_avise_in_plp
@@ -81,7 +81,6 @@ def apply_filter_strict(driver, wait, open_locator, option_locator, timeout=10, 
             last_exc = e
             time.sleep(0.6)
 
-    # se quiser, você pode printar last_exc aqui, mas não é obrigatório
     return False
 
 
@@ -322,3 +321,60 @@ def scroll_to_avise(driver, locator):
 
     driver.execute_script("arguments[0].scrollIntoView({block:'center'});", el)
     return el
+
+def add_favorite_from_category_first_item_mobile(driver, wait):
+    '''Favoritar primeiro item da lista (PLP)'''
+    mobile_click_strict(driver, MOBILE_MENU_HAMBURGER, timeout=12, retries=4, sleep_between=0.25)
+    time.sleep(1)
+    mobile_click_strict(driver, MOBILE_MENU_PARENT_NEXT("pescados"), timeout=12, retries=4, sleep_between=0.25)
+    time.sleep(1)
+    mobile_click_strict(driver, MOBILE_MENU_SEE_ALL, timeout=12, retries=4, sleep_between=0.25)
+    time.sleep(5)
+    safe_click_loc(driver, wait, PLP_WISHLIST_BTN_BY_INDEX(1), timeout=12)
+    assert wait_favorite_status(driver), "Não confirmou status de favorito na PLP categoria."
+
+def search_and_add_favorite_by_index_mobile(driver, wait, term: str):
+    """Favoritar item da lista (BUSCA) - MOBILE"""
+
+    safe_click_loc(driver, wait, SEARCH_INPUT, timeout=12)
+    el = visible(driver, SEARCH_INPUT, timeout=12)
+    el.clear()
+    el.send_keys(term)
+
+    visible(driver, MOBILE_SEARCH_SUGGEST_ADD_1, timeout=20)
+
+    safe_click_loc(driver, wait, MOBILE_SEARCH_BUTTON, timeout=12)
+    time.sleep(5)
+
+    mobile_click_strict(driver, PLP_WISHLIST_BTN_BY_INDEX(1), timeout=20, retries=4, sleep_between=0.25)
+    assert wait_favorite_status(driver), "Não confirmou status de favorito na PLP categoria."
+
+
+def open_product_with_avise_by_pagination_mobile(driver, wait, pages=(1, 2, 3, 4, 5)):
+    """
+    Entra na categoria e percorre páginas
+    até encontrar produto com botão 'Avise-me'.
+    """
+
+    # entra na categoria
+    mobile_click_strict(driver, MOBILE_MENU_HAMBURGER, timeout=12, retries=4, sleep_between=0.25)
+    time.sleep(1)
+    mobile_click_strict(driver, MOBILE_MENU_PARENT_NEXT("cordeiros"), timeout=12, retries=4, sleep_between=0.25) # Para alterar a categoria é só alterar a string
+    time.sleep(1)
+    mobile_click_strict(driver, MOBILE_MENU_SEE_ALL, timeout=12, retries=4, sleep_between=0.25)
+    time.sleep(2)
+
+    visible(driver, SORTER_SELECT, timeout=25)
+
+    for page in pages:
+        try:
+            safe_click_loc(driver, wait, PAGINATION_BY_PAGE(page), timeout=6)
+            visible(driver, SORTER_SELECT, timeout=20)
+        except Exception:
+            pass
+
+        # reutiliza função existente
+        if open_pdp_from_first_avise_in_plp(driver):
+            return True
+
+    return False

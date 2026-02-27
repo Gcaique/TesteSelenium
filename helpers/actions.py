@@ -249,3 +249,18 @@ def mobile_click_strict(driver, locator, timeout=12, retries=4, sleep_between=0.
         time.sleep(sleep_between)
 
     raise last
+
+def scroll_into_view_loc_mobile(driver, locator, timeout=20):
+    end = time.time() + timeout
+    last_err = None
+
+    while time.time() < end:
+        try:
+            el = driver.find_element(*locator)
+            driver.execute_script("arguments[0].scrollIntoView({block:'center'});", el)
+            return el
+        except StaleElementReferenceException as e:
+            last_err = e
+            time.sleep(0.3)
+
+    raise TimeoutError(f"Não consegui dar scroll no elemento: {locator}. Erro: {last_err}")

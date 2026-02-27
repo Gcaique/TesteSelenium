@@ -27,3 +27,19 @@ HOME_SECTIONS = [
     "//*[@class='cutting-map __home-section']",
     "//div[@class='footer-content']"
 ]
+
+
+#---------------------------------------------------------------
+# 📱 MOBILE
+#---------------------------------------------------------------
+# Icone favorito
+MOBILE_HOME_CAROUSEL_1 = (By.XPATH, "(//div[contains(@class,'slider-products')])[1]") # HOME - CAROUSEL 1
+MOBILE_HOME_CAROUSEL_ACTIVE_PRODUCT_CARD = (By.XPATH, ".//li[contains(@class,'product-item')]") # CARD dentro do slide ativo
+MOBILE_HOME_CAROUSEL_WISHLIST_BTN = (By.XPATH, ".//button[contains(@id,'button_wishlist')]") # Botão wishlist dentro do card
+# SLIDE ATIVO (ignora clonados)
+MOBILE_HOME_CAROUSEL_ACTIVE_SLIDE = (
+    By.XPATH,
+    ".//div[contains(@class,'slick-slide') "
+    "and contains(@class,'slick-active') "
+    "and not(contains(@class,'slick-cloned'))]"
+)
