@@ -9,7 +9,7 @@ from helpers.actions import click, safe_click_loc_retry
 from locators.common import (MINICART_WRAPPER)
 from locators.cart import *
 from locators.wishlist import *
-
+from helpers.actions import click_when_clickable
 
 def minicart_visible(driver) -> bool:
     """Fonte da verdade para usuário logado"""
@@ -197,3 +197,18 @@ def minicart_empty(driver, wait, max_removals: int = 30):
 
     # se estourou limite
     raise AssertionError("Minicart não ficou vazio após tentativas de remoção.")
+
+# ------------------------------------------------------------------------
+# Incrementa quantidade do produto no minicart
+# ------------------------------------------------------------------------
+def minicart_increment_qty(driver, wait):
+    click_when_clickable(wait, MINICART_INCREMENT_BTN)
+    wait_minicart_loading(driver)
+
+
+# ------------------------------------------------------------------------
+# Decrementa quantidade do produto no minicart
+# ------------------------------------------------------------------------
+def minicart_decrement_qty(driver, wait):
+    click_when_clickable(wait, MINICART_DECREMENT_BTN)
+    wait_minicart_loading(driver)
