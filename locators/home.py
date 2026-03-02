@@ -28,6 +28,33 @@ HOME_SECTIONS = [
     "//div[@class='footer-content']"
 ]
 
+# =====================================================
+# HOME - COOKIES
+# =====================================================
+
+BTN_COOKIES = (
+    By.XPATH,
+    "//*[@id='privacytools-banner-consent']//*[@title='Aceitar']"
+)
+
+# =====================================================
+# HOME - REGIÃO
+# =====================================================
+
+BTN_OUTRAS_REGIOES = (
+    By.ID,
+    "other-regions"
+)
+
+# =====================================================
+# HOME - MODAL CLIENTE
+# =====================================================
+
+BTN_QUERO_SER_CLIENTE = (
+    By.XPATH,
+    "//button[@id='modal-customer-open']/span[normalize-space(text())='Quero ser cliente']"
+)
+
 
 #---------------------------------------------------------------
 # 📱 MOBILE

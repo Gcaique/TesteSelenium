@@ -75,6 +75,19 @@ PLP_PRODUCT_IMAGE_WRAPPER_BY_INDEX = lambda idx: (By.XPATH, f"(//*[contains(@id,
 # Botão do favorito
 PLP_WISHLIST_BTN_BY_INDEX = lambda idx: (By.XPATH, f"(//button[contains(@id,'button_wishlist')])[{idx}]",)
 
+# Add to Cart / Quantidade por índice (para testes dinâmicos)
+
+PLP_ADD_TO_CART_BY_INDEX = lambda idx: (
+    By.XPATH,
+    f"(//button[contains(@class,'action tocart') and contains(@class,'primary')])[{idx}]"
+)
+
+PLP_INCREMENT_BY_INDEX = lambda idx: (
+    By.XPATH,
+    f"(//button[contains(@class,'increment-qty')])[{idx}]"
+)
+
+
 
 #---------------------------------------------------------------
 # 📱 MOBILE
