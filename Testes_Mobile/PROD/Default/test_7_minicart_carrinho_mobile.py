@@ -21,21 +21,24 @@ VALID_PASS = "Min@1234"
 @pytest.mark.smoke
 @pytest.mark.default
 @pytest.mark.logado
-def test_7_minicart_carrinho(driver, setup_site, wait):
+def test_7_minicart_carrinho_mobile(driver, setup_site, wait):
     """
     Fluxo completo de MiniCart + Carrinho.
     """
 
     # 1) Login
-    ensure_logged_in(driver, VALID_USER, VALID_PASS)
+    ensure_logged_in_mobile(driver, VALID_USER, VALID_PASS)
     wait.until(EC.visibility_of_element_located(MINICART_ICON))
     try_close_popups(driver)
 
     # 2) Categoria Bovinos + adicionar item ao carrinho
-    click_when_clickable(wait, CATEGORY_MENU("Bovinos"))
-    wait_category_loaded(wait, driver)
+    mobile_click_strict(driver, MOBILE_MENU_HAMBURGER, timeout=10, retries=4, sleep_between=0.25)
+    time.sleep(1)
+    mobile_click_strict(driver, MOBILE_MENU_PARENT_NEXT("bovinos"), timeout=10, retries=4, sleep_between=0.25)
+    time.sleep(1)
+    mobile_click_strict(driver, MOBILE_MENU_SEE_ALL, timeout=10, retries=4, sleep_between=0.25)
+    visible(driver, SORTER_SELECT, timeout=20)
 
-    scroll_into_view(driver, TOOLBAR_AMOUNT)
     safe_click_loc(driver, wait, PLP_ADD_TO_CART_BY_INDEX(1))
     wait_minicart_ready(driver)
 
