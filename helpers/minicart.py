@@ -198,17 +198,12 @@ def minicart_empty(driver, wait, max_removals: int = 30):
     # se estourou limite
     raise AssertionError("Minicart não ficou vazio após tentativas de remoção.")
 
-# ------------------------------------------------------------------------
-# Incrementa quantidade do produto no minicart
-# ------------------------------------------------------------------------
 def minicart_increment_qty(driver, wait):
+    "Incrementa quantidade do produto no minicart"
     click_when_clickable(wait, MINICART_INCREMENT_BTN)
     wait_minicart_loading(driver)
 
-
-# ------------------------------------------------------------------------
-# Decrementa quantidade do produto no minicart
-# ------------------------------------------------------------------------
 def minicart_decrement_qty(driver, wait):
+    "Decrementa quantidade do produto no minicart"
     click_when_clickable(wait, MINICART_DECREMENT_BTN)
     wait_minicart_loading(driver)

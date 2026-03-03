@@ -64,6 +64,8 @@ BTN_ENTRAR_LISTA = (By.XPATH, "//a[contains(@class,'loggin-btn') and .//span[nor
 # Botões de ações (card)
 BTN_INCREMENT_QTY = (By.XPATH, "(//div[@class='product actions product-item-actions']//button[contains(@class,'increment-qty')])[1]")
 BTN_ADD_TO_CART = (By.XPATH, "(//button[contains(@class,'action tocart') and contains(@class,'primary')])[1]")
+PLP_ADD_TO_CART_BY_INDEX = lambda idx: (By.XPATH, f"(//button[contains(@class,'action tocart') and contains(@class,'primary')])[{idx}]")
+PLP_INCREMENT_BY_INDEX = lambda idx: (By.XPATH, f"(//div[@class='product actions product-item-actions']//button[contains(@class,'increment-qty')])[{idx}]")
 
 TOOLBAR_AMOUNT = (By.ID, "toolbar-amount")
 
@@ -74,18 +76,6 @@ PLP_PRODUCT_IMAGE_WRAPPER_BY_INDEX = lambda idx: (By.XPATH, f"(//*[contains(@id,
 
 # Botão do favorito
 PLP_WISHLIST_BTN_BY_INDEX = lambda idx: (By.XPATH, f"(//button[contains(@id,'button_wishlist')])[{idx}]",)
-
-# Add to Cart / Quantidade por índice (para testes dinâmicos)
-
-PLP_ADD_TO_CART_BY_INDEX = lambda idx: (
-    By.XPATH,
-    f"(//button[contains(@class,'action tocart') and contains(@class,'primary')])[{idx}]"
-)
-
-PLP_INCREMENT_BY_INDEX = lambda idx: (
-    By.XPATH,
-    f"(//button[contains(@class,'increment-qty')])[{idx}]"
-)
 
 
 
