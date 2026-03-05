@@ -72,3 +72,12 @@ MOBILE_PIX_TEXT = (By.XPATH, "//*[self::label or self::span][normalize-space()='
 MOBILE_TERMS_PIX = (By.ID, "terms_conditions_dux_pay_pix_agreement") # Termos
 
 MOBILE_BTN_FINALIZAR_COMPRA_PIX = (By.XPATH, "(//button[contains(@class,'action primary checkout')])[1]")
+
+# cupom
+MOBILE_APLICAR_CUPOM = (By.XPATH, "//*[@class='action showcart']")
+MOBILE_MODAL_APLICAR_CUPOM = (By.XPATH, "//*[@class='modal-custom opc-sidebar opc-summary-wrapper custom-slide _show']")
+MOBILE_BTN_CLOSE_MODAL_CUPOM = (By.XPATH, "//*[@class='modal-custom opc-sidebar opc-summary-wrapper custom-slide _show']//*[@class='action-close']")
+
+# resumo do pedido
+MOBILE_OPEN_SUMARY = (By.XPATH, "//*[@class='summary-floating __expand __not-expanded']//img")
+MOBILE_CLOSE_SUMARY = (By.XPATH, "//*[@class='summary-floating __expand']//img")

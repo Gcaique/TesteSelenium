@@ -122,7 +122,7 @@ def test_8_finalizacao_pedidos(driver, setup_site, wait):
     time.sleep(5)
     click_when_clickable(wait, PARTIAL_BILLING_TRIGGER_BOLETO)
     wait.until(EC.visibility_of_element_located(PARTIAL_BILLING_ACCEPT))
-    click_when_clickable(wait, PARTIAL_BILLING_REJECT)
+    click_when_clickable(wait, PARTIAL_BILLING_ACCEPT)
     wait.until(EC.invisibility_of_element_located(PARTIAL_BILLING_ACCEPT))
 
     # 15) Finalizando pedido com BOLETO
