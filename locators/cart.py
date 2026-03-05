@@ -60,6 +60,7 @@ CART_PROCEED_CHECKOUT = (By.XPATH, "//ul[@class='checkout methods items checkout
 #---------------------------------------------------------------
 
 # MINI-CART
+MOBILE_REMOVE_SIMPLE_DELETE_BY_INDEX = lambda idx: (By.XPATH, f"(//a[@class='action delete hj-minicart_product-item-delete'])[{idx}]",)
 
 # ÍCONE do mini-cart (para ABRIR)
 MOBILE_MINICART_ICON = (
@@ -100,7 +101,6 @@ MOBILE_MINICART_CLOSED = (
 
 
 # CARRINHO
-
 # Resumo do pedido
 SUMARY_EXPAND = (By.XPATH, "//*[@class='summary-floating __expand']")
 SUMARY_EXPAND_ARROW = (By.XPATH, "//*[@class='summary-floating __expand']/img")
