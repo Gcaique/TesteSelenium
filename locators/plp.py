@@ -92,6 +92,9 @@ MOBILE_MENU_SEE_ALL = (By.XPATH, "//*[@class='mm-panel mm-panel_opened']//a[norm
 def MOBILE_MENU_PARENT_NEXT(slug: str):
     return (By.XPATH, f"//nav[@id='custom-menu']//li[a[contains(@href,'/{slug}.html')]]//a[contains(@class,'mm-btn_next')]")
 
+def MOBILE_MENU_PARENT(slug: str):
+    return (By.XPATH, f"//nav[@id='custom-menu']//li[a[contains(@href,'/{slug}.html')]]//a")
+
 # Paginação
 MOBILE_PAGINATION_CONTAINER = (By.CSS_SELECTOR, "ul.pages-items")
 
