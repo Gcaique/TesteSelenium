@@ -17,6 +17,7 @@ VALID_PASS = "Min@1234"
 @pytest.mark.smoke
 @pytest.mark.default
 @pytest.mark.checkout
+@pytest.mark.mobile
 def test_8_finalizacao_pedidos_mobile(driver, setup_site, wait):
 
     # 1) Login (fonte da verdade = mini-cart)
