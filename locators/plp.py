@@ -64,6 +64,8 @@ BTN_ENTRAR_LISTA = (By.XPATH, "//a[contains(@class,'loggin-btn') and .//span[nor
 # Botões de ações (card)
 BTN_INCREMENT_QTY = (By.XPATH, "(//div[@class='product actions product-item-actions']//button[contains(@class,'increment-qty')])[1]")
 BTN_ADD_TO_CART = (By.XPATH, "(//button[contains(@class,'action tocart') and contains(@class,'primary')])[1]")
+PLP_ADD_TO_CART_BY_INDEX = lambda idx: (By.XPATH, f"(//button[contains(@class,'action tocart') and contains(@class,'primary')])[{idx}]")
+PLP_INCREMENT_BY_INDEX = lambda idx: (By.XPATH, f"(//div[@class='product actions product-item-actions']//button[contains(@class,'increment-qty')])[{idx}]")
 
 TOOLBAR_AMOUNT = (By.ID, "toolbar-amount")
 
@@ -74,6 +76,7 @@ PLP_PRODUCT_IMAGE_WRAPPER_BY_INDEX = lambda idx: (By.XPATH, f"(//*[contains(@id,
 
 # Botão do favorito
 PLP_WISHLIST_BTN_BY_INDEX = lambda idx: (By.XPATH, f"(//button[contains(@id,'button_wishlist')])[{idx}]",)
+
 
 
 #---------------------------------------------------------------
@@ -88,6 +91,9 @@ MOBILE_MENU_SEE_ALL = (By.XPATH, "//*[@class='mm-panel mm-panel_opened']//a[norm
 # abrir submenu (setinha) pelo slug (usa o <a class="mm-btn mm-btn_next ... href='#mm-8'>)
 def MOBILE_MENU_PARENT_NEXT(slug: str):
     return (By.XPATH, f"//nav[@id='custom-menu']//li[a[contains(@href,'/{slug}.html')]]//a[contains(@class,'mm-btn_next')]")
+
+def MOBILE_MENU_PARENT(slug: str):
+    return (By.XPATH, f"//nav[@id='custom-menu']//li[a[contains(@href,'/{slug}.html')]]//a")
 
 # Paginação
 MOBILE_PAGINATION_CONTAINER = (By.CSS_SELECTOR, "ul.pages-items")
