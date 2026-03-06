@@ -86,10 +86,6 @@ def add_favorite_from_home_first_carousel(driver, wait, timeout=25):
 
     raise TimeoutError("Não consegui clicar no botão wishlist do primeiro produto.")
 
-BTN_QUERO_SER_CLIENTE = (
-    By.XPATH,
-    "//*[normalize-space()='Quero ser cliente']"
-)
 
 #---------------------------------------------------------------
 # 📱 MOBILE

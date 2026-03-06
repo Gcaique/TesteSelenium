@@ -242,7 +242,7 @@ def driver_mobile_lambdatest(nome_teste, navegador, sistema_operacional, device_
 # ============================
 # 💻 Desktop (BrowserStack)
 # ============================
-def driver_desktop_browserstack(nome_teste, navegador, sistema_operacional, resolucao="1920x1080"):
+def driver_desktop_browserstack(nome_teste, navegador, sistema_operacional):
     """
     Desktop web no BrowserStack (Windows/macOS + Chrome/Firefox/Edge/Safari).
     """

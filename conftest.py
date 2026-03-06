@@ -50,14 +50,13 @@ def pytest_addoption(parser):
     parser.addoption("--navegador", action="store", default="chrome", help="chrome|firefox|edge|safari")
     parser.addoption("--so", action="store", default="Windows 11", help="Sistema operacional (LT/BS)")
     parser.addoption("--device", action="store", default="", help='Device name (mobile). Ex: "iPhone 14"')
-    parser.addoption("--base-url", action="store", default=os.getenv("URL"), help="URL base")
+    parser.addoption("--base-url", action="store", default="https://meuminerva.com/", help="URL base")
     parser.addoption("--region", action="store", default="outras", help="outras|sul")
     parser.addoption("--username", action="store", default=os.getenv("USERNAME", ""), help="Login")
     parser.addoption("--password", action="store", default=os.getenv("PASSWORD", ""), help="Senha")
     parser.addoption("--timeout", action="store", default=10, type=int, help="Timeout padrão do WebDriverWait")
     parser.addoption("--grid", action="store", default="lt", help="lt|bs|local")
     parser.addoption("--headless", action="store_true", help="Executa browser local em modo headless")
-    parser.addoption("--resolution", action="store", default="1920x1080", help='Resolução desktop no formato LARGURAxALTURA. Ex: 1920x1080')
 
 
 # =============================================================================
@@ -153,7 +152,6 @@ def driver(request):
         grid=grid,
         headless=headless
     )
-    driver.maximize_window()
 
     yield driver
     driver.quit()
