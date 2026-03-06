@@ -9,7 +9,8 @@ from selenium.webdriver.common.actions.pointer_input import PointerInput
 from selenium.webdriver.common.actions import interaction
 
 from helpers.waiters import clickable, visible
-
+import time
+from selenium.webdriver.support import expected_conditions as EC
 
 def click(driver, locator, timeout=10):
     """Clique robusto com fallback JS"""
@@ -264,3 +265,29 @@ def scroll_into_view_loc_mobile(driver, locator, timeout=20):
             time.sleep(0.3)
 
     raise TimeoutError(f"Não consegui dar scroll no elemento: {locator}. Erro: {last_err}")
+
+def click_when_clickable(wait, locator):
+    """Aguarda o elemento ficar clicavel e clica."""
+    el = wait.until(EC.element_to_be_clickable(locator))
+    el.click()
+    return el
+
+
+def scroll_to_middle(driver, wait, locator, timeout=10):
+    """Faz scroll ate o elemento ficar centralizado na viewport."""
+    el = wait.until(EC.presence_of_element_located(locator))
+    driver.execute_script(
+        "arguments[0].scrollIntoView({block: 'center', behavior: 'smooth'});",
+        el,
+    )
+    return el
+
+
+def scroll_to_top(driver, wait, locator, timeout=10):
+    """Faz scroll ate o elemento ficar no topo da viewport."""
+    el = wait.until(EC.presence_of_element_located(locator))
+    driver.execute_script(
+        "arguments[0].scrollIntoView({block: 'start', behavior: 'smooth'});",
+        el,
+    )
+    return el
