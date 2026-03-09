@@ -19,9 +19,9 @@ from helpers.auth import *
 @pytest.mark.smoke
 @pytest.mark.sul
 @pytest.mark.deslogado
-def test_1_userDeslogado(driver, setup_site, wait):
+def test_14_userDeslogado_sul(driver, setup_site, wait):
     """
-    Usuário deslogado (visão default).
+    Usuário deslogado (visão sul).
     Passa por modais, scroll, busca e cenários por categoria.
     """
 
@@ -80,18 +80,13 @@ def test_1_userDeslogado(driver, setup_site, wait):
 
     # 5 Acessar categoria:
     # Paginação 2 e 3 (sem travar)
-    click_when_clickable(wait, CATEGORY_MENU("Bovinos Premium"))
+    click_when_clickable(wait, CATEGORY_MENU("Bovinos"))
     wait_category_loaded(wait, driver)
     try_go_to_page(wait, driver, "2", timeout=6)
     try_go_to_page(wait, driver, "3", timeout=6)
 
     # Garante que os filtros carregaram na página
-    wait.until(EC.visibility_of_element_located(FILTER_NACIONALIDADE))
     wait.until(EC.visibility_of_element_located(FILTER_CONSERVACAO_OPEN))
-
-    # Aplica Nacionalidade
-    aplicou_nat = apply_filter_strict(driver, wait, FILTER_NACIONALIDADE, FILTER_NACIONALIDADE_OPTION_1, timeout=12, retries=5)
-    assert aplicou_nat, "Não consegui aplicar filtro Nacionalidade."
 
     # Aplica Conservação
     aplicou_cons = apply_filter_strict(driver, wait, FILTER_CONSERVACAO_OPEN, FILTER_CONSERVACAO_RESFRIADO, timeout=12, retries=5)
@@ -101,8 +96,8 @@ def test_1_userDeslogado(driver, setup_site, wait):
     limpou_promo = clear_filters_strict(driver, wait, FILTER_CLEAR_ALL, timeout=15, retries=5)
     assert limpou_promo, "Não consegui limpar os filtros (Limpar Tudo)."
 
-    # Pescados: ordenação
-    click_when_clickable(wait, CATEGORY_MENU("Pescados"))
+    # Marcas: ordenação
+    click_when_clickable(wait, CATEGORY_MENU("Marcas"))
     wait_category_loaded(wait, driver)
 
     wait.until(EC.visibility_of_element_located(SORTER_SELECT))
