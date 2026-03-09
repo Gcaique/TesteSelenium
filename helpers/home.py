@@ -2,9 +2,8 @@ import time
 from selenium.common.exceptions import TimeoutException, StaleElementReferenceException, WebDriverException
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
-from selenium.webdriver.common.action_chains import ActionChains
 
-from helpers.actions import click_when_clickable, click, scroll_and_safe_click_loc, safe_click_loc, scroll_into_view
+from helpers.actions import click_when_clickable, click
 from helpers.auth import expect_login_popup, expect_login_popup_mobile
 from helpers.wishlist import wait_favorite_status
 
@@ -47,49 +46,28 @@ def go_home(driver):
 
 
 def add_favorite_from_home_first_carousel(driver, wait, timeout=25):
-
-    # 1) Espera o carrossel existir
+    # Espera o carrossel aparecer
     carousel = wait.until(EC.presence_of_element_located(HOME_CAROUSEL_1))
+
+    # Faz scroll até ele
     driver.execute_script("arguments[0].scrollIntoView({block:'center'});", carousel)
+    time.sleep(1)
 
-    end = time.time() + timeout
+    # Pega o primeiro card
+    card = carousel.find_element(*FIRST_PRODUCT_CARD)
 
-    while time.time() < end:
-        try:
-            # 2) Re-encontra o carrossel (evita stale)
-            carousel = driver.find_element(*HOME_CAROUSEL_1)
+    # Faz scroll até o card
+    driver.execute_script("arguments[0].scrollIntoView({block:'center'});", card)
+    time.sleep(1)
 
-            # 3) Pega o primeiro card REAL
-            card = carousel.find_element(*FIRST_PRODUCT_CARD)
+    # Pega o botão wishlist dentro do card
+    btn = card.find_element(*WISHLIST_BTN_INSIDE)
 
-            driver.execute_script("arguments[0].scrollIntoView({block:'center'});", card)
+    # Clica com JS
+    driver.execute_script("arguments[0].click();", btn)
 
-            # 4) HOVER (essencial no seu layout)
-            ActionChains(driver).move_to_element(card).perform()
+    return True
 
-            time.sleep(0.5)  # pequeno tempo pro botão aparecer
-
-            # 5) Agora busca o botão dentro do card
-            btn = card.find_element(*WISHLIST_BTN_INSIDE)
-
-            # 6) Clique seguro
-            try:
-                wait.until(lambda d: btn.is_displayed() and btn.is_enabled())
-                btn.click()
-            except Exception:
-                driver.execute_script("arguments[0].click();", btn)
-
-            return True
-
-        except StaleElementReferenceException:
-            time.sleep(0.3)
-
-    raise TimeoutError("Não consegui clicar no botão wishlist do primeiro produto.")
-
-BTN_QUERO_SER_CLIENTE = (
-    By.XPATH,
-    "//*[normalize-space()='Quero ser cliente']"
-)
 
 #---------------------------------------------------------------
 # 📱 MOBILE
