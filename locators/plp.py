@@ -53,6 +53,7 @@ CATEGORY_PESCADOS = (By.XPATH, "//*[@id='nav-menu-desktop']//span[normalize-spac
 CATEGORY_CORDEIROS = (By.XPATH, "//*[@id='nav-menu-desktop']//span[normalize-space(text())='Cordeiros']")
 CATEGORY_BOVINOS_PREMIUM = (By.XPATH, "//*[@id='nav-menu-desktop']//span[normalize-space()='Bovinos Premium']")
 CATEGORY_BOVINOS = (By.XPATH, "//*[@id='nav-menu-desktop']//span[normalize-space(text())='Bovinos']")
+CATEGORY_MAIS_VENDIDOS = (By.XPATH, "//*[@id='nav-menu-desktop']//span[normalize-space(text())='Mais Vendidos']")
 
 # Avise-me (PLP/PDP)
 AVISE_DISABLED_ANY = (By.CSS_SELECTOR, "a[id^='button_disabled_']")
