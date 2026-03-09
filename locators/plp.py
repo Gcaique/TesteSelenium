@@ -75,7 +75,7 @@ PLP_LIMITER = (By.ID, "limiter")
 PLP_PRODUCT_IMAGE_WRAPPER_BY_INDEX = lambda idx: (By.XPATH, f"(//*[contains(@id,'product-item-info')]//span[@class='product-image-wrapper'])[{idx}]",)
 
 # Botão do favorito
-PLP_WISHLIST_BTN_BY_INDEX = lambda idx: (By.XPATH, f"(//button[contains(@id,'button_wishlist')])[{idx}]",)
+PLP_WISHLIST_BTN_BY_INDEX = lambda idx: (By.XPATH, f"(.//button[contains(@class,'towishlist')])[{idx}]",)
 
 
 
