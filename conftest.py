@@ -243,14 +243,14 @@ def setup_site(open_home, driver, region):
     # 1) Espera body carregar
     w.until(EC.presence_of_element_located((By.TAG_NAME, "body")))
 
-    # 2) Cookies
-    click_if_present(driver, BTN_ACCEPT_COOKIES, seconds=20)
-
-    # 3) Região
+    # 2) Região
     if region == "sul":
         click_if_present(driver, BTN_REGION_SUL, seconds=15)
     else:
         click_if_present(driver, BTN_REGION_OUTRAS, seconds=15)
+
+    # 3) Cookies
+    click_if_present(driver, BTN_ACCEPT_COOKIES, seconds=20)
 
     # 4) Fecha modais ocasionais
     click_if_present(driver, BTN_CLOSE_SPIN, seconds=8)

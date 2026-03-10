@@ -5,7 +5,7 @@ FIRST_ACCESS_CREATE_PASSWORD = (By.ID, "select-number") # Utilizado na primeira 
 SEND_BY_EMAIL = (By.XPATH, "//li[@class='type-send-option']/span[normalize-space()='E-MAIL']") # Utilizado na segunda modal (Validação), onde é selecionado o enivo do token por e-mail
 
 EMAIL_OPTION_2 = (By.XPATH, "(//ul[@class='options-list']//input[@name='email'])[2]") # Utilizado na terceira modal (Selecione), onde é selecionado a segunda opção do e-mail
-
+EMAIL_OPTION = (By.XPATH), "//ul[@class='options-list']//input[@name='email']"
 BTN_SEND_CODE_2 = (By.XPATH, "(//*[@id='resend-code'])[2]") # Utilizado na terceria modal (Selecione) botão Avançar.
 
 TOKEN_INPUT = (By.ID, "token") # Utilizado na quarta modal (Verifique), campo de inserção do token

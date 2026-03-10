@@ -26,6 +26,8 @@ def open_out_of_stock_product_and_add_to_favorites(
     category_locator,
     pages=(1, 2, 3, 4, 5, 6)
 ):
+
+
     """
     Fluxo:
       - entra na categoria

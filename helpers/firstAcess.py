@@ -23,6 +23,11 @@ def send_code_by_email(driver, wait):
     wait.until(EC.element_to_be_clickable(EMAIL_OPTION_2)).click()
     wait.until(EC.element_to_be_clickable(BTN_SEND_CODE_2)).click()
 
+def send_code_by_email_sul(driver, wait):
+    wait.until(EC.element_to_be_clickable(SEND_BY_EMAIL)).click()
+    wait.until(EC.element_to_be_clickable(EMAIL_OPTION)).click()
+    wait.until(EC.element_to_be_clickable(BTN_SEND_CODE_2)).click()
+
 
 def validate_token(driver, wait, token):
     wait.until(EC.visibility_of_element_located(TOKEN_INPUT))
