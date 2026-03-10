@@ -56,7 +56,6 @@ CATEGORY_BOVINOS = (By.XPATH, "//*[@id='nav-menu-desktop']//span[normalize-space
 CATEGORY_MARCAS = (By.XPATH,"//*[@id='nav-menu-desktop']//span[normalize-space(text())='Marcas']")
 CATEGORY_MAIS_VENDIDOS = (By.XPATH,"//*[@id='nav-menu-desktop']//span[normalize-space(text())='Mais Vendidos']")
 
-
 # Avise-me (PLP/PDP)
 AVISE_DISABLED_ANY = (By.CSS_SELECTOR, "a[id^='button_disabled_']")
 AVISE_ENABLED_ANY = (By.CSS_SELECTOR, "a[id^='button_enabled_']")
@@ -78,7 +77,7 @@ PLP_LIMITER = (By.ID, "limiter")
 PLP_PRODUCT_IMAGE_WRAPPER_BY_INDEX = lambda idx: (By.XPATH, f"(//*[contains(@id,'product-item-info')]//span[@class='product-image-wrapper'])[{idx}]",)
 
 # Botão do favorito
-PLP_WISHLIST_BTN_BY_INDEX = lambda idx: (By.XPATH, f"(//button[contains(@id,'button_wishlist')])[{idx}]",)
+PLP_WISHLIST_BTN_BY_INDEX = lambda idx: (By.XPATH, f"(.//button[contains(@class,'towishlist')])[{idx}]",)
 
 
 

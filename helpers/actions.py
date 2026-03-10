@@ -7,6 +7,7 @@ from selenium.webdriver.remote.webelement import WebElement
 from selenium.webdriver.common.actions.action_builder import ActionBuilder
 from selenium.webdriver.common.actions.pointer_input import PointerInput
 from selenium.webdriver.common.actions import interaction
+from selenium.webdriver.common.keys import Keys
 
 from helpers.waiters import clickable, visible
 import time
@@ -181,6 +182,33 @@ def fill_input(driver, wait, locator, value: str, timeout=10):
         driver.execute_script("arguments[0].value='';", el)
     el.send_keys(value)
 
+def clear_and_type(driver, locator, texto):
+    """Limpa o campo e digita o texto."""
+    campo = driver.find_element(*locator)
+    campo.clear()
+    time.sleep(1)
+    campo.send_keys(texto)
+    time.sleep(1)
+
+def scroll_to_middle(driver, wait, locator, timeout=10):
+    """Faz scroll ate o elemento ficar centralizado na viewport."""
+    el = wait.until(EC.presence_of_element_located(locator))
+    driver.execute_script(
+        "arguments[0].scrollIntoView({block: 'center', behavior: 'smooth'});",
+        el,
+    )
+    return el
+
+
+def scroll_to_top(driver, wait, locator, timeout=10):
+    """Faz scroll ate o elemento ficar no topo da viewport."""
+    el = wait.until(EC.presence_of_element_located(locator))
+    driver.execute_script(
+        "arguments[0].scrollIntoView({block: 'start', behavior: 'smooth'});",
+        el,
+    )
+    return el
+
 
 #---------------------------------------------------------------
 # 📱 MOBILE
@@ -265,29 +293,3 @@ def scroll_into_view_loc_mobile(driver, locator, timeout=20):
             time.sleep(0.3)
 
     raise TimeoutError(f"Não consegui dar scroll no elemento: {locator}. Erro: {last_err}")
-
-def click_when_clickable(wait, locator):
-    """Aguarda o elemento ficar clicavel e clica."""
-    el = wait.until(EC.element_to_be_clickable(locator))
-    el.click()
-    return el
-
-
-def scroll_to_middle(driver, wait, locator, timeout=10):
-    """Faz scroll ate o elemento ficar centralizado na viewport."""
-    el = wait.until(EC.presence_of_element_located(locator))
-    driver.execute_script(
-        "arguments[0].scrollIntoView({block: 'center', behavior: 'smooth'});",
-        el,
-    )
-    return el
-
-
-def scroll_to_top(driver, wait, locator, timeout=10):
-    """Faz scroll ate o elemento ficar no topo da viewport."""
-    el = wait.until(EC.presence_of_element_located(locator))
-    driver.execute_script(
-        "arguments[0].scrollIntoView({block: 'start', behavior: 'smooth'});",
-        el,
-    )
-    return el

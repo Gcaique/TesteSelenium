@@ -8,7 +8,7 @@ ADD_BTN_FIRST_CAROUSEL = (By.XPATH, "(//*[@class='slick-slide slick-current slic
 # Icone favorito
 HOME_CAROUSEL_1 = (By.XPATH, "(//div[contains(@class,'slider-products')])[1]")
 FIRST_PRODUCT_CARD = (By.XPATH, ".//li[contains(@class,'product-item')][1]")
-WISHLIST_BTN_INSIDE = (By.XPATH, ".//button[contains(@id,'button_wishlist')]")
+WISHLIST_BTN_INSIDE = (By.XPATH, ".//button[contains(@class,'towishlist')]")
 
 # Carrossel / Mapa de cortes / Footer - Interação com o scroll da home
 BRANDS_CAROUSEL = (By.XPATH, "//div[@class='brands-carousel']")
@@ -35,7 +35,7 @@ HOME_SECTIONS = [
 # Icone favorito
 MOBILE_HOME_CAROUSEL_1 = (By.XPATH, "(//div[contains(@class,'slider-products')])[1]") # HOME - CAROUSEL 1
 MOBILE_HOME_CAROUSEL_ACTIVE_PRODUCT_CARD = (By.XPATH, ".//li[contains(@class,'product-item')]") # CARD dentro do slide ativo
-MOBILE_HOME_CAROUSEL_WISHLIST_BTN = (By.XPATH, ".//button[contains(@id,'button_wishlist')]") # Botão wishlist dentro do card
+MOBILE_HOME_CAROUSEL_WISHLIST_BTN = (By.XPATH, ".//button[contains(@class,'towishlist')]") # Botão wishlist dentro do card
 # SLIDE ATIVO (ignora clonados)
 MOBILE_HOME_CAROUSEL_ACTIVE_SLIDE = (
     By.XPATH,

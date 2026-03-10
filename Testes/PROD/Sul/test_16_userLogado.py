@@ -16,7 +16,7 @@ from locators.plp import (
     PAGINA_2, FILTER_CONSERVACAO_OPEN, FILTER_CONSERVACAO_RESFRIADO,
     FILTER_MARCA_OPEN, FILTER_MARCA_OPT1, FILTER_CLEAR_ALL,
     SORTER_SELECT, SORT_LOW_TO_HIGH, SORT_HIGH_TO_LOW,
-    CATEGORY_PROMOCOES, CATEGORY_PESCADOS, CATEGORY_CORDEIROS,
+    CATEGORY_PROMOCOES, CATEGORY_BOVINOS, CATEGORY_MAIS_VENDIDOS,
 )
 from locators.pdp import (
     FIRST_PRODUCT_PLP, PDP_INCREMENT, PDP_ADD_TO_CART,
@@ -27,22 +27,20 @@ from locators.header import (
     DD_MINHA_CONTA, DD_COMPARAR, DD_MEUS_PEDIDOS,
     DD_FAVORITOS, DD_MEUS_PONTOS, DD_MEUS_CUPONS, DD_MINHAS_MISSOES
 )
-from locators.dashboard import BTN_MAIN_ADDRESS_DASHBOARD, BTN_FILTER, REWARD_FILTER_SELECT, COUPON_FILTER_SELECT, MISSIONS_READY
-from locators.productCompare import INPUT_COMPARE
 
 # =========================
 # Credenciais
 # =========================
-VALID_USER = "hub.teste2-bruno-popup@minervafoods.com"
+VALID_USER = "smoketesting@automatizacao.com.br"
 VALID_PASS = "Min@1234"
 
 
 @pytest.mark.smoke
-@pytest.mark.default
+@pytest.mark.sul
 @pytest.mark.logado
-def test_3_userLogado(driver, setup_site):
+def test_16_userLogado_sul(driver, setup_site):
     """
-    Usuário LOGADO (default):
+    Usuário LOGADO (sul):
     - login
     - navega itens do dropdown do usuário
     - troca região (default <-> sul)
@@ -68,9 +66,9 @@ def test_3_userLogado(driver, setup_site):
     open_dropdown_item(driver, DD_MEUS_CUPONS, timeout=15)
     open_dropdown_item(driver, DD_MINHAS_MISSOES, timeout=15)
 
-    # 3) Troca de região: default -> sul -> default
-    switch_region(driver, "sul")
+    # 3) Troca de região: sul -> default -> sul
     switch_region(driver, "default")
+    switch_region(driver, "sul")
 
     # 4) Mini-cart abre/fecha
     click(driver, MINICART_ICON, timeout=10)
@@ -86,9 +84,9 @@ def test_3_userLogado(driver, setup_site):
     click(driver, ADD_BTN_FIRST_CAROUSEL, timeout=10)
     wait_minicart_loading(driver)
 
-    # 6) Busca: "suino" e add pela sugestão da busca
+    # 6) Busca: "alcatra" e add pela sugestão da busca
     click(driver, SEARCH_INPUT, timeout=10)
-    fill(driver, SEARCH_INPUT, "suino")
+    fill(driver, SEARCH_INPUT, "alcatra")
     visible(driver, SEARCH_SUGGEST_ADD_2, timeout=20)
     click(driver, SEARCH_SUGGEST_ADD_2, timeout=10)
     wait_minicart_loading(driver)
@@ -139,8 +137,8 @@ def test_3_userLogado(driver, setup_site):
     click(driver, (By.XPATH, "(//button[contains(@class, 'action tocart primary tget-btn-buy tocart')])[1]"), timeout=10)
     wait_minicart_loading(driver)
 
-    # 9) Pescados -> PDP -> add -> previsão entrega
-    click(driver, CATEGORY_PESCADOS, timeout=15)
+    # 9) Bovinos -> PDP -> add -> previsão entrega
+    click(driver, CATEGORY_BOVINOS, timeout=15)
     visible(driver, FIRST_PRODUCT_PLP, timeout=20)
     click(driver, FIRST_PRODUCT_PLP, timeout=15)
 
@@ -155,11 +153,8 @@ def test_3_userLogado(driver, setup_site):
     click(driver, BTN_VERIFY_FORECAST, timeout=10)
     visible(driver, FORECAST_RESULT, timeout=20)
 
-    # 10) Cordeiros -> página 2
-    click(driver, CATEGORY_CORDEIROS, timeout=15)
-    visible(driver, SORTER_SELECT, timeout=20)
-
-    click(driver, PAGINA_2, timeout=15)
+    # 10) Mais vendidos -> página 2
+    click(driver, CATEGORY_MAIS_VENDIDOS, timeout=15)
     visible(driver, SORTER_SELECT, timeout=20)
 
     # PLP: toggle avise-me

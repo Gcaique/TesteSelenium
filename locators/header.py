@@ -14,6 +14,8 @@ LOGIN_NAME_CONTAINER = (By.ID, "login-name")  # área do usuário (logado)
 USERNAME_INPUT = (By.ID, "username")  # input e-mail/cnpj/cpf
 PASSWORD_INPUT = (By.XPATH, "//*[@name='login[password]']")  # input senha
 BTN_AVANCAR = (By.ID, "send2")  # botão "Avançar"
+LINK_ESQUECI_SENHA = (By.XPATH, "//a[@class='action remind hj-fgt-pwd-modal_opener-action']")
+BTN_MOSTRAR_SENHA = (By.XPATH, "//*[contains(@data-bind,'showPassword')]/label")
 
 #ALERTAS
 ERROR_EMAIL_NOT_FOUND = (By.XPATH, "//*[@class='message-error error message']//*[contains(normalize-space(),'Verifique o dado informado')]")

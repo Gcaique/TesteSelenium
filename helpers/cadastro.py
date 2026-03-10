@@ -1,8 +1,11 @@
+import time
+
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import Select
 from selenium.webdriver.common.keys import Keys
 
 from helpers.dropdown import mobile_open_quero_ser_cliente_from_dropdown
+from helpers.actions import click_when_clickable
 
 from locators.cadastro import *
 from locators.header import BTN_QUERO_SER_CLIENTE
@@ -118,6 +121,14 @@ def finalizar_cadastro(driver, wait):
 
     # Espera modal de sucesso
     wait.until(EC.visibility_of_element_located(MODAL_SUCESSO))
+
+    # Clique no botão de copiar e-mail
+    click_when_clickable(wait, BTN_COPIAR_EMAIL)
+    time.sleep(1)
+
+    # Clique no botão Ir para home
+    click_when_clickable(wait, BTN_IR_HOME)
+    time.sleep(3)
 
 
 #---------------------------------------------------------------
