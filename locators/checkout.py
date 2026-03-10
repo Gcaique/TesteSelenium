@@ -31,6 +31,8 @@ BOLETO_SELECT = (By.ID, "payment-conditions-checkmo")
 BOLETO_OPTION_21 = (By.XPATH, "//*[@id='payment-conditions-checkmo']/option[@value='21']")
 TERMS_BOLETO = (By.ID, "terms_conditions_checkmo_agreement")
 BTN_FINALIZAR_COMPRA_BOLETO = (By.XPATH, "(//button[contains(@class,'action primary checkout')])[2]")
+BTN_FINALIZAR_COMPRA_BOLETO_SUL = (By.XPATH, "//button[contains(@class,'action primary checkout')]")
+
 
 PAGINA_SUCESSO = (By.XPATH, "//body[contains(@class,'checkout-onepage-success')]")
 BTN_IR_PARA_HOME = (By.XPATH, "//a[@class='action primary continue']")
