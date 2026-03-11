@@ -1,20 +1,4 @@
-from helpers.mapa_de_corte import (
-    fazer_login,
-    fechar_roleta_cupons,
-    interagir_mapa_bovino_cliques,
-    paginar_modal_bovino_e_carrossel,
-    ver_produtos_bovino_20,
-    interagir_mapa_cordeiro_cliques,
-    paginar_modal_cordeiro_e_marca,
-    fazer_logout,
-    abrir_mapa_corte_footer,
-    interagir_mapa_corte_pagina_bovino,
-    paginar_pagina_bovino_e_marca,
-    ver_produtos_pagina_bovino_21,
-    interagir_mapa_corte_pagina_cordeiro,
-    paginar_pagina_cordeiro_e_marca,
-    ver_produtos_pagina_cordeiro_final,
-)
+from helpers.mapa_de_corte import *
 
 
 def test_13_mapaDeCorte(driver, setup_site, wait):

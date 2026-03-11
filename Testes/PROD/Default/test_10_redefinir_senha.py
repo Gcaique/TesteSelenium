@@ -1,3 +1,4 @@
+import pytest
 import os
 
 from helpers.redefinir_senha import *
@@ -6,6 +7,9 @@ from helpers.auth import open_login, submit_username_valid, login_password, clic
 
 VALID_USER = "caique.oliveira@infobase.com.br"
 
+@pytest.mark.smoke
+@pytest.mark.default
+@pytest.mark.redefinir_senha
 def test_10_redefinir_senha(driver, setup_site, wait):
 
     # 1) Abre login

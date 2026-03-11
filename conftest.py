@@ -153,7 +153,8 @@ def driver(request):
         grid=grid,
         headless=headless
     )
-    driver.maximize_window()
+    if ambiente != "mobile":
+        driver.maximize_window()
 
     yield driver
     driver.quit()
