@@ -1,4 +1,6 @@
+import pytest
 import os
+
 
 from locators.header import MOBILE_LOGIN_ACESSO
 from helpers.redefinir_senha import *
@@ -8,6 +10,10 @@ from helpers.dropdown import mobile_open_login_modal_from_dropdown
 
 VALID_USER = "caique.oliveira@infobase.com.br"
 
+@pytest.mark.smoke
+@pytest.mark.default
+@pytest.mark.redefinir_senha
+@pytest.mark.mobile
 def test_10_redefinir_senha_mobile(driver, setup_site, wait):
 
     # 1) Abre login

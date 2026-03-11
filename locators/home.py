@@ -27,7 +27,8 @@ HOME_SECTIONS = [
     "//*[@class='cutting-map __home-section']",
     "//div[@class='footer-content']"
 ]
-
+# Carrossel de Marcas
+BRANDS_CAROUSEL_ITEM = lambda index: (By.XPATH, f"(//li[contains(@class,'brands-carousel-item')])[{index}]")
 
 #---------------------------------------------------------------
 # 📱 MOBILE
@@ -43,3 +44,6 @@ MOBILE_HOME_CAROUSEL_ACTIVE_SLIDE = (
     "and contains(@class,'slick-active') "
     "and not(contains(@class,'slick-cloned'))]"
 )
+
+# Carrossel de Marcas
+MOBILE_BRANDS_CAROUSEL_ITEM = lambda index: (By.XPATH, f"(//li[contains(@class,'brands-carousel-item')]/a)[{index}]")
