@@ -21,59 +21,6 @@ from locators.common import *
 
 
 # ---------------------------
-# COMPRA + CHECKOUT BOLETO
-# ---------------------------
-def buy_first_product_and_checkout_boleto(driver, wait):
-    # acesso categoria
-    safe_click_loc(driver, wait, CATEGORY_BOVINOS, timeout=12)
-
-    # garante listagem carregada + scroll
-    visible(driver, BTN_INCREMENT_QTY, timeout=20)
-    scroll_into_view(driver, TOOLBAR_AMOUNT, timeout=12)
-
-    # incrementa e adiciona
-    safe_click_loc(driver, wait, BTN_INCREMENT_QTY, timeout=12)
-    safe_click_loc(driver, wait, BTN_ADD_TO_CART, timeout=12)
-
-    # espera minicart atualizar
-    wait_minicart_loading(driver)
-
-    visible(driver, BTN_CHECKOUT_TOP, timeout=20)
-    safe_click_loc(driver, wait, BTN_CHECKOUT_TOP, timeout=12)
-
-    # shipping -> continuar
-    visible(driver, BTN_CONTINUAR_SHIPPING, timeout=30)
-    safe_click_loc(driver, wait, BTN_CONTINUAR_SHIPPING, timeout=20)
-
-    # payment -> Boleto + termos + finalizar
-    visible(driver, BOLETO, timeout=30)
-    safe_click_loc(driver, wait, BOLETO, timeout=12)
-    click_when_clickable(wait, BOLETO_SELECT)
-    click_when_clickable(wait, BOLETO_OPTION_21)
-    time.sleep(5)
-    click_when_clickable(wait, TERMS_BOLETO)
-    time.sleep(1)
-    try:
-        # Tenta a primeira opção (Default)
-        visible(driver, BTN_FINALIZAR_COMPRA_BOLETO, timeout=25)
-        safe_click_loc(driver, wait, BTN_FINALIZAR_COMPRA_BOLETO, timeout=12)
-
-    except TimeoutException:
-        # Se a primeira falhar, tenta a segunda opção (SUL)
-        visible(driver, BTN_FINALIZAR_COMPRA_BOLETO_SUL, timeout=15)
-        safe_click_loc(driver, wait, BTN_FINALIZAR_COMPRA_BOLETO_SUL, timeout=12)
-
-    wait.until(EC.visibility_of_element_located(PAGINA_SUCESSO))
-    click_when_clickable(wait, BTN_IR_PARA_HOME)
-
-
-
-    # aguarda retorno
-    time.sleep(6)
-
-
-
-# ---------------------------
 # COMPRA + CHECKOUT PIX
 # ---------------------------
 def buy_first_product_and_checkout_pix(driver, wait):

@@ -1,8 +1,11 @@
 import pytest
 
+from locators.cart import MINICART_ICON
+
 from helpers.lp_deslogado_logado import *
 from helpers.auth import submit_username_valid, login_password
 from helpers.minicart import remove_simple_delete
+from helpers.popups import try_close_popups
 
 VALID_USER = "caique.oliveira@infobase.com.br"
 VALID_PASS = "Min@1234"
@@ -27,6 +30,8 @@ def test_11_lp_marcas(driver, setup_site, wait):
    # 5) Efetuar login
    submit_username_valid(driver, VALID_USER, "usuário válido")
    login_password(driver, VALID_PASS, "senha válida", expect_success=True)
+   wait.until(EC.visibility_of_element_located(MINICART_ICON))
+   try_close_popups(driver)
 
    # 6) Navegar nas LPs de marcas logado + adicionar produtos em marcas selecionadas (Alma-lusa e Pul)
    marcas = [

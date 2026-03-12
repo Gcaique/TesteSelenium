@@ -23,35 +23,36 @@ def minicart_visible(driver) -> bool:
 
 
 def wait_minicart_loading(driver):
-    """Espera loading do minicart (duas variações de classe)"""
+    """Espera loading do minicart (três variações de classe)"""
     try:
-        wait(driver, 8).until(
-            EC.visibility_of_element_located(MINICART_LOADING_2)
-        )
+        wait(driver, 10).until(EC.visibility_of_element_located(MINICART_LOADING_1))
     except Exception:
         pass
 
     try:
-        wait(driver, 20).until(
-            EC.invisibility_of_element_located(MINICART_LOADING_2)
-        )
+        wait(driver, 10).until(EC.invisibility_of_element_located(MINICART_LOADING_1))
     except Exception:
         pass
 
     try:
-        wait(driver, 8).until(
-            EC.visibility_of_element_located(MINICART_LOADING_1)
-        )
+        wait(driver, 10).until(EC.visibility_of_element_located(MINICART_LOADING_2))
     except Exception:
         pass
 
     try:
-        wait(driver, 20).until(
-            EC.invisibility_of_element_located(MINICART_LOADING_1)
-        )
+        wait(driver, 10).until(EC.invisibility_of_element_located(MINICART_LOADING_2))
     except Exception:
         pass
 
+    try:
+        wait(driver, 10).until(EC.visibility_of_element_located(MINICART_LOADING_3))
+    except Exception:
+        pass
+
+    try:
+        wait(driver, 10).until(EC.invisibility_of_element_located(MINICART_LOADING_3))
+    except Exception:
+        pass
 
 def wait_minicart_ready(driver, timeout=20):
     """

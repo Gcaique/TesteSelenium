@@ -5,14 +5,19 @@ BTN_CONTINUAR_SHIPPING = (By.XPATH, "//*[@id='shipping-method-buttons-container'
 STEP_ENDERECO = (By.XPATH, "//ul[@class='opc-progress-bar']//li[@class='opc-progress-bar-item _complete']")
 BTN_MAIN_ADRESS_SHIPPING = (By.XPATH, "//*[@class='shipping-address-item selected-item']//button[@class='btn-main-address']")
 
-# CUPOM
+# Step PAYMENT
+BODY_AJAX_LOADING = (By.XPATH, "//body[@class='checkout-index-index page-layout-checkout ajax-loading']",)
+
+# Cupom
 INPUT_CUPOM = (By.ID, "discount-code")
 BTN_APLICAR_CUPOM = (By.ID, "button-apply-coupon")
 MENSAGEM_SUCESSO_CUPOM = (By.XPATH, "//*[@class='message message-success success']")
 BTN_REMOVER_CUPOM = (By.ID, "remove-coupon")
 RADIO_BTN_CUPOM = (By.ID, "coupon-automacao10")
+CUPONS_EXPANDED = (By.XPATH, "//form[@id='discount-form']//label[@aria-expanded='true']",)
+CUPONS_COLLAPSED = (By.XPATH, "//form[@id='discount-form']//label[@aria-expanded='false']",)
 
-# PIX
+# Pix
 PIX = (By.XPATH, "//label[@for='dux_pay_pix']")
 TERMS_PIX = (By.ID, "terms_conditions_dux_pay_pix_agreement")
 BTN_FINALIZAR_COMPRA_PIX = (By.XPATH, "(//button[contains(@class,'action primary checkout')])[1]")
@@ -20,24 +25,26 @@ PARTIAL_BILLING_TRIGGER_PIX = (By.XPATH, "//*[@id='partial_billing_dux_pay_pix_d
 PIX_SUCESSO = (By.XPATH, "//span[@class='dux-pix-customer-area __counter-label']")
 PIX_COPIAR = (By.XPATH, "//*[@class='dux-pay-pix __btn-pix']/button")
 
-# RECEBIMENTO PARCIAL
+# Recebimento parcial
 PARTIAL_BILLING_ACCEPT = (By.XPATH, "//aside[contains(@class,'_show')]//input[contains(@class,'accept')]")
 PARTIAL_BILLING_REJECT = (By.XPATH, "//aside[contains(@class,'_show')]//input[contains(@class,'reject')]")
 
-# BOLETO
+# Boleto
 BOLETO = (By.XPATH, "//label[@for='checkmo']")
 PARTIAL_BILLING_TRIGGER_BOLETO = (By.XPATH, "//*[@id='partial_billing_checkmo_div']//strong")
 BOLETO_SELECT = (By.ID, "payment-conditions-checkmo")
 BOLETO_OPTION_21 = (By.XPATH, "//*[@id='payment-conditions-checkmo']/option[@value='21']")
+BOLETO_OPTION_28 = (By.XPATH, "//*[@id='payment-conditions-checkmo']/option[@value='28']",)
 TERMS_BOLETO = (By.ID, "terms_conditions_checkmo_agreement")
 BTN_FINALIZAR_COMPRA_BOLETO = (By.XPATH, "(//button[contains(@class,'action primary checkout')])[2]")
 BTN_FINALIZAR_COMPRA_BOLETO_SUL = (By.XPATH, "//button[contains(@class,'action primary checkout')]")
 
-
+# Página de sucesso
 PAGINA_SUCESSO = (By.XPATH, "//body[contains(@class,'checkout-onepage-success')]")
 BTN_IR_PARA_HOME = (By.XPATH, "//a[@class='action primary continue']")
+SUCCESS_PAGE_BODY = (By.XPATH, "//body[@class='checkout-onepage-success page-layout-1column mm-wrapper']",)
 
-# CARTÃO
+# Cartão
 CARTAO = (By.XPATH, "//label[@for='braspag_pagador_creditcard']")
 TERMS_CARTAO = (By.ID, "terms_conditions_braspag_pagador_creditcard_agreement")
 BTN_FINALIZAR_COMPRA_CARTAO = (By.XPATH, "(//button[contains(@class,'action primary checkout')])[3]")
@@ -50,9 +57,7 @@ SELECT_ANO_CARTAO = (By.XPATH, "//*[@id='braspag_pagador_creditcard_expiration_y
 OPTION_ANO_CARTAO = (By.XPATH, "//*[@id='braspag_pagador_creditcard_expiration_yr']/option[@value='2027']")
 INPUT_CVV_CARTAO = (By.XPATH, "//*[@id='braspag_pagador_creditcard_cc_cid']")
 
-
-
-# ENDEREÇO
+# Endereço
 BTN_ALTERAR_ENDERECO = (By.XPATH, "//*[@class='choose-address']/a")
 BTN_MAIN_ADDRESS = lambda idx: (By.XPATH, f"(//*[@id='main-address'])[{idx}]")
 BTN_ACCEPT_MODAL = (By.XPATH, "//button[@class='action action-primary action-accept']")
