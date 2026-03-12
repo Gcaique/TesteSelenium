@@ -17,7 +17,7 @@ VALID_PASS = "Min@1234"
 @pytest.mark.smoke
 @pytest.mark.sul
 @pytest.mark.checkout
-def test_21_finalizacao_pedidos(driver, setup_site, wait):
+def test_21_finalizacao_pedidos_sul(driver, setup_site, wait):
 
     # 1) Login (fonte da verdade = mini-cart)
     ensure_logged_in(driver, VALID_USER, VALID_PASS)

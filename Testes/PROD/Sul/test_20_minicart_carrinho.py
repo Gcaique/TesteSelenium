@@ -21,7 +21,7 @@ VALID_PASS = "Min@1234"
 @pytest.mark.smoke
 @pytest.mark.sul
 @pytest.mark.logado
-def test_7_minicart_carrinho(driver, setup_site, wait):
+def test_7_minicart_carrinho_sul(driver, setup_site, wait):
     """
     Fluxo completo de MiniCart + Carrinho.
     """

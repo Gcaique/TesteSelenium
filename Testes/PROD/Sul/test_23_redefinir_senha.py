@@ -8,7 +8,7 @@ from helpers.auth import open_login, submit_username_valid, login_password, clic
 VALID_USER = "caique.oliveira2@infobase.com.br"
 
 @pytest.mark.sul
-def test_23_redefinir_senha(driver, setup_site, wait):
+def test_23_redefinir_senha_sul(driver, setup_site, wait):
 
     # 1) Abre login
     open_login(driver)
