@@ -110,8 +110,8 @@ def test_14_userDeslogado_sul(driver, setup_site, wait):
     ok_pesc_za = sort_strict(driver, wait, SORTER_SELECT, "name_desc", timeout=12, retries=4)
     assert ok_pesc_za, "Pescados: não consegui aplicar ordenação Z-A (name_desc)."
 
-    # 6) Bovinos: apenas acessar
-    click_when_clickable(wait, CATEGORY_MENU("Bovinos"))
+    # 6) Mais Vendidos: apenas acessar
+    click_when_clickable(wait, CATEGORY_MENU("Mais Vendidos"))
     wait_category_loaded(wait, driver)
 
     # Tentativa de compra na lista (exige login)

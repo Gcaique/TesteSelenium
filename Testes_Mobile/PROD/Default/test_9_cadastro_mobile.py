@@ -8,6 +8,8 @@ from helpers.cadastro import (
     finalizar_cadastro,
 )
 
+# ALTERE O E-MAIL AQUI
+USER_EMAIL = "automatizacao@smoketesting.com"
 
 @pytest.mark.smoke
 @pytest.mark.default
@@ -19,7 +21,7 @@ def test_9_cadastro_mobile(driver, setup_site, wait):
     iniciar_fluxo_cadastro_mobile(driver, wait)
 
     # 2 - Preencher dados empresa
-    preencher_dados_empresa(driver, wait)
+    preencher_dados_empresa(driver, wait, email_cliente=USER_EMAIL)
 
     # 3 - Validar token inválido
     validar_token_invalido(driver, wait)

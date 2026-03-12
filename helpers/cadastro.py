@@ -34,13 +34,16 @@ def continuar(driver, wait):
     driver.execute_script("arguments[0].click();", btn)
 
 
-def preencher_dados_empresa(driver, wait):
+def preencher_dados_empresa(driver, wait, email_cliente):
     "Preencher dados no step Dados Gerais"
     wait.until(EC.visibility_of_element_located(INPUT_BUSINESS_NAME)).send_keys("Teste Automatizado")
     wait.until(EC.visibility_of_element_located(INPUT_NOME_CONTATO)).send_keys("Teste Automatizado")
-    wait.until(EC.visibility_of_element_located(INPUT_EMAIL)).send_keys("automatizacao@smoketesting.com")
+    campo_email = wait.until(EC.visibility_of_element_located(INPUT_EMAIL))
+    campo_email.clear()
+    campo_email.send_keys(email_cliente)
     wait.until(EC.visibility_of_element_located(INPUT_CELULAR)).send_keys("11999999999")
     wait.until(EC.visibility_of_element_located(INPUT_TELEFONE)).send_keys("1133333333")
+
 
     driver.execute_script(
         "arguments[0].click();",

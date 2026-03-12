@@ -9,12 +9,12 @@ from helpers.cadastro import (
 )
 
 # ALTERE O E-MAIL AQUI
-USER_EMAIL = "automatizacao@smoketesting.com"
+USER_EMAIL = "automatizacao1@smoketesting.com"
 
 @pytest.mark.smoke
-@pytest.mark.default
+@pytest.mark.sul
 @pytest.mark.cadastro
-def test_9_cadastro(driver, setup_site, wait):
+def test_22_cadastro_sul(driver, setup_site, wait):
 
     # 1 - Iniciar cadastro
     iniciar_fluxo_cadastro(driver, wait)

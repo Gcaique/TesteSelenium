@@ -4,7 +4,8 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support.ui import Select
 from selenium.common.exceptions import WebDriverException, TimeoutException
 
-from helpers.actions import safe_click_loc, scroll_into_view, fill_input, try_click, scroll_and_safe_click_loc, mobile_click_strict
+from helpers.actions import safe_click_loc, scroll_into_view, fill_input, try_click, scroll_and_safe_click_loc, \
+    mobile_click_strict, click_when_clickable
 from helpers.waiters import visible
 from helpers.minicart import wait_minicart_loading
 from helpers.popups import try_close_popups
@@ -17,6 +18,59 @@ from locators.checkout import *
 from locators.header import *
 from locators.dashboard import *
 from locators.common import *
+
+
+# ---------------------------
+# COMPRA + CHECKOUT BOLETO
+# ---------------------------
+def buy_first_product_and_checkout_boleto(driver, wait):
+    # acesso categoria
+    safe_click_loc(driver, wait, CATEGORY_BOVINOS, timeout=12)
+
+    # garante listagem carregada + scroll
+    visible(driver, BTN_INCREMENT_QTY, timeout=20)
+    scroll_into_view(driver, TOOLBAR_AMOUNT, timeout=12)
+
+    # incrementa e adiciona
+    safe_click_loc(driver, wait, BTN_INCREMENT_QTY, timeout=12)
+    safe_click_loc(driver, wait, BTN_ADD_TO_CART, timeout=12)
+
+    # espera minicart atualizar
+    wait_minicart_loading(driver)
+
+    visible(driver, BTN_CHECKOUT_TOP, timeout=20)
+    safe_click_loc(driver, wait, BTN_CHECKOUT_TOP, timeout=12)
+
+    # shipping -> continuar
+    visible(driver, BTN_CONTINUAR_SHIPPING, timeout=30)
+    safe_click_loc(driver, wait, BTN_CONTINUAR_SHIPPING, timeout=20)
+
+    # payment -> Boleto + termos + finalizar
+    visible(driver, BOLETO, timeout=30)
+    safe_click_loc(driver, wait, BOLETO, timeout=12)
+    click_when_clickable(wait, BOLETO_SELECT)
+    click_when_clickable(wait, BOLETO_OPTION_21)
+    time.sleep(5)
+    click_when_clickable(wait, TERMS_BOLETO)
+    time.sleep(1)
+    try:
+        # Tenta a primeira opção (Default)
+        visible(driver, BTN_FINALIZAR_COMPRA_BOLETO, timeout=25)
+        safe_click_loc(driver, wait, BTN_FINALIZAR_COMPRA_BOLETO, timeout=12)
+
+    except TimeoutException:
+        # Se a primeira falhar, tenta a segunda opção (SUL)
+        visible(driver, BTN_FINALIZAR_COMPRA_BOLETO_SUL, timeout=15)
+        safe_click_loc(driver, wait, BTN_FINALIZAR_COMPRA_BOLETO_SUL, timeout=12)
+
+    wait.until(EC.visibility_of_element_located(PAGINA_SUCESSO))
+    click_when_clickable(wait, BTN_IR_PARA_HOME)
+
+
+
+    # aguarda retorno
+    time.sleep(6)
+
 
 
 # ---------------------------
@@ -51,8 +105,8 @@ def buy_first_product_and_checkout_pix(driver, wait):
     visible(driver, TERMS_PIX, timeout=25)
     safe_click_loc(driver, wait, TERMS_PIX, timeout=12)
 
-    visible(driver, BTN_FINALIZAR_COMPRA, timeout=25)
-    safe_click_loc(driver, wait, BTN_FINALIZAR_COMPRA, timeout=12)
+    visible(driver, BTN_FINALIZAR_COMPRA_PIX, timeout=25)
+    safe_click_loc(driver, wait, BTN_FINALIZAR_COMPRA_PIX, timeout=12)
 
     # aguarda retorno
     time.sleep(6)
@@ -79,8 +133,8 @@ def dashboard_set_main_address(driver, wait):
 
 
 def go_all_addresses(driver, wait):
-    scroll_and_safe_click_loc(driver, wait, LINK_VER_TODOS_ENDERECOS, timeout=12)
-    time.sleep(2)
+    scroll_and_safe_click_loc(driver, wait, LINK_VER_TODOS_ENDERECOS, timeout=15)
+    time.sleep(5)
 
 
 def open_recent_orders_from_dashboard(driver, wait):
@@ -101,7 +155,12 @@ def orders_open_first_and_copy_pix(driver, wait):
 
 
 def orders_filters_flow(driver, wait):
-    scroll_and_safe_click_loc(driver, wait, NAV_MEUS_PEDIDOS, timeout=12)
+    # Tenta um clique rápido de 3 segundos no menu lateral.
+    # Se falhar, o fluxo apenas segue para o próximo passo.
+    try:
+        scroll_and_safe_click_loc(driver, wait, NAV_MEUS_PEDIDOS, timeout=3)
+    except (TimeoutException, Exception):
+        """Elemento opcional ou página já carregada"""
 
     # período 7 dias + filtrar
     scroll_and_safe_click_loc(driver, wait, SEL_PERIOD, timeout=12)
