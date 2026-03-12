@@ -93,10 +93,16 @@ MOBILE_MENU_SEE_ALL = (By.XPATH, "//*[@class='mm-panel mm-panel_opened']//a[norm
 
 # abrir submenu (setinha) pelo slug (usa o <a class="mm-btn mm-btn_next ... href='#mm-8'>)
 def MOBILE_MENU_PARENT_NEXT(slug: str):
-    return (By.XPATH, f"//nav[@id='custom-menu']//li[a[contains(@href,'/{slug}.html')]]//a[contains(@class,'mm-btn_next')]")
+    return (
+        By.XPATH,
+        f"//nav[@id='custom-menu']//li[contains(@class,'hj-menu-{slug}')]//a[contains(@class,'mm-btn_next')]"
+    )
 
 def MOBILE_MENU_PARENT(slug: str):
-    return (By.XPATH, f"//nav[@id='custom-menu']//li[a[contains(@href,'/{slug}.html')]]//a")
+    return (
+        By.XPATH,
+        f"//nav[@id='custom-menu']//li[contains(@class,'hj-menu-{slug}')]//a[contains(@class,'mm-listitem__text')]"
+    )
 
 # Paginação
 MOBILE_PAGINATION_CONTAINER = (By.CSS_SELECTOR, "ul.pages-items")

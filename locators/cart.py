@@ -69,11 +69,23 @@ MOBILE_MINICART_ICON = (
     "//a[@id='open-minicart' and contains(@class,'showcart') and contains(@class,'hj-header-minicart')]"
 )
 
+MOBILE_MINICART_ICON_SUL = (
+    By.XPATH,
+    "//div[contains(@class,'minicart-wrapper')]"
+    "//a[contains(@class,'showcart') and contains(@class,'hj-header-minicart')]"
+)
+
 # Estado ABERTO
 MOBILE_MINICART_OPENED = (
     By.XPATH,
     "//div[contains(@class,'minicart-wrapper') and contains(@class,'active')]"
     "//a[@id='open-minicart' and contains(@class,'showcart') and contains(@class,'active')]"
+)
+
+MOBILE_MINICART_OPENED_SUL = (
+    By.XPATH,
+    "//div[contains(@class,'minicart-wrapper') and contains(@class,'active')]"
+    "//a[contains(@class,'showcart') and contains(@class,'active')]"
 )
 
 # BOTÃO FECHAR (X)

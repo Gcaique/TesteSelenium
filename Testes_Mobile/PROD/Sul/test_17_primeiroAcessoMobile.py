@@ -4,7 +4,7 @@ import pytest
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 
-from locators.header import LOGIN_MENU, USERNAME_INPUT, BTN_AVANCAR
+from locators.header import LOGIN_MENU, USERNAME_INPUT, BTN_AVANCAR, MOBILE_LOGIN_ACESSO
 
 from helpers.firstAcess import *
 from helpers.waiters import minicart_visible
@@ -12,18 +12,19 @@ from helpers.waiters import minicart_visible
 # =========================
 # Credenciais
 # =========================
-VALID_USER = "caique.oliveira5@infobase.com.br"
+VALID_USER = "caique.oliveira2@infobase.com.br"
 
 
 @pytest.mark.smoke
 @pytest.mark.sul
 @pytest.mark.primeiroAcesso
-def test_17_primeiro_acesso_sul(driver, setup_site, wait):
+@pytest.mark.mobile
+def test_7_primeiro_acesso_mobile_sul(driver, setup_site, wait):
 
 
     # 1) Abre login
     wait.until(EC.element_to_be_clickable(LOGIN_MENU)).click()
-
+    wait.until(EC.visibility_of_element_located(MOBILE_LOGIN_ACESSO)).click()
     wait.until(EC.visibility_of_element_located(USERNAME_INPUT))
     el_user = driver.find_element(*USERNAME_INPUT)
     el_user.clear()
@@ -35,7 +36,7 @@ def test_17_primeiro_acesso_sul(driver, setup_site, wait):
     open_first_access_modal(driver, wait)
 
     # 3) Modal de seleção de e-mail
-    send_code_by_email_sul(driver, wait)
+    send_code_by_email(driver, wait)
 
     # 4) Modal de inserção do token / token iválido
     validate_token(driver, wait, "456789")
@@ -47,13 +48,13 @@ def test_17_primeiro_acesso_sul(driver, setup_site, wait):
     create_password(driver, wait, "automatizacao@teste", "Min@1234", "Min@1234")
 
     # 7) Criar senha inválida
-    create_password_invalid(driver, wait, "caique.oliveira5@infobase.com.br", "min@123", "Min@1234")
+    create_password_invalid(driver, wait, "caique.oliveira2@infobase.com.br", "min@123", "Min@1234")
 
     # 8) Criar confirmar senha inválida
-    create_password_invalid(driver, wait, "caique.oliveira5@infobase.com.br", "Min@1234", "min@1234")
+    create_password_invalid(driver, wait, "caique.oliveira2@infobase.com.br", "Min@1234", "min@1234")
 
     # 9) Criar credenciais finais válidas
-    create_password(driver, wait, "caique.oliveira5@infobase.com.br", "Min@1234", "Min@1234")
+    create_password(driver, wait, "caique.oliveira2@infobase.com.br", "Min@1234", "Min@1234")
 
     # 10) Apresentação da modal de conclusão
     close_success_modal(driver, wait)

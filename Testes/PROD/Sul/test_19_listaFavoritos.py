@@ -21,7 +21,7 @@ VALID_PASS = "Min@1234"
 @pytest.mark.smoke
 @pytest.mark.sul
 @pytest.mark.favoritos
-def test_6_lista_de_favoritos(driver, setup_site, wait):
+def test_6_lista_de_favoritos_sul(driver, setup_site, wait):
     """
       - Login
       - Favoritar itens: Home, Pescados, Busca, Bovinos (paginando) + PDP
