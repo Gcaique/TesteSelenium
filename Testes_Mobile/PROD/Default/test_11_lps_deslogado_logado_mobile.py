@@ -3,6 +3,7 @@ import pytest
 from helpers.lp_deslogado_logado import *
 from helpers.auth import submit_username_valid, login_password
 from helpers.minicart import remove_simple_delete_mobile
+from helpers.popups import try_close_popups
 
 from locators.cart import MOBILE_MINICART_ICON, MOBILE_MINICART_OPENED
 
@@ -13,6 +14,7 @@ VALID_PASS = "Min@1234"
 @pytest.mark.smoke
 @pytest.mark.default
 @pytest.mark.lp
+@pytest.mark.mobile
 def test_11_lp_marcas_mobile(driver, setup_site, wait):
 
     # 1) Acessar LP Alma lusa pelo carrossel da HOME
@@ -33,6 +35,7 @@ def test_11_lp_marcas_mobile(driver, setup_site, wait):
 
     submit_username_valid(driver, VALID_USER, "usuário válido")
     login_password(driver, VALID_PASS, "senha válida", expect_success=True)
+    try_close_popups(driver)
 
     # 6) Navegar nas LPs de marcas logado + adicionar produtos em marcas selecionadas (Alma-lusa e Pul)
     marcas = [

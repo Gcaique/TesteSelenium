@@ -1,14 +1,19 @@
 import pytest
 
+from conftest import click_if_present
+
 from locators.checkout import BOLETO_OPTION_21, BOLETO_OPTION_28
-from locators.cart import BTN_CHECKOUT_TOP
+from locators.cart import BTN_CHECKOUT_TOP, MOBILE_MINICART_ICON, MOBILE_MINICART_OPENED
 from locators.header import DD_MEUS_PEDIDOS
+from locators.header import MOBILE_LOGIN_ACESSO
+from locators.common import COOKIE_ACCEPT
 
 from helpers.refazer_pedido import *
 from helpers.auth import submit_username_valid, login_password
 from helpers.popups import try_close_popups
-from helpers.checkout import avancar_shipping, selecionar_boleto_e_finalizar, ir_para_home
+from helpers.checkout import avancar_shipping_mobile, selecionar_boleto_e_finalizar_mobile, ir_para_home
 from helpers.dropdown import open_dropdown_item
+from helpers.actions import mobile_click_strict, visible
 
 
 # Dados de teste
@@ -19,7 +24,8 @@ VALID_PASS = "Min@1234"
 @pytest.mark.smoke
 @pytest.mark.default
 @pytest.mark.refazer
-def test_12_refazer_pedido(driver, setup_site, wait):
+@pytest.mark.mobile
+def test_12_refazer_pedido_mobile(driver, setup_site, wait):
     """
     Fluxo completo Refazer Pedidos (com Ver Similar):
     Login -> filtro -> Ver Similar -> adicionar pedido -> checkout cond 21 ->
@@ -29,31 +35,36 @@ def test_12_refazer_pedido(driver, setup_site, wait):
     """
 
     # 1) Login via Ultimos Pedidos
+    click_if_present(driver, COOKIE_ACCEPT, seconds=20)
     clicar_ultimos_pedidos(driver, wait)
+    mobile_click_strict(driver, MOBILE_LOGIN_ACESSO, 10, 4, 0.25)
     submit_username_valid(driver, VALID_USER, "usuário válido")
     login_password(driver, VALID_PASS, "senha válida", expect_success=True)
     aguardar_redirect_ultimos_pedidos(driver, wait)
     try_close_popups(driver)
 
     # 2) Ultimos Pedidos - (Filtro)
-    filtrar_ultimos_7_dias(driver, wait)
+    filtrar_ultimos_7_dias_mobile(driver, wait)
 
     # 3) Ver Similar + Adicionar pedido ao carrinho
-    ver_similar_refazer_e_adicionar(driver, wait)
+    ver_similar_refazer_e_adicionar_mobile(driver, wait)
 
     # 4) Finalizar compra
-    wait.until(EC.element_to_be_clickable(BTN_CHECKOUT_TOP))
-    click_when_clickable(wait, BTN_CHECKOUT_TOP)
+    mobile_click_strict(driver, MOBILE_MINICART_ICON, timeout=20, retries=4, sleep_between=0.25)
+    visible(driver, MOBILE_MINICART_OPENED, timeout=20)
 
-    avancar_shipping(driver, wait)
+    mobile_click_strict(driver, BTN_CHECKOUT_TOP, timeout=12, retries=4, sleep_between=0.25)
+    time.sleep(5)
 
-    selecionar_boleto_e_finalizar(driver, wait, BOLETO_OPTION_21)
+    avancar_shipping_mobile(driver, wait)
+
+    selecionar_boleto_e_finalizar_mobile(driver, wait, BOLETO_OPTION_21)
 
     ir_para_home(driver, wait)
 
     # 5) Comprados Recentemente (Filtro + favoritar e desvaforitar um item)
     navegar_comprados_recentemente(driver, wait)
-    filtrar_comprados_recentemente(driver, wait)
+    filtrar_ultimos_7_dias_mobile(driver, wait)
     scroll_ate_adicionar_todos(driver, wait)
     favoritar_e_desfavoritar(driver, wait)
 
@@ -61,21 +72,23 @@ def test_12_refazer_pedido(driver, setup_site, wait):
     interagir_avise_me(driver, wait)
 
     # 7) Ver Similar + Adicionar no carrinho
-    ver_similar_comprados_e_adicionar(driver, wait)
+    ver_similar_comprados_e_adicionar_mobile(driver, wait)
 
     # 8) Adicionar todos ao carrinho
-    adicionar_todos_ao_carrinho(driver, wait)
+    adicionar_todos_ao_carrinho_mobile(driver, wait)
 
     # 9) Finalizar compra
-    wait.until(EC.element_to_be_clickable(BTN_CHECKOUT_TOP))
-    click_when_clickable(wait, BTN_CHECKOUT_TOP)
+    mobile_click_strict(driver, MOBILE_MINICART_ICON, timeout=20, retries=4, sleep_between=0.25)
+    visible(driver, MOBILE_MINICART_OPENED, timeout=20)
 
-    avancar_shipping(driver, wait)
+    mobile_click_strict(driver, BTN_CHECKOUT_TOP, timeout=12, retries=4, sleep_between=0.25)
+    time.sleep(5)
 
-    selecionar_boleto_e_finalizar(driver, wait, BOLETO_OPTION_28)
+    avancar_shipping_mobile(driver, wait)
+
+    selecionar_boleto_e_finalizar_mobile(driver, wait, BOLETO_OPTION_28)
 
     # 10) Meus Pedidos
     open_dropdown_item(driver, DD_MEUS_PEDIDOS, 10)
-    ordenar_por_forma_pagamento(driver, wait)
-    abrir_detalhe_primeiro_pedido(driver, wait)
+    abrir_detalhe_primeiro_pedido_mobile(driver, wait)
     refazer_pedido(driver, wait)
