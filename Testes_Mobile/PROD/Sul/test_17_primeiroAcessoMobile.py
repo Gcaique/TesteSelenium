@@ -9,10 +9,11 @@ from locators.header import LOGIN_MENU, USERNAME_INPUT, BTN_AVANCAR, MOBILE_LOGI
 from helpers.firstAcess import *
 from helpers.waiters import minicart_visible
 
+
 # =========================
 # Credenciais
 # =========================
-VALID_USER = "caique.oliveira2@infobase.com.br"
+VALID_USER = "caique.oliveira5@infobase.com.br"
 
 
 @pytest.mark.smoke
@@ -20,8 +21,6 @@ VALID_USER = "caique.oliveira2@infobase.com.br"
 @pytest.mark.primeiroAcesso
 @pytest.mark.mobile
 def test_7_primeiro_acesso_mobile_sul(driver, setup_site, wait):
-
-
     # 1) Abre login
     wait.until(EC.element_to_be_clickable(LOGIN_MENU)).click()
     wait.until(EC.visibility_of_element_located(MOBILE_LOGIN_ACESSO)).click()

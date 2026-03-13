@@ -7,14 +7,18 @@ from helpers.auth import submit_username_valid, login_password
 from helpers.minicart import remove_simple_delete
 from helpers.popups import try_close_popups
 
+
+# =========================
+# Credenciais
+# =========================
 VALID_USER = "caique.oliveira@infobase.com.br"
 VALID_PASS = "Min@1234"
+
 
 @pytest.mark.smoke
 @pytest.mark.default
 @pytest.mark.lp
 def test_11_lp_marcas(driver, setup_site, wait):
-
    # 1) Acessar LP Alma lusa pelo carrossel da HOME
    entrar_alma_lusa_via_home(driver, wait)
 

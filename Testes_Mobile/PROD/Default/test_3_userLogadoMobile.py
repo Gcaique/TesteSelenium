@@ -25,6 +25,7 @@ from locators.dashboard import BTN_MAIN_ADDRESS_DASHBOARD, BTN_FILTER, REWARD_FI
 from locators.common import COOKIE_ACCEPT
 from locators.productCompare import INPUT_COMPARE
 
+
 # =========================
 # Credenciais
 # =========================
@@ -37,19 +38,6 @@ VALID_PASS = "Min@1234"
 @pytest.mark.logado
 @pytest.mark.mobile
 def test_3_userLogado_mobile(driver, setup_site, wait):
-    """
-    Usuário LOGADO (default):
-    - login
-    - navega itens do dropdown do usuário
-    - troca região (default <-> sul)
-    - abre/fecha minicart
-    - interações de compra/busca/categoria/pdp/filtros/ordenacao
-    - avise-me (PLP e PDP, com refresh obrigatório)
-    - limpa carrinho
-    """
-
-    visible(driver, SEARCH_INPUT, timeout=20)
-
     # 1) Login (fonte da verdade = mini-cart)
     ensure_logged_in_mobile(driver, VALID_USER, VALID_PASS)
     '''

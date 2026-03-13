@@ -8,6 +8,7 @@ from helpers.dashboard import *
 
 from helpers.auth import (login_expect_email_not_found, login_expect_wrong_password, login_password)
 
+
 # =========================
 # Credenciais
 # =========================
@@ -22,14 +23,6 @@ NEW_PASS = "Min@1234567"
 @pytest.mark.default
 @pytest.mark.dashboard
 def test_5_dashboard(driver, setup_site, wait):
-    """
-    Parte A: Login + Compra + Checkout Pix
-    Parte B: Minha Conta / Dashboard (endereços, pedidos, filtros, favoritos, endereços)
-    Parte C: Pontos / Relatórios / Cadastro de redes / Cupons / Missões
-    Parte D: Info da conta (editar email + trocar senha)  <-- obrigatório
-    Parte E: Logout + validações login + login com senha nova + voltar email  <-- obrigatório
-    """
-
     # 1) Login inicial
     ensure_logged_in(driver, VALID_USER, VALID_PASS)
     assert minicart_visible(driver), "Era para estar logado, mas o minicart não apareceu."

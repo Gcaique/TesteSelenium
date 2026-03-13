@@ -9,6 +9,7 @@ from locators.header import LOGIN_MENU, USERNAME_INPUT, BTN_AVANCAR
 from helpers.firstAcess import *
 from helpers.waiters import minicart_visible
 
+
 # =========================
 # Credenciais
 # =========================
@@ -19,8 +20,6 @@ VALID_USER = "caique.oliveira5@infobase.com.br"
 @pytest.mark.sul
 @pytest.mark.primeiroAcesso
 def test_17_primeiro_acesso_sul(driver, setup_site, wait):
-
-
     # 1) Abre login
     wait.until(EC.element_to_be_clickable(LOGIN_MENU)).click()
 

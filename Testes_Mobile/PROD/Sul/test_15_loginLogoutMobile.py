@@ -10,6 +10,7 @@ from helpers.navigation import validate_navigation_by_auth_state_mobile
 from helpers.dropdown import mobile_open_login_modal_from_dropdown
 from helpers.home import go_home
 
+
 # =========================
 # Credenciais
 # =========================
@@ -22,24 +23,6 @@ VALID_PASS = "Min@1234"
 @pytest.mark.loginLogout
 @pytest.mark.mobile
 def test_15_loginLogout_mobile_sul(driver, setup_site, wait):
-    """
-    Fluxo Login/Logout (otimizado e estável):
-    01) Garantir estado inicial DESLOGADO
-    02) Abrir modal de login
-    03) Username inválido: email não encontrado
-    04) Username inválido: cnpj mismatch/não encontrado
-    05) Username inválido: formato inválido
-    06) Username inválido: cnpj fake
-    07) Username válido: abrir senha
-    08) Senha inválida: erro
-    09) Senha válida: login OK (mini-cart visível)
-    10) Fluxos públicos LOGADO
-    11) Logout
-    12) Fluxos públicos DESLOGADO
-    13) Últimos pedidos deslogado -> loga -> ver produtos
-    14) Logout final
-    """
-
     # 02) Abrir modal de login
     mobile_open_login_modal_from_dropdown(driver, timeout=12)
 

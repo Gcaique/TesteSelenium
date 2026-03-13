@@ -8,14 +8,17 @@ from helpers.cadastro import (
     finalizar_cadastro,
 )
 
-# ALTERE O E-MAIL AQUI
+
+# =========================
+# Altere o e-mail aqui
+# =========================
 USER_EMAIL = "automatizacao1@smoketesting.com"
+
 
 @pytest.mark.smoke
 @pytest.mark.sul
 @pytest.mark.cadastro
 def test_22_cadastro_sul(driver, setup_site, wait):
-
     # 1 - Iniciar cadastro
     iniciar_fluxo_cadastro(driver, wait)
 

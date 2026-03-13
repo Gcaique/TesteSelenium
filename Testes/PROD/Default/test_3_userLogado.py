@@ -30,6 +30,7 @@ from locators.header import (
 from locators.dashboard import BTN_MAIN_ADDRESS_DASHBOARD, BTN_FILTER, REWARD_FILTER_SELECT, COUPON_FILTER_SELECT, MISSIONS_READY
 from locators.productCompare import INPUT_COMPARE
 
+
 # =========================
 # Credenciais
 # =========================
@@ -41,19 +42,6 @@ VALID_PASS = "Min@1234"
 @pytest.mark.default
 @pytest.mark.logado
 def test_3_userLogado(driver, setup_site):
-    """
-    Usuário LOGADO (default):
-    - login
-    - navega itens do dropdown do usuário
-    - troca região (default <-> sul)
-    - abre/fecha minicart
-    - interações de compra/busca/categoria/pdp/filtros/ordenacao
-    - avise-me (PLP e PDP, com refresh obrigatório)
-    - limpa carrinho
-    """
-
-    visible(driver, SEARCH_INPUT, timeout=20)
-
     # 1) Login (fonte da verdade = mini-cart)
     ensure_logged_in(driver, VALID_USER, VALID_PASS)
 

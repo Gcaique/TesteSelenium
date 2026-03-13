@@ -4,14 +4,16 @@ from locators.checkout import BOLETO_OPTION_21, BOLETO_OPTION_28
 from locators.cart import BTN_CHECKOUT_TOP
 from locators.header import DD_MEUS_PEDIDOS
 
-from helpers.refazer_pedido import *
+from helpers.lastOrders_lastItems import *
 from helpers.auth import submit_username_valid, login_password
 from helpers.popups import try_close_popups
 from helpers.checkout import avancar_shipping, selecionar_boleto_e_finalizar, ir_para_home
 from helpers.dropdown import open_dropdown_item
 
 
-# Dados de teste
+# =========================
+# Credenciais
+# =========================
 VALID_USER = "smoketesting@automatizacao.com.br"
 VALID_PASS = "Min@1234"
 
@@ -20,14 +22,6 @@ VALID_PASS = "Min@1234"
 @pytest.mark.default
 @pytest.mark.refazer
 def test_12_refazer_pedido(driver, setup_site, wait):
-    """
-    Fluxo completo Refazer Pedidos (com Ver Similar):
-    Login -> filtro -> Ver Similar -> adicionar pedido -> checkout cond 21 ->
-    Comprados Recentemente -> filtro -> favoritar -> avise-me ->
-    Ver Similar + Adicionar -> adicionar todos -> checkout cond 28 ->
-    Meus Pedidos -> detalhe -> refazer pedido.
-    """
-
     # 1) Login via Ultimos Pedidos
     clicar_ultimos_pedidos(driver, wait)
     submit_username_valid(driver, VALID_USER, "usuário válido")

@@ -1,9 +1,13 @@
 import pytest
 
+from conftest import click_if_present
+
 from helpers.mapa_de_corte import *
-from helpers.auth import ensure_logged_in, logout
+from helpers.auth import ensure_logged_in_mobile, logout_mobile
 from helpers.popups import try_close_popups
 from helpers.minicart import minicart_visible
+
+from locators.common import COOKIE_ACCEPT
 
 
 # =========================
@@ -16,15 +20,17 @@ VALID_PASS = "Min@1234"
 @pytest.mark.smoke
 @pytest.mark.default
 @pytest.mark.mapa
-def test_13_mapa_de_corte(driver, setup_site, wait):
+@pytest.mark.mobile
+def test_13_mapa_de_corte_mobile(driver, setup_site, wait):
     # 1) Login
-    ensure_logged_in(driver, VALID_USER, VALID_PASS)
+    click_if_present(driver, COOKIE_ACCEPT, seconds=20)
+    ensure_logged_in_mobile(driver, VALID_USER, VALID_PASS)
     assert minicart_visible(driver), "Era para estar logado, mas o minicart não apareceu."
     try_close_popups(driver)
 
     # 2) Interagir com Mapa de corte Bovinos na Home
     interagir_mapa_bovino_cliques_home(driver, wait)
-
+    
     # 3) Paginacao modal bovino + carrossel marcas + acessa alguma categoria de marca
     paginar_modal_bovino_e_carrossel_home(driver, wait)
 
@@ -33,7 +39,7 @@ def test_13_mapa_de_corte(driver, setup_site, wait):
 
     # 5) Interagir com Mapa de corte Cordeiro na Home
     interagir_mapa_cordeiro_cliques_home(driver, wait)
-
+    
     # 6) Paginacao modal cordeiro + carrossel marcas + acessa alguma categoria de marca
     paginar_modal_cordeiro_e_marca_home(driver, wait)
 
@@ -41,10 +47,10 @@ def test_13_mapa_de_corte(driver, setup_site, wait):
     interagir_ver_produtos_modal_cordeiro_home(driver, wait)
 
     # 8) Efetuar logout
-    logout(driver)
+    logout_mobile(driver)
 
     # 9) Footer - Mapa de Corte (nova janela)
-    abrir_mapa_corte_footer(driver, wait)
+    abrir_mapa_corte_footer_mobile(driver, wait)
 
     # 10) Interagir com Mapa de corte Bovinos na pagina "/mapa-de-corte"
     interagir_mapa_bovino_cliques_pagina(driver, wait)

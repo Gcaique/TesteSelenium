@@ -13,7 +13,9 @@ from helpers.popups import *
 from helpers.minicart import *
 
 
-
+# =========================
+# Credenciais
+# =========================
 VALID_USER = "caique.oliveira4@infobase.com.br"
 VALID_PASS = "Min@1234"
 
@@ -22,10 +24,6 @@ VALID_PASS = "Min@1234"
 @pytest.mark.default
 @pytest.mark.logado
 def test_7_minicart_carrinho(driver, setup_site, wait):
-    """
-    Fluxo completo de MiniCart + Carrinho.
-    """
-
     # 1) Login
     ensure_logged_in(driver, VALID_USER, VALID_PASS)
     wait.until(EC.visibility_of_element_located(MINICART_ICON))

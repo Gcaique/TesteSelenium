@@ -10,6 +10,10 @@ from helpers.popups import *
 from helpers.minicart import *
 from helpers.checkout import *
 
+
+# =========================
+# Credenciais
+# =========================
 VALID_USER = "hub.teste2-bruno-popup@minervafoods.com"
 VALID_PASS = "Min@1234"
 
@@ -19,7 +23,6 @@ VALID_PASS = "Min@1234"
 @pytest.mark.checkout
 @pytest.mark.mobile
 def test_8_finalizacao_pedidos_mobile(driver, setup_site, wait):
-
     # 1) Login (fonte da verdade = mini-cart)
     ensure_logged_in_mobile(driver, VALID_USER, VALID_PASS)
     wait.until(EC.visibility_of_element_located(MINICART_ICON))
