@@ -4,6 +4,7 @@ from selenium.webdriver.common.by import By
 from helpers.wishlist import wait_favorite_status
 from helpers.plp import open_product_with_avise_by_pagination, open_product_with_avise_by_pagination_mobile
 from helpers.actions import safe_click_loc,mobile_click_strict
+from selenium.webdriver.support.ui import WebDriverWait
 
 from locators.pdp import *
 
@@ -58,12 +59,17 @@ def add_current_pdp_product_to_favorites_mobile(driver, wait):
     e valida mudança de status.
     """
 
+    btn = driver.find_element(*PDP_WISHLIST_BTN)
+    before = btn.get_attribute("class")
+
     mobile_click_strict(driver, PDP_WISHLIST_BTN, timeout=20, retries=4, sleep_between=0.25)
 
-    assert wait_favorite_status(driver), \
-        "Não confirmou alteração de status do favorito na PDP."
+    WebDriverWait(driver, 10).until(
+        lambda d: d.find_element(*PDP_WISHLIST_BTN).get_attribute("class") != before
+    )
 
-def open_out_of_stock_product_and_add_to_favorites_mobile(driver, wait, pages=(1, 2, 3, 4, 5, 6)):
+
+def open_out_of_stock_product_and_add_to_favorites_mobile(driver, wait, pages=(1,2,3,4,5,6)):
     """
     Fluxo:
       - percorre páginas
@@ -71,7 +77,9 @@ def open_out_of_stock_product_and_add_to_favorites_mobile(driver, wait, pages=(1
       - abre PDP
       - adiciona aos favoritos
     """
+
     found = open_product_with_avise_by_pagination_mobile(driver, wait, pages=pages)
+
     assert found, "Não foi encontrado produto fora de estoque nas páginas percorridas."
 
     add_current_pdp_product_to_favorites_mobile(driver, wait)
