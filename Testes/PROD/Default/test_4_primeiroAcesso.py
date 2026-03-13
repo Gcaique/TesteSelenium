@@ -9,18 +9,16 @@ from locators.header import LOGIN_MENU, USERNAME_INPUT, BTN_AVANCAR
 from helpers.firstAcess import *
 from helpers.waiters import minicart_visible
 
+
 # =========================
 # Credenciais
 # =========================
 VALID_USER = "caique.oliveira2@infobase.com.br"
 
-
 @pytest.mark.smoke
 @pytest.mark.default
 @pytest.mark.primeiroAcesso
 def test_4_primeiro_acesso(driver, setup_site, wait):
-
-
     # 1) Abre login
     wait.until(EC.element_to_be_clickable(LOGIN_MENU)).click()
 

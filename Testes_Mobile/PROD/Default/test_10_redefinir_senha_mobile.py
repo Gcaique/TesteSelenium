@@ -8,14 +8,17 @@ from helpers.auth import submit_username_valid, login_password, clicar_esqueci_s
 from helpers.dropdown import mobile_open_login_modal_from_dropdown
 
 
+# =========================
+# Credenciais
+# =========================
 VALID_USER = "caique.oliveira@infobase.com.br"
+
 
 @pytest.mark.smoke
 @pytest.mark.default
 @pytest.mark.redefinir_senha
 @pytest.mark.mobile
 def test_10_redefinir_senha_mobile(driver, setup_site, wait):
-
     # 1) Abre login
     mobile_open_login_modal_from_dropdown(driver, timeout=12)
 

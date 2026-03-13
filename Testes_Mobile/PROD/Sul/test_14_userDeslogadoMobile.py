@@ -23,7 +23,6 @@ from helpers.dropdown import  mobile_open_quero_ser_cliente_from_dropdown, mobil
 @pytest.mark.deslogado
 @pytest.mark.mobile
 def test_14_userDeslogado_mobile_sul(driver, setup_site, wait):
-
     # 1) Termos de uso (mobile: dropdown -> Acesso -> Termos)
     mobile_open_login_modal_from_dropdown(driver)
     click_when_clickable(wait, BTN_TERMS)

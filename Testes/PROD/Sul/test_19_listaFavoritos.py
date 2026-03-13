@@ -9,8 +9,6 @@ from helpers.pdp import open_out_of_stock_product_and_add_to_favorites
 from locators.plp import *
 
 
-
-
 # =========================
 # Credenciais
 # =========================
@@ -22,14 +20,6 @@ VALID_PASS = "Min@1234"
 @pytest.mark.sul
 @pytest.mark.favoritos
 def test_6_lista_de_favoritos_sul(driver, setup_site, wait):
-    """
-      - Login
-      - Favoritar itens: Home, Pescados, Busca, Bovinos (paginando) + PDP
-      - Abrir Lista de favoritos
-      - Interações: qty, add all, inc/dec, add item, avise-me (não opcional)
-      - Toggle favoritos e remoções + esvaziar minicart e voltar pra Home
-    """
-
     # 1) Login
     ensure_logged_in(driver, VALID_USER, VALID_PASS)
     assert minicart_visible(driver), "Era para estar logado, mas o minicart não apareceu."

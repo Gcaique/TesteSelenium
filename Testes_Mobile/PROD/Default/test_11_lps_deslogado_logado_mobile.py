@@ -7,6 +7,10 @@ from helpers.popups import try_close_popups
 
 from locators.cart import MOBILE_MINICART_ICON, MOBILE_MINICART_OPENED
 
+
+# =========================
+# Credenciais
+# =========================
 VALID_USER = "caique.oliveira@infobase.com.br"
 VALID_PASS = "Min@1234"
 
@@ -16,7 +20,6 @@ VALID_PASS = "Min@1234"
 @pytest.mark.lp
 @pytest.mark.mobile
 def test_11_lp_marcas_mobile(driver, setup_site, wait):
-
     # 1) Acessar LP Alma lusa pelo carrossel da HOME
     entrar_alma_lusa_via_home_mobile(driver, wait)
 

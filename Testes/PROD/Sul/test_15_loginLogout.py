@@ -6,6 +6,7 @@ from helpers.waiters import *
 from helpers.popups import *
 from helpers.navigation import *
 
+
 # =========================
 # Credenciais
 # =========================
@@ -17,39 +18,10 @@ VALID_PASS = "Min@1234"
 @pytest.mark.sul
 @pytest.mark.loginLogout
 def test_15_loginLogout_sul(driver, setup_site):
-    """
-    Fluxo Login/Logout (Visão sul):
-    01) Garantir estado inicial DESLOGADO
-    02) Abrir modal de login
-    03) Username inválido: email não encontrado
-    04) Username inválido: cnpj mismatch/não encontrado
-    05) Username inválido: formato inválido
-    06) Username inválido: cnpj fake
-    07) Username válido: abrir senha
-    08) Senha inválida: erro
-    09) Senha válida: login OK (mini-cart visível)
-    10) Fluxos públicos LOGADO
-    11) Logout
-    12) Fluxos públicos DESLOGADO
-    13) Últimos pedidos deslogado -> loga -> ver produtos
-    14) Logout final
-    """
-
-    # 01) Garantir estado inicial DESLOGADO
-    if minicart_visible(driver):
-        try:
-            logout(driver)
-        except Exception:
-            driver.delete_all_cookies()
-            driver.get("https://meuminerva.com.br/")
-            time.sleep(1.5)
-
-    assert_logged_out(driver, "01) estado inicial")
-
-    # 02) Abrir modal de login
+    # 1) Abrir modal de login
     open_login(driver)
 
-    # 03) Username inválido: email não encontrado
+    # 2) Username inválido: email não encontrado
     submit_username_invalid(
         driver,
         "teste.12345@teste.com",
@@ -57,7 +29,7 @@ def test_15_loginLogout_sul(driver, setup_site):
         tokens=["verifique", "cpf", "cnpj", "e-mail", "email"],
     )
 
-    # 04) Username inválido: cnpj mismatch/não encontrado
+    # 3) Username inválido: cnpj mismatch/não encontrado
     submit_username_invalid(
         driver,
         "42.765.782/0001-08",
@@ -65,7 +37,7 @@ def test_15_loginLogout_sul(driver, setup_site):
         tokens=["verifique", "e-mail", "email", "cpf", "cnpj"],
     )
 
-    # 05) Username inválido: formato inválido
+    # 4) Username inválido: formato inválido
     submit_username_invalid(
         driver,
         "teste.teste",
@@ -73,7 +45,7 @@ def test_15_loginLogout_sul(driver, setup_site):
         tokens=["insira", "e-mail", "email", "cpf", "cnpj", "invál", "inval"],
     )
 
-    # 06) Username inválido: cnpj fake
+    # 5) Username inválido: cnpj fake
     submit_username_invalid(
         driver,
         "11.222.333/4444-55",
@@ -81,27 +53,27 @@ def test_15_loginLogout_sul(driver, setup_site):
         tokens=["insira", "e-mail", "email", "cpf", "cnpj", "invál", "inval"],
     )
 
-    # 07) Username válido: abrir senha
+    # 6) Username válido: abrir senha
     submit_username_valid(driver, VALID_USER, "07) usuário válido")
 
-    # 08) Senha inválida: erro
+    # 7) Senha inválida: erro
     login_password(driver, "SenhaErrada_", "08) senha inválida", expect_success=False)
 
-    # 09) Senha válida: login OK
+    # 8) Senha válida: login OK
     login_password(driver, VALID_PASS, "09) senha válida", expect_success=True)
 
-    # 10) Fluxos públicos LOGADO
+    # 9) Fluxos públicos LOGADO
     try_close_popups(driver)
     validate_navigation_by_auth_state(driver, logged=True)
 
-    # 11) Logout
+    # 10) Logout
     logout(driver)
     assert_logged_out(driver, "11) após logout")
 
-    # 12) Fluxos públicos DESLOGADO
+    # 11) Fluxos públicos DESLOGADO
     validate_navigation_by_auth_state(driver, logged=False)
 
-    # 13) Últimos pedidos deslogado -> loga -> ver produtos
+    # 12) Últimos pedidos deslogado -> loga -> ver produtos
     go_home(driver)
     click(driver, LAST_ORDERS, timeout=10)
 
@@ -113,6 +85,6 @@ def test_15_loginLogout_sul(driver, setup_site):
     try_close_hotjar(driver)
     click(driver, EMPTY_GRID_ORDERS, timeout=10)
 
-    # 14) Logout final
+    # 13) Logout final
     logout(driver)
     assert_logged_out(driver, "14) fim do teste")

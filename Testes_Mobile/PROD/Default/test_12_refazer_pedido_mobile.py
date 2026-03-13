@@ -8,7 +8,7 @@ from locators.header import DD_MEUS_PEDIDOS
 from locators.header import MOBILE_LOGIN_ACESSO
 from locators.common import COOKIE_ACCEPT
 
-from helpers.refazer_pedido import *
+from helpers.lastOrders_lastItems import *
 from helpers.auth import submit_username_valid, login_password
 from helpers.popups import try_close_popups
 from helpers.checkout import avancar_shipping_mobile, selecionar_boleto_e_finalizar_mobile, ir_para_home
@@ -16,7 +16,9 @@ from helpers.dropdown import open_dropdown_item
 from helpers.actions import mobile_click_strict, visible
 
 
-# Dados de teste
+# =========================
+# Credenciais
+# =========================
 VALID_USER = "smoketesting@automatizacao.com.br"
 VALID_PASS = "Min@1234"
 
@@ -26,14 +28,6 @@ VALID_PASS = "Min@1234"
 @pytest.mark.refazer
 @pytest.mark.mobile
 def test_12_refazer_pedido_mobile(driver, setup_site, wait):
-    """
-    Fluxo completo Refazer Pedidos (com Ver Similar):
-    Login -> filtro -> Ver Similar -> adicionar pedido -> checkout cond 21 ->
-    Comprados Recentemente -> filtro -> favoritar -> avise-me ->
-    Ver Similar + Adicionar -> adicionar todos -> checkout cond 28 ->
-    Meus Pedidos -> detalhe -> refazer pedido.
-    """
-
     # 1) Login via Ultimos Pedidos
     click_if_present(driver, COOKIE_ACCEPT, seconds=20)
     clicar_ultimos_pedidos(driver, wait)
