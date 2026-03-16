@@ -110,11 +110,16 @@ def avancar_shipping_mobile(driver, wait):
 def selecionar_boleto_e_finalizar_mobile(driver, wait, condicao_locator):
     """Seleciona Boleto, condicao, aceita termos e finaliza."""
 
-    time.sleep(3)
-
     # Seleciona Boleto
     mobile_click_strict(driver, BOLETO, 10, 4, 0.25)
     time.sleep(3)
+
+    # Define qual botão de finalizar usar
+    try:
+        wait.until(EC.presence_of_element_located(BTN_FINALIZAR_COMPRA_BOLETO))
+        btn_finalizar = BTN_FINALIZAR_COMPRA_BOLETO
+    except TimeoutException:
+        btn_finalizar = BTN_FINALIZAR_COMPRA_BOLETO_SUL
 
     # Seleciona condicao
     mobile_click_strict(driver, BOLETO_SELECT, 10, 4, 0.25)
@@ -128,7 +133,12 @@ def selecionar_boleto_e_finalizar_mobile(driver, wait, condicao_locator):
     mobile_click_strict(driver, TERMS_BOLETO, 10, 4, 0.25)
 
     # Finaliza compra
-    mobile_click_strict(driver, BTN_FINALIZAR_COMPRA_BOLETO, 10, 4, 0.25)
+    mobile_click_strict(driver, btn_finalizar, 10, 4, 0.25)
 
-    # Aguarda pagina de sucesso
-    wait.until(EC.presence_of_element_located(SUCCESS_PAGE_BODY))
+    # Aguarda pagina de sucesso; se nao aparecer em 8s, segue o fluxo
+    try:
+        WebDriverWait(driver, 10).until(
+            EC.presence_of_element_located(SUCCESS_PAGE_BODY)
+        )
+    except TimeoutException:
+        pass

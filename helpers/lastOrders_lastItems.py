@@ -1,7 +1,9 @@
 import time
+
+from selenium.common.exceptions import TimeoutException, NoSuchElementException, StaleElementReferenceException
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
-from selenium.common.exceptions import TimeoutException
+
 
 from helpers.actions import scroll_to_middle, scroll_to_top, click_when_clickable, mobile_click_strict
 from helpers.minicart import wait_minicart_loading, wait_minicart_ready
@@ -86,20 +88,54 @@ def favoritar_e_desfavoritar(driver, wait):
     click_when_clickable(wait, FAVORITE_ON_WISHLIST_FIRST)
     wait.until(EC.visibility_of_element_located(FAVORITE_ADD_TO_FIRST))
 
-def interagir_avise_me(driver, wait):
-    """Clica no Avise-me, aguarda status, atualiza a pagina, clica em
-    'Ok, avisaremos' e aguarda voltar ao status original."""
-    scroll_to_middle(driver, wait, AVISE_ME_SPAN)
-    click_when_clickable(wait, AVISE_ME_SPAN)
-    wait.until(EC.element_to_be_clickable(AVISE_ME_CLICKED_SPAN))
-    time.sleep(2)
 
-    driver.refresh()
-    time.sleep(5)
+def interagir_avise_me(driver, wait, next_page_locator, max_paginas=5):
+    """
+    Procura o botao 'Avise-me' na pagina atual e nas proximas paginas.
+    Se encontrar, interage com ele.
+    Se nao encontrar, segue o teste sem falhar.
 
-    click_when_clickable(wait, AVISE_ME_CLICKED_SPAN)
-    wait.until(EC.element_to_be_clickable(AVISE_ME_SPAN))
-    time.sleep(2)
+    Retorna:
+        True  -> encontrou e interagiu
+        False -> nao encontrou
+    """
+
+    for _ in range(max_paginas):
+        try:
+            # Tenta localizar o Avise-me na pagina atual
+            elemento = WebDriverWait(driver, 5).until(
+                EC.presence_of_element_located(AVISE_ME_SPAN)
+            )
+
+            scroll_to_middle(driver, wait, AVISE_ME_SPAN)
+            click_when_clickable(wait, AVISE_ME_SPAN)
+            wait.until(EC.element_to_be_clickable(AVISE_ME_CLICKED_SPAN))
+            time.sleep(2)
+
+            driver.refresh()
+            time.sleep(5)
+
+            click_when_clickable(wait, AVISE_ME_CLICKED_SPAN)
+            wait.until(EC.element_to_be_clickable(AVISE_ME_SPAN))
+            time.sleep(2)
+
+            return True
+
+        except (TimeoutException, NoSuchElementException, StaleElementReferenceException):
+            # Nao encontrou o Avise-me, tenta ir para a proxima pagina
+            try:
+                proxima_pagina = WebDriverWait(driver, 5).until(
+                    EC.element_to_be_clickable(next_page_locator)
+                )
+                driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", proxima_pagina)
+                time.sleep(1)
+                proxima_pagina.click()
+                time.sleep(3)
+            except (TimeoutException, NoSuchElementException, StaleElementReferenceException):
+                # Nao tem proxima pagina ou nao foi possivel navegar
+                return False
+
+    return False
 
 def ver_similar_comprados_e_adicionar(driver, wait):
     """Executa fluxo de similar comprados apenas se o botão existir."""

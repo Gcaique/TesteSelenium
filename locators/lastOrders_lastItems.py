@@ -126,4 +126,5 @@ ADD_TO_CART_SECOND = (
     "(//button[contains(@class, 'action tocart primary tocart')])[2]",
 )
 
+BTN_PROXIMA_PAGINA = (By.XPATH, "//div[@class='item next']")
 
