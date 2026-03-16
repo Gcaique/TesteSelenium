@@ -1,20 +1,25 @@
 import pytest
 
+from conftest import click_if_present
+
+from locators.common import COOKIE_ACCEPT
+
 from helpers.cadastro import *
 
 
 # =========================
 # Altere o e-mail aqui
 # =========================
-USER_EMAIL = "automatizacao@smoketesting.com"
+USER_EMAIL = "automatizacao1@smoketesting.com"
 
 
 @pytest.mark.smoke
-@pytest.mark.default
+@pytest.mark.sul
 @pytest.mark.cadastro
 @pytest.mark.mobile
-def test_9_cadastro_mobile(driver, setup_site, wait):
+def test_22_cadastro_mobile_sul(driver, setup_site, wait):
     # 1 - Iniciar cadastro
+    click_if_present(driver, COOKIE_ACCEPT, seconds=20)
     iniciar_fluxo_cadastro_mobile(driver, wait)
 
     # 2 - Preencher dados empresa

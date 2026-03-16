@@ -4,12 +4,19 @@ import pytest
 from locators.plp import *
 from locators.checkout import *
 from locators.home import QTY_INPUT_FIRST
+from locators.common import COOKIE_ACCEPT
 
 from helpers.auth import *
 from helpers.popups import *
 from helpers.minicart import *
 from helpers.checkout import *
 
+from conftest import click_if_present
+
+
+# =========================
+# Credenciais
+# =========================
 VALID_USER = "smoketesting1@automatizacao.com.br"
 VALID_PASS = "Min@1234"
 
@@ -20,6 +27,7 @@ VALID_PASS = "Min@1234"
 @pytest.mark.mobile
 def test_21_finalizacao_pedidos_mobile_sul(driver, setup_site, wait):
     # 1) Login (fonte da verdade = mini-cart)
+    click_if_present(driver, COOKIE_ACCEPT, seconds=20)
     ensure_logged_in_mobile(driver, VALID_USER, VALID_PASS)
     wait.until(EC.visibility_of_element_located(MINICART_ICON))
     try_close_popups(driver)
@@ -33,7 +41,7 @@ def test_21_finalizacao_pedidos_mobile_sul(driver, setup_site, wait):
     clickable(driver, SORTER_SELECT, timeout=15)
 
     safe_click_loc(driver, wait, PLP_ADD_TO_CART_BY_INDEX(1))
-    wait_minicart_loading(driver)
+    time.sleep(5)
 
     # 3) Acessando checkout
     mobile_click_strict(driver, MOBILE_MINICART_ICON_SUL, timeout=20, retries=4, sleep_between=0.25)
@@ -98,7 +106,7 @@ def test_21_finalizacao_pedidos_mobile_sul(driver, setup_site, wait):
     # 8) Acessando categoria Marcas + Adicionando produto com a qtd superior a valor de R$ 5.000,00
     mobile_click_strict(driver, MOBILE_MENU_HAMBURGER, timeout=10, retries=4, sleep_between=0.25)
     time.sleep(2)
-    mobile_click_strict(driver, MOBILE_MENU_PARENT_NEXT("Marcas"), timeout=10, retries=4, sleep_between=0.25)
+    mobile_click_strict(driver, MOBILE_MENU_PARENT_NEXT("marcas"), timeout=10, retries=4, sleep_between=0.25)
     time.sleep(1)
     mobile_click_strict(driver, MOBILE_MENU_SEE_ALL, timeout=10, retries=4, sleep_between=0.25)
     clickable(driver, SORTER_SELECT, timeout=15)
@@ -106,7 +114,7 @@ def test_21_finalizacao_pedidos_mobile_sul(driver, setup_site, wait):
     safe_click_loc(driver, wait, QTY_INPUT_FIRST, timeout=10)
     fill(driver, QTY_INPUT_FIRST, "9")
     safe_click_loc(driver, wait, PLP_ADD_TO_CART_BY_INDEX(1), timeout=10)
-    wait_minicart_loading(driver)
+    time.sleep(5)
 
     # 9) Acessando checkout
     mobile_click_strict(driver, MOBILE_MINICART_ICON_SUL, timeout=20, retries=4, sleep_between=0.25)
@@ -170,7 +178,7 @@ def test_21_finalizacao_pedidos_mobile_sul(driver, setup_site, wait):
     # 14) Acessando categoria + Adicionando produtos no carrinho
     mobile_click_strict(driver, MOBILE_MENU_HAMBURGER, timeout=10, retries=4, sleep_between=0.25)
     time.sleep(2)
-    mobile_click_strict(driver, MOBILE_MENU_PARENT_NEXT("Mais vendidos"), timeout=10, retries=4, sleep_between=0.25)
+    mobile_click_strict(driver, MOBILE_MENU_PARENT_NEXT("promocoes"), timeout=10, retries=4, sleep_between=0.25)
     time.sleep(1)
     mobile_click_strict(driver, MOBILE_MENU_SEE_ALL, timeout=10, retries=4, sleep_between=0.25)
     clickable(driver, SORTER_SELECT, timeout=15)
@@ -182,7 +190,7 @@ def test_21_finalizacao_pedidos_mobile_sul(driver, setup_site, wait):
     time.sleep(5)
 
     safe_click_loc(driver, wait, PLP_ADD_TO_CART_BY_INDEX(3))
-    wait_minicart_loading(driver)
+    time.sleep(5)
 
     # 15) Indo para checkout
     mobile_click_strict(driver, MOBILE_MINICART_ICON_SUL, timeout=20, retries=4, sleep_between=0.25)

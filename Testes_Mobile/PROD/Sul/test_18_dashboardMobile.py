@@ -2,13 +2,14 @@ import time
 
 import pytest
 
-from helpers.auth import ensure_logged_in_mobile, logout
+from conftest import click_if_present
+
+from helpers.auth import ensure_logged_in_mobile, logout_mobile
 from helpers.minicart import minicart_visible
 from helpers.popups import try_close_popups
-
 from helpers.dashboard import *
+from helpers.auth import login_expect_email_not_found_mobile, login_expect_wrong_password, login_password
 
-from helpers.auth import (login_expect_email_not_found_mobile, login_expect_wrong_password, login_password)
 
 # =========================
 # Credenciais
@@ -25,48 +26,41 @@ NEW_PASS = "Min@1234567"
 @pytest.mark.dashboard
 @pytest.mark.mobile
 def test_18_dashboard_mobile_sul(driver, setup_site, wait):
-    """
-    Parte A: Login
-    Parte B: Minha Conta / Dashboard (endereços, pedidos, filtros, favoritos, endereços)
-    Parte C: Pontos / Relatórios / Cadastro de redes / Cupons / Missões
-    Parte D: Info da conta (editar email + trocar senha)  <-- obrigatório
-    Parte E: Logout + validações login + login com senha nova + voltar email  <-- obrigatório
-    """
-
     # 1) Login inicial
+    click_if_present(driver, COOKIE_ACCEPT, seconds=20)
     ensure_logged_in_mobile(driver, VALID_USER, VALID_PASS)
     assert minicart_visible(driver), "Era para estar logado, mas o minicart não apareceu."
     try_close_popups(driver)
 
-    # 3) Acessa Minha Conta
+    # 2) Acessa Minha Conta
     open_my_account(driver, wait)
 
-    # 4) Dashboard: definir endereço principal (se existir)
+    # 3) Dashboard: definir endereço principal (se existir)
     dashboard_set_main_address(driver, wait)
 
-    # 5) Ver todos endereços
+    # 4) Ver todos endereços
     go_all_addresses(driver, wait)
 
-    # 6) Volta Minha conta e abre pedidos recentes
+    # 5) Volta Minha conta e abre pedidos recentes
     time.sleep(2)
     open_minha_conta_mobile(driver, timeout=20)
     mobile_click_strict(driver, MOBILE_NAV_MINHA_CONTA, timeout=12, retries=4, sleep_between=0.25)
     open_recent_orders_from_dashboard(driver, wait)
 
-    # 8) Meus pedidos: filtros e limpar filtros
+    # 6) Meus pedidos: filtros e limpar filtros
     orders_filters_flow_mobile(driver, wait)
 
-    # 9) Lista de favoritos
+    # 7) Lista de favoritos
     open_minha_conta_mobile(driver, timeout=20)
     mobile_click_strict(driver, MOBILE_NAV_LISTA_FAVORITOS, timeout=12, retries=4, sleep_between=0.25)
     time.sleep(3)
 
-    # 10) Endereços: definir segundo como principal
+    # 8) Endereços: definir segundo como principal
     open_minha_conta_mobile(driver, timeout=20)
     mobile_click_strict(driver, MOBILE_NAV_ENDERECOS, timeout=12, retries=4, sleep_between=0.25)
     addresses_set_second_as_main_mobile(driver, wait)
 
-    # 11) Meus pontos + relatório
+    # 9) Meus pontos + relatório
     open_minha_conta_mobile(driver, timeout=20)
     mobile_click_strict(driver, MOBILE_NAV_MEUS_PONTOS, timeout= 12, retries=4, sleep_between=0.25)
     apply_reward_filter_mobile(driver, wait, "earnings") # Ganhou
@@ -78,7 +72,7 @@ def test_18_dashboard_mobile_sul(driver, setup_site, wait):
     mobile_click_strict(driver, BTN_POINTS_REPORT, timeout=12, retries=4, sleep_between=0.25)
     visible(driver, POINTS_REPORT_FILTER, timeout=25)
 
-    # 12) Cadastro de redes: navega tabs
+    # 10) Cadastro de redes: navega tabs
     open_minha_conta_mobile(driver, timeout=20)
     mobile_click_strict(driver, MOBILE_NAV_CADASTRO_REDES, timeout=12, retries=4, sleep_between=0.25)
     apply_cadastro_redes_filter_mobile(driver, wait, "new-assign") #Agrupar CNPJ
@@ -86,7 +80,7 @@ def test_18_dashboard_mobile_sul(driver, setup_site, wait):
     apply_cadastro_redes_filter_mobile(driver, wait, "rules") # Regras de agrupamento
     apply_cadastro_redes_filter_mobile(driver, wait, "assigned-grid")  # CNPJs agrupados
 
-    # 13) Meus cupons: ver mais/copia/tab indisponíveis
+    # 11) Meus cupons: ver mais/copia/tab indisponíveis
     open_minha_conta_mobile(driver, timeout=20)
     mobile_click_strict(driver, MOBILE_NAV_MEUS_CUPONS, timeout=12, retries=4, sleep_between=0.25)
     apply_meus_cupons_filter_mobile(driver, wait, "active")  # Ativos
@@ -96,14 +90,13 @@ def test_18_dashboard_mobile_sul(driver, setup_site, wait):
     time.sleep(0.8)
     apply_meus_cupons_filter_mobile(driver, wait, "unavailable")  # Indisponíveis
 
-    # 14) Minhas missões
+    # 12) Minhas missões
     open_minha_conta_mobile(driver, timeout=20)
     mobile_click_strict(driver, MOBILE_NAV_MINHAS_MISSOES, timeout=12, retries=4, sleep_between=0.25)
     visible(driver, MISSIONS_READY, timeout=25)
 
-    # ------------------------------------------------------------
-    # 15) OBRIGATÓRIO: Info da conta: whatsapp + editar email
-    # ------------------------------------------------------------
+    # 13) Info da conta: whatsapp + editar email
+
     # WhatsApp
     open_minha_conta_mobile(driver, timeout=20)
     mobile_click_strict(driver, MOBILE_NAV_INFO_CONTA, timeout=12, retries=4, sleep_between=0.25)
@@ -112,15 +105,11 @@ def test_18_dashboard_mobile_sul(driver, setup_site, wait):
     # Alterar email
     account_change_email_flow_mobile(driver, wait, new_email=NEW_EMAIL, current_password=VALID_PASS)
 
-    # ------------------------------------------------------------
-    # 16) OBRIGATÓRIO: Troca senha (aplica)
-    # ------------------------------------------------------------
+    # 14) Troca senha (aplica)
     change_password_flow_mobile(driver, wait, current_password=VALID_PASS, new_password=NEW_PASS)
 
-    # ------------------------------------------------------------
-    # 17) OBRIGATÓRIO: Logout e validações de login
-    # ------------------------------------------------------------
-    logout(driver)
+    # 15) Logout e validações de login
+    logout_mobile(driver)
 
     # email antigo não encontrado
     login_expect_email_not_found_mobile(driver, wait, VALID_USER)

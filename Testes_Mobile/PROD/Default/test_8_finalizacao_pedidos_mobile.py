@@ -37,7 +37,7 @@ def test_8_finalizacao_pedidos_mobile(driver, setup_site, wait):
     clickable(driver, SORTER_SELECT, timeout=15)
 
     safe_click_loc(driver, wait, PLP_ADD_TO_CART_BY_INDEX(1))
-    wait_minicart_loading(driver)
+    time.sleep(5)
 
     # 3) Acessando checkout
     mobile_click_strict(driver, MOBILE_MINICART_ICON, timeout=20, retries=4, sleep_between=0.25)
@@ -115,7 +115,7 @@ def test_8_finalizacao_pedidos_mobile(driver, setup_site, wait):
     safe_click_loc(driver, wait, QTY_INPUT_FIRST, timeout=10)
     fill(driver, QTY_INPUT_FIRST, "9")
     safe_click_loc(driver, wait, PLP_ADD_TO_CART_BY_INDEX(1), timeout=10)
-    wait_minicart_loading(driver)
+    time.sleep(5)
 
     # 10) Acessando checkout
     mobile_click_strict(driver, MOBILE_MINICART_ICON, timeout=20, retries=4, sleep_between=0.25)
@@ -195,7 +195,7 @@ def test_8_finalizacao_pedidos_mobile(driver, setup_site, wait):
     time.sleep(5)
 
     safe_click_loc(driver, wait, PLP_ADD_TO_CART_BY_INDEX(3))
-    wait_minicart_loading(driver)
+    time.sleep(5)
 
     # 17) Indo para checkout
     mobile_click_strict(driver, MOBILE_MINICART_ICON, timeout=20, retries=4, sleep_between=0.25)
