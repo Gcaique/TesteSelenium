@@ -23,7 +23,7 @@ def test_2_loginLogout(driver, setup_site):
     # 2) Username inválido: email não encontrado
     submit_username_invalid(driver,
         "teste.12345@teste.com",
-        "03) email não encontrado",
+        "email não encontrado",
         tokens=["verifique", "cpf", "cnpj", "e-mail", "email"],
     )
 
@@ -31,7 +31,7 @@ def test_2_loginLogout(driver, setup_site):
     submit_username_invalid(
         driver,
         "42.765.782/0001-08",
-        "04) cnpj não encontrado",
+        "cnpj não encontrado",
         tokens=["verifique", "e-mail", "email", "cpf", "cnpj"],
     )
 
@@ -39,7 +39,7 @@ def test_2_loginLogout(driver, setup_site):
     submit_username_invalid(
         driver,
         "teste.teste",
-        "05) formato inválido",
+        "formato inválido",
         tokens=["insira", "e-mail", "email", "cpf", "cnpj", "invál", "inval"],
     )
 
@@ -47,18 +47,18 @@ def test_2_loginLogout(driver, setup_site):
     submit_username_invalid(
         driver,
         "11.222.333/4444-55",
-        "06) cnpj fake",
+        "cnpj fake",
         tokens=["insira", "e-mail", "email", "cpf", "cnpj", "invál", "inval"],
     )
 
     # 6) Username válido: abrir senha
-    submit_username_valid(driver, VALID_USER, "07) usuário válido")
+    submit_username_valid(driver, VALID_USER, "usuário válido")
 
     # 7) Senha inválida: erro
-    login_password(driver, "SenhaErrada_", "08) senha inválida", expect_success=False)
+    login_password(driver, "SenhaErrada_", "senha inválida", expect_success=False)
 
     # 8) Senha válida: login OK
-    login_password(driver, VALID_PASS, "09) senha válida", expect_success=True)
+    login_password(driver, VALID_PASS, "senha válida", expect_success=True)
 
     # 9) Fluxos públicos LOGADO
     try_close_popups(driver)
@@ -66,7 +66,7 @@ def test_2_loginLogout(driver, setup_site):
 
     # 10) Logout
     logout(driver)
-    assert_logged_out(driver, "11) após logout")
+    assert_logged_out(driver, "após logout")
 
     # 11) Fluxos públicos DESLOGADO
     validate_navigation_by_auth_state(driver, logged=False)
@@ -76,8 +76,8 @@ def test_2_loginLogout(driver, setup_site):
     click(driver, LAST_ORDERS, timeout=10)
 
     visible(driver, USERNAME_INPUT, timeout=10)
-    submit_username_valid(driver, VALID_USER, "13) login via últimos pedidos (username)")
-    login_password(driver, VALID_PASS, "13) login via últimos pedidos (senha)", expect_success=True)
+    submit_username_valid(driver, VALID_USER, "login via últimos pedidos (username)")
+    login_password(driver, VALID_PASS, "login via últimos pedidos (senha)", expect_success=True)
 
     visible(driver, EMPTY_GRID_ORDERS, timeout=20)
     try_close_hotjar(driver)
@@ -85,4 +85,4 @@ def test_2_loginLogout(driver, setup_site):
 
     # 13) Logout final
     logout(driver)
-    assert_logged_out(driver, "14) fim do teste")
+    assert_logged_out(driver, "fim do teste")

@@ -1,5 +1,5 @@
 import time
-
+from selenium.common.exceptions import TimeoutException
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
@@ -28,8 +28,15 @@ def selecionar_boleto_e_finalizar(driver, wait, condicao_locator):
     wait.until(EC.invisibility_of_element_located(BODY_AJAX_LOADING))
     time.sleep(3)
 
+    # Define qual botão de finalizar usar
+    try:
+        wait.until(EC.presence_of_element_located(BTN_FINALIZAR_COMPRA_BOLETO))
+        btn_finalizar = BTN_FINALIZAR_COMPRA_BOLETO
+    except TimeoutException:
+        btn_finalizar = BTN_FINALIZAR_COMPRA_BOLETO_SUL
+
     # Scroll ate Finalizar
-    scroll_to_middle(driver, wait, BTN_FINALIZAR_COMPRA_BOLETO)
+    scroll_to_middle(driver, wait, btn_finalizar)
 
     # Seleciona condicao
     click_when_clickable(wait, BOLETO_SELECT)
@@ -44,50 +51,17 @@ def selecionar_boleto_e_finalizar(driver, wait, condicao_locator):
     click_when_clickable(wait, TERMS_BOLETO)
 
     # Finaliza compra
-    click_when_clickable(wait, BTN_FINALIZAR_COMPRA_BOLETO)
+    click_when_clickable(wait, btn_finalizar)
 
     # Aguarda pagina de sucesso
-    wait.until(EC.presence_of_element_located(SUCCESS_PAGE_BODY))
-
-def selecionar_boleto_e_finalizar_sul(driver, wait, condicao_locator):
-        """Seleciona Boleto, condicao, aceita termos e finaliza."""
-
-        wait.until(EC.presence_of_element_located(BODY_AJAX_LOADING))
-        wait.until(EC.invisibility_of_element_located(BODY_AJAX_LOADING))
-        time.sleep(3)
-
-        # Seleciona Boleto
-        click_when_clickable(wait, BOLETO)
-        wait.until(EC.invisibility_of_element_located(BODY_AJAX_LOADING))
-        time.sleep(3)
-
-        # Scroll ate Finalizar
-        scroll_to_middle(driver, wait, BTN_FINALIZAR_COMPRA_BOLETO_SUL)
-
-        # Seleciona condicao
-        click_when_clickable(wait, BOLETO_SELECT)
-
-        wait.until(EC.element_to_be_clickable(condicao_locator))
-        click_when_clickable(wait, condicao_locator)
-
-        wait.until(EC.invisibility_of_element_located(BODY_AJAX_LOADING))
-        time.sleep(3)
-
-        # Aceita termos
-        click_when_clickable(wait, TERMS_BOLETO)
-
-        # Finaliza compra
-        click_when_clickable(wait, BTN_FINALIZAR_COMPRA_BOLETO_SUL)
-
-        # Aguarda pagina de sucesso
-        wait.until(EC.url_contains("success"))
+    wait.until(EC.url_contains("success"))
 
 def ir_para_home(driver, wait):
     """Clica Ir Para Home, aguarda e refresh."""
     click_when_clickable(wait, BTN_IR_PARA_HOME)
-    time.sleep(8)
-    driver.refresh()
     time.sleep(5)
+    driver.refresh()
+    time.sleep(3)
 
 
 #---------------------------------------------------------------

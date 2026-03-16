@@ -2,13 +2,15 @@ import time
 
 import pytest
 
+from conftest import click_if_present
+
+from locators.common import COOKIE_ACCEPT
+
 from helpers.auth import ensure_logged_in_mobile
 from helpers.wishlist import *
 from helpers.home import add_favorite_from_home_first_carousel_mobile
 from helpers.plp import add_favorite_from_category_first_item_mobile, search_and_add_favorite_by_index_mobile
 from helpers.pdp import open_out_of_stock_product_and_add_to_favorites_mobile
-
-from locators.plp import *
 
 
 # =========================
@@ -24,6 +26,7 @@ VALID_PASS = "Min@1234"
 @pytest.mark.mobile
 def test_6_lista_de_favoritos_mobile(driver, setup_site, wait):
     # 1) Login
+    click_if_present(driver, COOKIE_ACCEPT, 20)
     ensure_logged_in_mobile(driver, VALID_USER, VALID_PASS)
     assert minicart_visible(driver), "Era para estar logado, mas o minicart não apareceu."
     try_close_popups(driver)

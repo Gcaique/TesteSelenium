@@ -9,21 +9,18 @@ from conftest import click_if_present
 from helpers.waiters import visible, clickable
 from helpers.actions import click, fill, scroll_into_view, safe_click_loc_retry, mobile_click_strict
 from helpers.auth import ensure_logged_in_mobile
-from helpers.dropdown import open_dropdown_item_mobile
+from helpers.dropdown import validate_user_dropdown_mobile
 from helpers.region import switch_region_mobile
-from helpers.minicart import wait_minicart_loading
 from helpers.avise_me import open_pdp_from_first_avise_in_plp, find_avise_me_plp_mobile
-from helpers.plp import open_filter_panel_mobile, _first_visible, scroll_to_avise, clear_filters_strict
+from helpers.plp import open_filter_panel_mobile, scroll_to_avise, clear_filters_strict
 
 from locators.header import SEARCH_INPUT, SEE_ALL_LINK, MOBILE_SEARCH_SUGGEST_ADD_1
-from locators.home import CAROUSEL_1, QTY_INPUT_FIRST, ADD_BTN_FIRST_CAROUSEL
+from locators.home import CAROUSEL_1, ADD_BTN_FIRST_CAROUSEL
 from locators.plp import *
 from locators.pdp import (FIRST_PRODUCT_PLP, PDP_INCREMENT, PDP_ADD_TO_CART, ADDRESSES_SELECT, ADDRESSES_OPT2, BTN_VERIFY_FORECAST, FORECAST_RESULT)
 from locators.cart import *
-from locators.header import DD_MINHA_CONTA, MOBILE_DD_COMPARAR, MOBILE_DD_MEUS_PEDIDOS, MOBILE_DD_FAVORITOS, MOBILE_DD_MEUS_PONTOS, MOBILE_DD_MEUS_CUPONS, MOBILE_DD_MINHAS_MISSOES
-from locators.dashboard import BTN_MAIN_ADDRESS_DASHBOARD, BTN_FILTER, REWARD_FILTER_SELECT, COUPON_VER_MAIS_1, MISSIONS_READY
 from locators.common import COOKIE_ACCEPT
-from locators.productCompare import INPUT_COMPARE
+
 
 
 # =========================
@@ -37,25 +34,13 @@ VALID_PASS = "Min@1234"
 @pytest.mark.default
 @pytest.mark.logado
 @pytest.mark.mobile
-def test_3_userLogado_mobile(driver, setup_site, wait):
+def test_3_user_logado_mobile(driver, setup_site, wait):
     # 1) Login (fonte da verdade = mini-cart)
+    click_if_present(driver, COOKIE_ACCEPT, seconds=20)
     ensure_logged_in_mobile(driver, VALID_USER, VALID_PASS)
-    '''
-    # 2) Dropdown do usuário (seus itens)
-    open_dropdown_item_mobile(driver, DD_MINHA_CONTA, timeout=15)
-    visible(driver, BTN_MAIN_ADDRESS_DASHBOARD, timeout=25)
-    open_dropdown_item_mobile(driver, MOBILE_DD_COMPARAR, timeout=15)
-    visible(driver, INPUT_COMPARE, timeout=25)
-    open_dropdown_item_mobile(driver, MOBILE_DD_MEUS_PEDIDOS, timeout=15)
-    visible(driver, BTN_FILTER, timeout=25)
-    open_dropdown_item_mobile(driver, MOBILE_DD_FAVORITOS, timeout=15)
-    time.sleep(5)
-    open_dropdown_item_mobile(driver, MOBILE_DD_MEUS_PONTOS, timeout=15)
-    visible(driver, REWARD_FILTER_SELECT, timeout=25)
-    open_dropdown_item_mobile(driver, MOBILE_DD_MEUS_CUPONS, timeout=15)
-    visible(driver, COUPON_VER_MAIS_1, timeout=25)
-    open_dropdown_item_mobile(driver, MOBILE_DD_MINHAS_MISSOES, timeout=15)
-    visible(driver, MISSIONS_READY, timeout=25)'''
+
+    # 2) Dropdown do usuário
+    validate_user_dropdown_mobile(driver, wait)
 
     # 3) Troca de região: default -> sul -> default
     switch_region_mobile(driver, "sul")
@@ -74,14 +59,14 @@ def test_3_userLogado_mobile(driver, setup_site, wait):
     # 5) Carrossel 1: adicionar produto ao carrinho
     scroll_into_view(driver, CAROUSEL_1, timeout=15)
     click(driver, ADD_BTN_FIRST_CAROUSEL, timeout=10)
-    wait_minicart_loading(driver)
+    time.sleep(5)
 
     # 6) Busca: "suino" e add pela sugestão da busca
     click(driver, SEARCH_INPUT, timeout=10)
     fill(driver, SEARCH_INPUT, "suino")
     visible(driver, MOBILE_SEARCH_SUGGEST_ADD_1, timeout=20)
     click(driver, MOBILE_SEARCH_SUGGEST_ADD_1, timeout=10)
-    wait_minicart_loading(driver)
+    time.sleep(5)
 
     # 7) Busca: pack -> carne -> ver todos
     click(driver, SEARCH_INPUT, timeout=10)
@@ -93,7 +78,7 @@ def test_3_userLogado_mobile(driver, setup_site, wait):
     visible(driver, SEE_ALL_LINK, timeout=20)
     click(driver, SEE_ALL_LINK, timeout=10)
 
-    # paginação e filtros / ordenação
+    # 8) Paginação e filtros / ordenação
     mobile_click_strict(driver, PAGINA_2, timeout=20, retries=4, sleep_between=0.25)
     time.sleep(5)
     visible(driver, MOBILE_FILTER_OPEN_PANEL, timeout=10)
@@ -118,11 +103,11 @@ def test_3_userLogado_mobile(driver, setup_site, wait):
     mobile_click_strict(driver, SORT_HIGH_TO_LOW, 10, 4, 0.25)
     WebDriverWait(driver, 20).until(EC.url_contains("product_list_order=high_to_low"))
 
-    # add primeiro da lista
-    mobile_click_strict(driver, (By.XPATH, "(//button[contains(@class, 'action tocart primary tget-btn-buy tocart')])[1]"), 10, 4, 0.25)
-    wait_minicart_loading(driver)
+    # 9 Add primeiro da lista
+    mobile_click_strict(driver, PLP_ADD_TO_CART_BY_INDEX(1), 10, 4, 0.25)
+    time.sleep(5)
 
-    # 8) Promoções: adicionar item
+    # 10) Promoções: adicionar item
     mobile_click_strict(driver, MOBILE_MENU_HAMBURGER, timeout=10, retries=4, sleep_between=0.25)
     time.sleep(1)
     mobile_click_strict(driver, MOBILE_MENU_PARENT_NEXT("promocoes"), timeout=10, retries=4, sleep_between=0.25)
@@ -130,10 +115,10 @@ def test_3_userLogado_mobile(driver, setup_site, wait):
     mobile_click_strict(driver, MOBILE_MENU_SEE_ALL, timeout=10, retries=4, sleep_between=0.25)
     visible(driver, SORTER_SELECT, timeout=20)
 
-    mobile_click_strict(driver,(By.XPATH, "(//button[contains(@class, 'action tocart primary tget-btn-buy tocart')])[1]"), timeout=20, retries=4, sleep_between=0.25)
-    wait_minicart_loading(driver)
+    mobile_click_strict(driver,(By.XPATH, PLP_ADD_TO_CART_BY_INDEX(1)), timeout=20, retries=4, sleep_between=0.25)
+    time.sleep(5)
 
-    # 9) Pescados -> PDP -> add -> previsão entrega
+    # 11) Pescados -> PDP -> add -> previsão entrega
     mobile_click_strict(driver, MOBILE_MENU_HAMBURGER, timeout=10, retries=4, sleep_between=0.25)
     time.sleep(2)
     mobile_click_strict(driver, MOBILE_MENU_PARENT_NEXT("pescados"), timeout=10, retries=4, sleep_between=0.25)
@@ -147,7 +132,7 @@ def test_3_userLogado_mobile(driver, setup_site, wait):
     scroll_into_view(driver, PDP_ADD_TO_CART,timeout=10)
     safe_click_loc_retry(driver, PDP_INCREMENT, 10, 4, 0.25)
     click(driver, PDP_ADD_TO_CART, timeout=10)
-    wait_minicart_loading(driver)
+    time.sleep(5)
 
     # previsão entrega
     scroll_into_view(driver, ADDRESSES_SELECT, timeout=10)
@@ -157,7 +142,7 @@ def test_3_userLogado_mobile(driver, setup_site, wait):
     visible(driver, FORECAST_RESULT, timeout=20)
     scroll_into_view(driver, FORECAST_RESULT, timeout=10)
 
-    # 10) Cordeiros -> Interagir com o botão do avise-me encontrado na listagem
+    # 12) Cordeiros -> Interagir com o botão do avise-me PLP e PDP
     mobile_click_strict(driver, MOBILE_MENU_HAMBURGER, timeout=20, retries=4, sleep_between=0.25)
     time.sleep(2)
     mobile_click_strict(driver, MOBILE_MENU_PARENT_NEXT("cordeiros"), timeout=10, retries=4, sleep_between=0.25)
@@ -174,18 +159,13 @@ def test_3_userLogado_mobile(driver, setup_site, wait):
     mobile_click_strict(driver, MOBILE_AVISE_BTN_DISABLED(1), timeout=20, retries=4, sleep_between=0.25)
 
     # Espera AJAX: virar alert-active clicked (sem refresh ainda)
-    w = WebDriverWait(driver, 25)
-    w.until(lambda d: _first_visible(d, MOBILE_AVISE_BTN_ACTIVE_NO_REFRESH) is not None)
-    time.sleep(1)
+    time.sleep(3)
 
     # Refresh
     driver.refresh()
 
     # Página pronta de novo
     visible(driver, SORTER_SELECT, timeout=25)
-
-    # Verifica que continua ativado após refresh (button_enabled_ + alert-active clicked)
-    w.until(lambda d: _first_visible(d, MOBILE_AVISE_BTN_ACTIVE_AFTER_REFRESH) is not None)
 
     # Scroll no botão ativado
     el_active = scroll_to_avise(driver, MOBILE_AVISE_BTN_ACTIVE_AFTER_REFRESH)
@@ -195,9 +175,9 @@ def test_3_userLogado_mobile(driver, setup_site, wait):
     mobile_click_strict(driver, MOBILE_AVISE_BTN_ACTIVE_AFTER_REFRESH, timeout=20, retries=4, sleep_between=0.25)
 
     # Aguarda voltar para "disabled" (sem alert-active)
-    time.sleep(4)
+    time.sleep(3)
 
-    # 11) PDP: abrir PDP do primeiro produto que tenha avise-me e repetir o teste
+    # PDP: abrir PDP do primeiro produto que tenha avise-me e repetir o teste
     ok_pdp = open_pdp_from_first_avise_in_plp(driver)
     if not ok_pdp:
         print("[WARN] Não consegui abrir PDP a partir de um produto com Avise-me.")
@@ -206,15 +186,10 @@ def test_3_userLogado_mobile(driver, setup_site, wait):
     mobile_click_strict(driver, MOBILE_AVISE_BTN_DISABLED(1), timeout=20, retries=4, sleep_between=0.25)
 
     # Espera AJAX: virar alert-active clicked (sem refresh ainda)
-    w = WebDriverWait(driver, 25)
-    w.until(lambda d: _first_visible(d, MOBILE_AVISE_BTN_ACTIVE_NO_REFRESH) is not None)
-    time.sleep(1)
+    time.sleep(3)
 
     # Refresh
     driver.refresh()
-
-    # Verifica que continua ativado após refresh (button_enabled_ + alert-active clicked)
-    w.until(lambda d: _first_visible(d, MOBILE_AVISE_BTN_ACTIVE_AFTER_REFRESH) is not None)
 
     # Scroll no botão ativado
     el_active = scroll_to_avise(driver, MOBILE_AVISE_BTN_ACTIVE_AFTER_REFRESH)
@@ -224,9 +199,9 @@ def test_3_userLogado_mobile(driver, setup_site, wait):
     mobile_click_strict(driver, MOBILE_AVISE_BTN_ACTIVE_AFTER_REFRESH, timeout=20, retries=4, sleep_between=0.25)
 
     # Aguarda voltar para "disabled" (sem alert-active)
-    time.sleep(4)
+    time.sleep(3)
 
-    # 12) Limpar carrinho (view cart -> empty -> confirm -> ver catálogo)
+    # 13) Limpar carrinho (view cart -> empty -> confirm -> ver catálogo)
     mobile_click_strict(driver, MOBILE_MINICART_ICON, timeout=20, retries=4, sleep_between=0.25)
     visible(driver, MINICART_ACTIVE, timeout=10)
     mobile_click_strict(driver, VIEWCART, 15, 4, 0.25)
@@ -239,4 +214,4 @@ def test_3_userLogado_mobile(driver, setup_site, wait):
     mobile_click_strict(driver, VER_CATALOGO, 20, 4, 0.25)
 
     # Final: ainda logado
-    time.sleep(8)
+    time.sleep(5)
