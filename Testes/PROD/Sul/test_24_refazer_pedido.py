@@ -50,7 +50,7 @@ def test_24_refazer_pedido_sul(driver, setup_site, wait):
     favoritar_e_desfavoritar(driver, wait)
 
     # 6) Avise-me + refresh na pagina (Verifica se o avise-me continua ativo)
-    interagir_avise_me(driver, wait)
+    interagir_avise_me(driver, wait, BTN_PROXIMA_PAGINA)
 
     # 7) Ver Similar + Adicionar no carrinho
     ver_similar_comprados_e_adicionar(driver, wait)

@@ -3,7 +3,7 @@ import pytest
 from conftest import click_if_present
 
 from locators.checkout import BOLETO_OPTION_21, BOLETO_OPTION_28
-from locators.cart import BTN_CHECKOUT_TOP, MOBILE_MINICART_ICON, MOBILE_MINICART_OPENED
+from locators.cart import BTN_CHECKOUT_TOP, MOBILE_MINICART_ICON_SUL, MOBILE_MINICART_OPENED_SUL
 from locators.header import DD_MEUS_PEDIDOS
 from locators.header import MOBILE_LOGIN_ACESSO
 from locators.common import COOKIE_ACCEPT
@@ -19,15 +19,15 @@ from helpers.actions import mobile_click_strict, visible
 # =========================
 # Credenciais
 # =========================
-VALID_USER = "smoketesting@automatizacao.com.br"
+VALID_USER = "smoketesting2@automatizacao.com.br"
 VALID_PASS = "Min@1234"
 
 
 @pytest.mark.smoke
-@pytest.mark.default
+@pytest.mark.sul
 @pytest.mark.refazer
 @pytest.mark.mobile
-def test_12_refazer_pedido_mobile(driver, setup_site, wait):
+def test_24_refazer_pedido_mobile_sul(driver, setup_site, wait):
     # 1) Login via Ultimos Pedidos
     click_if_present(driver, COOKIE_ACCEPT, seconds=20)
     clicar_ultimos_pedidos(driver, wait)
@@ -44,8 +44,8 @@ def test_12_refazer_pedido_mobile(driver, setup_site, wait):
     ver_similar_refazer_e_adicionar_mobile(driver, wait)
 
     # 4) Finalizar compra
-    mobile_click_strict(driver, MOBILE_MINICART_ICON, timeout=20, retries=4, sleep_between=0.25)
-    visible(driver, MOBILE_MINICART_OPENED, timeout=20)
+    mobile_click_strict(driver, MOBILE_MINICART_ICON_SUL, timeout=20, retries=4, sleep_between=0.25)
+    visible(driver, MOBILE_MINICART_OPENED_SUL, timeout=20)
 
     mobile_click_strict(driver, BTN_CHECKOUT_TOP, timeout=12, retries=4, sleep_between=0.25)
     time.sleep(5)
@@ -72,8 +72,8 @@ def test_12_refazer_pedido_mobile(driver, setup_site, wait):
     adicionar_todos_ao_carrinho_mobile(driver, wait)
 
     # 9) Finalizar compra
-    mobile_click_strict(driver, MOBILE_MINICART_ICON, timeout=20, retries=4, sleep_between=0.25)
-    visible(driver, MOBILE_MINICART_OPENED, timeout=20)
+    mobile_click_strict(driver, MOBILE_MINICART_ICON_SUL, timeout=20, retries=4, sleep_between=0.25)
+    visible(driver, MOBILE_MINICART_OPENED_SUL, timeout=20)
 
     mobile_click_strict(driver, BTN_CHECKOUT_TOP, timeout=12, retries=4, sleep_between=0.25)
     time.sleep(5)
