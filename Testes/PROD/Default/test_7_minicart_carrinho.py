@@ -22,7 +22,7 @@ VALID_PASS = "Min@1234"
 
 @pytest.mark.smoke
 @pytest.mark.default
-@pytest.mark.logado
+@pytest.mark.cart
 def test_7_minicart_carrinho(driver, setup_site, wait):
     # 1) Login
     ensure_logged_in(driver, VALID_USER, VALID_PASS)

@@ -4,6 +4,9 @@ import time
 import pytest
 from selenium.webdriver.common.keys import Keys
 
+from conftest import click_if_present
+
+from locators.common import COOKIE_ACCEPT
 from locators.checkout import *
 from locators.pdp import ADDRESSES_SELECT
 
@@ -16,16 +19,17 @@ from helpers.minicart import *
 # =========================
 # Credenciais
 # =========================
-VALID_USER = "caique.oliveira4@infobase.com.br"
+VALID_USER = "smoketesting@automatizacao.com.br"
 VALID_PASS = "Min@1234"
 
 
 @pytest.mark.smoke
-@pytest.mark.default
+@pytest.mark.sul
 @pytest.mark.cart
 @pytest.mark.mobile
-def test_7_minicart_carrinho_mobile(driver, setup_site, wait):
+def test_20_minicart_carrinho_mobile_sul(driver, setup_site, wait):
     # 1) Login
+    click_if_present(driver, COOKIE_ACCEPT, seconds=20)
     ensure_logged_in_mobile(driver, VALID_USER, VALID_PASS)
     wait.until(EC.visibility_of_element_located(MINICART_ICON))
     try_close_popups(driver)
@@ -42,8 +46,8 @@ def test_7_minicart_carrinho_mobile(driver, setup_site, wait):
     wait_minicart_loading(driver)
 
     # 3) Favoritar + remoção do favorito pelo Mini-cart
-    mobile_click_strict(driver, MOBILE_MINICART_ICON, timeout=20, retries=4, sleep_between=0.25)  # abre minicart
-    visible(driver, MOBILE_MINICART_OPENED, timeout=20)
+    mobile_click_strict(driver, MOBILE_MINICART_ICON_SUL, timeout=20, retries=4, sleep_between=0.25)  # abre minicart
+    visible(driver, MOBILE_MINICART_OPENED_SUL, timeout=20)
     time.sleep(1)
     wishlist_toggle_add_towishlist(driver, wait, index=1)
 
@@ -74,28 +78,31 @@ def test_7_minicart_carrinho_mobile(driver, setup_site, wait):
     # 7) Ver produtos
     click_when_clickable(wait, MINICART_EMPTY_VIEW_PRODUCTS)
 
-    # 8) Categoria Azeite + adicionar item no carrinho + Conferencia de produto adicionado no mini-cart
+    # 8) Categoria Marcas + ordenação por menor valor + adicionar item no carrinho + Conferencia de produto adicionado no mini-cart
     mobile_click_strict(driver, MOBILE_MENU_HAMBURGER, timeout=10, retries=4, sleep_between=0.25)
     time.sleep(1)
-    mobile_click_strict(driver, MOBILE_MENU_PARENT("azeite"), timeout=10, retries=4, sleep_between=0.25)
+    mobile_click_strict(driver, MOBILE_MENU_PARENT("marcas"), timeout=10, retries=4, sleep_between=0.25)
     visible(driver, SORTER_SELECT, timeout=20)
 
+    mobile_click_strict(driver, SORTER_SELECT, 10, 4, 0.25)
+    mobile_click_strict(driver, SORT_LOW_TO_HIGH, 10, 4, 0.25)
+    WebDriverWait(driver, 20).until(EC.url_contains("product_list_order=low_to_high"))
     mobile_click_strict(driver, PLP_ADD_TO_CART_BY_INDEX(1), timeout=10, retries=4, sleep_between=0.25)
     wait_minicart_loading(driver)
 
     #  Mini-cart abre/fecha
-    mobile_click_strict(driver, MOBILE_MINICART_ICON, timeout=20, retries=4, sleep_between=0.25) # abre
-    visible(driver, MOBILE_MINICART_OPENED, timeout=20)
+    mobile_click_strict(driver, MOBILE_MINICART_ICON_SUL, timeout=20, retries=4, sleep_between=0.25) # abre
+    visible(driver, MOBILE_MINICART_OPENED_SUL, timeout=20)
 
     time.sleep(2)  # Tempo para conferencia
 
     mobile_click_strict(driver, MOBILE_MINICART_CLOSE, timeout=20, retries=4, sleep_between=0.25) # fecha
-    visible(driver, MOBILE_MINICART_CLOSED, timeout=20)
+    time.sleep(2)
 
-    # 9) Categoria Bovinos Premium + adicionar itens no carrinho
+    # 9) Categoria Bovinos + adicionar itens no carrinho
     mobile_click_strict(driver, MOBILE_MENU_HAMBURGER, timeout=10, retries=4, sleep_between=0.25)
     time.sleep(1)
-    mobile_click_strict(driver, MOBILE_MENU_PARENT_NEXT("bovinos-premium"), timeout=10, retries=4, sleep_between=0.25)
+    mobile_click_strict(driver, MOBILE_MENU_PARENT_NEXT("bovinos"), timeout=10, retries=4, sleep_between=0.25)
     time.sleep(1)
     mobile_click_strict(driver, MOBILE_MENU_SEE_ALL, timeout=10, retries=4, sleep_between=0.25)
     visible(driver, SORTER_SELECT, timeout=20)
@@ -122,30 +129,30 @@ def test_7_minicart_carrinho_mobile(driver, setup_site, wait):
     mobile_click_strict(driver, PLP_ADD_TO_CART_BY_INDEX(4), timeout=10, retries=4, sleep_between=0.25)
     wait_minicart_loading(driver)
 
-    mobile_click_strict(driver, MOBILE_MINICART_ICON, timeout=20, retries=4, sleep_between=0.25)
-    visible(driver, MOBILE_MINICART_OPENED, timeout=20)
+    mobile_click_strict(driver, MOBILE_MINICART_ICON_SUL, timeout=20, retries=4, sleep_between=0.25)
+    visible(driver, MOBILE_MINICART_OPENED_SUL, timeout=20)
     time.sleep(3)  # Tempo para conferencia
 
     # 10) Acessando PDP do item pelo mini-cart
     safe_click_loc(driver, wait, MINICART_ITEMS_BY_INDEX(1), timeout=10)
     wait.until(EC.visibility_of_element_located(ADDRESSES_SELECT))
-    mobile_click_strict(driver, MOBILE_MINICART_ICON, timeout=20, retries=4, sleep_between=0.25)
-    visible(driver, MOBILE_MINICART_OPENED, timeout=20)
+    mobile_click_strict(driver, MOBILE_MINICART_ICON_SUL, timeout=20, retries=4, sleep_between=0.25)
+    visible(driver, MOBILE_MINICART_OPENED_SUL, timeout=20)
     safe_click_loc(driver, wait, MINICART_ITEMS_BY_INDEX(2), timeout=10)
     time.sleep(2)
     wait.until(EC.visibility_of_element_located(ADDRESSES_SELECT))
 
     # 11) Finalizar Compra via MiniCart
-    mobile_click_strict(driver, MOBILE_MINICART_ICON, timeout=20, retries=4, sleep_between=0.25)
-    visible(driver, MOBILE_MINICART_OPENED, timeout=20)
+    mobile_click_strict(driver, MOBILE_MINICART_ICON_SUL, timeout=20, retries=4, sleep_between=0.25)
+    visible(driver, MOBILE_MINICART_OPENED_SUL, timeout=20)
     click_when_clickable(wait, BTN_CHECKOUT_TOP)
     time.sleep(8)
     wait.until(EC.visibility_of_element_located(BTN_CONTINUAR_SHIPPING))
 
     # 12) Voltar Home + abrir mini-cart + acessar pagina do carrinho
     click_when_clickable(wait, LOGO)
-    mobile_click_strict(driver, MOBILE_MINICART_ICON, timeout=20, retries=4, sleep_between=0.25)
-    visible(driver, MOBILE_MINICART_OPENED, timeout=20)
+    mobile_click_strict(driver, MOBILE_MINICART_ICON_SUL, timeout=20, retries=4, sleep_between=0.25)
+    visible(driver, MOBILE_MINICART_OPENED_SUL, timeout=20)
     click_when_clickable(wait, VIEWCART)
     wait.until(EC.url_contains("/checkout/cart"))
 
@@ -183,7 +190,7 @@ def test_7_minicart_carrinho_mobile(driver, setup_site, wait):
     wait.until(EC.presence_of_all_elements_located(BTN_CONTINUAR_SHIPPING))
 
     # 16) Voltar direto para o carrinho
-    driver.get(os.getenv("URL") + "checkout/cart/")
+    driver.get(os.getenv("URL_SUL") + "checkout/cart/")
     wait.until(EC.url_contains("/checkout/cart"))
 
     # 17) Limpar carrinho

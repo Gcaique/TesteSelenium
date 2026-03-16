@@ -69,23 +69,17 @@ def test_5_dashboard(driver, setup_site, wait):
     # 14) Minhas missões
     misssoes_flow(driver, wait)
 
-    # ------------------------------------------------------------
-    # 15) OBRIGATÓRIO: Info da conta: whatsapp + editar email + cancelar
-    # ------------------------------------------------------------
+    # 15) Info da conta: whatsapp + editar email + cancelar
     # WhatsApp
     account_whatsapp_toggle_flow(driver, wait)
 
     # Alterar email
     account_change_email_flow(driver, wait, new_email=NEW_EMAIL, current_password=VALID_PASS)
 
-    # ------------------------------------------------------------
-    # 16) OBRIGATÓRIO: Troca senha (aplica)
-    # ------------------------------------------------------------
+    # 16) Troca senha (aplica)
     change_password_flow(driver, wait, current_password=VALID_PASS, new_password=NEW_PASS)
 
-    # ------------------------------------------------------------
-    # 17) OBRIGATÓRIO: Logout e validações de login
-    # ------------------------------------------------------------
+    # 17) Logout e validações de login
     logout(driver)
 
     # email antigo não encontrado
