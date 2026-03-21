@@ -27,7 +27,7 @@ def _sanitize_test_name(s: str, max_len: int = 180) -> str:
 
 
 # ============================
-# 🔐 Credenciais (LT + BS)
+# 🔐 Credenciais (LT + BS + SAUCE)
 # ============================
 load_dotenv()  # carrega .env automaticamente
 
@@ -59,6 +59,41 @@ def _get_bs_hub():
     HUB Selenium do BrowserStack.
     """
     return "https://hub-cloud.browserstack.com/wd/hub"
+
+
+def _get_sauce_credentials():
+    """
+    Lê SAUCE_USERNAME e SAUCE_ACCESS_KEY do ambiente (.env).
+    """
+    user = os.getenv("SAUCE_USERNAME")
+    key = os.getenv("SAUCE_ACCESS_KEY")
+    if not user or not key:
+        raise RuntimeError("Variáveis SAUCE_USERNAME e SAUCE_ACCESS_KEY não definidas.")
+    return user, key
+
+
+def _get_sauce_hub():
+    """
+    Endpoint Selenium do Sauce Labs conforme região.
+    Regiões suportadas:
+      - us-west
+      - us-east
+      - eu-central
+    """
+    region = (os.getenv("SAUCE_REGION", "us-west") or "").strip().lower()
+
+    hubs = {
+        "us-west": "https://ondemand.us-west-1.saucelabs.com/wd/hub",
+        "us-east": "https://ondemand.us-east-4.saucelabs.com/wd/hub",
+        "eu-central": "https://ondemand.eu-central-1.saucelabs.com/wd/hub",
+    }
+
+    if region not in hubs:
+        raise RuntimeError(
+            "SAUCE_REGION inválida. Use: us-west, us-east ou eu-central."
+        )
+
+    return hubs[region]
 
 
 # ======================
@@ -138,12 +173,21 @@ def criar_driver(
         if ambiente == "desktop":
             return driver_desktop_browserstack(nome_teste, navegador, sistema_operacional)
         else:
-            # Mobile web REAL (Safari real iOS, Chrome real Android)
             so = (sistema_operacional or "").strip().lower()
             if so == "ios":
                 return driver_mobile_browserstack_ios_safari(nome_teste, device_name)
             else:
                 return driver_mobile_browserstack_android_chrome(nome_teste, device_name)
+
+    if grid in ("sauce", "saucelabs", "sl"):
+        if ambiente == "desktop":
+            return driver_desktop_saucelabs(nome_teste, navegador, sistema_operacional)
+        else:
+            so = (sistema_operacional or "").strip().lower()
+            if so == "ios":
+                return driver_mobile_saucelabs_ios_safari(nome_teste, device_name)
+            else:
+                return driver_mobile_saucelabs_android_chrome(nome_teste, device_name)
 
     # default: LambdaTest
     if ambiente == "desktop":
@@ -361,5 +405,133 @@ def driver_mobile_browserstack_android_chrome(nome_teste, device_name):
 
     return webdriver.Remote(
         command_executor=f"https://{bs_user}:{bs_key}@hub-cloud.browserstack.com/wd/hub",
+        options=options
+    )
+
+
+# ============================
+# 💻 Desktop (Sauce Labs)
+# ============================
+def driver_desktop_saucelabs(nome_teste, navegador, sistema_operacional, resolucao="1920x1080"):
+    """
+    Desktop web no Sauce Labs.
+    """
+    sauce_user, sauce_key = _get_sauce_credentials()
+    hub = _get_sauce_hub()
+
+    nav = (navegador or "chrome").strip().lower()
+
+    if nav == "chrome":
+        options = ChromeOptions()
+    elif nav == "firefox":
+        options = FirefoxOptions()
+    elif nav == "edge":
+        options = webdriver.EdgeOptions()
+    elif nav == "safari":
+        options = webdriver.SafariOptions()
+    else:
+        raise Exception("Navegador desktop não suportado no Sauce (chrome|firefox|edge|safari).")
+
+    build_name = os.getenv("SAUCE_BUILD_NAME", "Smoke - Desktop")
+    project_name = os.getenv("SAUCE_PROJECT_NAME", "MeuMinerva")
+
+    # Mapeamento básico de plataforma
+    so_in = (sistema_operacional or "").strip().lower()
+    if "windows" in so_in:
+        platform_name = "Windows 11"
+    elif "mac" in so_in or "os x" in so_in:
+        platform_name = "macOS 14"
+    else:
+        platform_name = sistema_operacional
+
+    options.set_capability("browserName", nav)
+    options.set_capability("browserVersion", "latest")
+    options.set_capability("platformName", platform_name)
+
+    options.set_capability("sauce:options", {
+        "name": nome_teste,
+        "build": build_name,
+        "project": project_name,
+        "screenResolution": resolucao,
+        "seleniumVersion": "4.21.0",
+    })
+
+    return webdriver.Remote(
+        command_executor=f"https://{sauce_user}:{sauce_key}@{hub.replace('https://', '')}",
+        options=options
+    )
+
+
+# ============================
+# 📱 Android REAL + Chrome (Sauce Labs)
+# ============================
+def driver_mobile_saucelabs_android_chrome(nome_teste, device_name):
+    """
+    Android mobile web no Sauce Labs.
+    """
+    sauce_user, sauce_key = _get_sauce_credentials()
+    hub = _get_sauce_hub()
+
+    if not device_name:
+        raise Exception('No Sauce Android, informe --device (ex: "Google Pixel 7").')
+
+    build_name = os.getenv("SAUCE_BUILD_NAME", "Smoke - Android Chrome")
+    project_name = os.getenv("SAUCE_PROJECT_NAME", "MeuMinerva")
+    android_version = os.getenv("SAUCE_ANDROID_VERSION", "14")
+    appium_version = os.getenv("SAUCE_APPIUM_VERSION", "latest")
+
+    options = ChromeOptions()
+    options.set_capability("browserName", "chrome")
+    options.set_capability("platformName", "Android")
+    options.set_capability("appium:deviceName", device_name)
+    options.set_capability("appium:platformVersion", android_version)
+    options.set_capability("appium:automationName", "UiAutomator2")
+
+    options.set_capability("sauce:options", {
+        "name": nome_teste,
+        "build": build_name,
+        "project": project_name,
+        "appiumVersion": appium_version,
+    })
+
+    return webdriver.Remote(
+        command_executor=f"https://{sauce_user}:{sauce_key}@{hub.replace('https://', '')}",
+        options=options
+    )
+
+
+# ============================
+# 📱 iOS REAL + Safari (Sauce Labs)
+# ============================
+def driver_mobile_saucelabs_ios_safari(nome_teste, device_name):
+    sauce_user, sauce_key = _get_sauce_credentials()
+    hub = _get_sauce_hub()
+
+    if not device_name:
+        raise Exception('No Sauce iOS, informe --device (ex: "iPhone 14").')
+
+    build_name = os.getenv("SAUCE_BUILD_NAME", "Smoke - iOS Safari")
+    project_name = os.getenv("SAUCE_PROJECT_NAME", "MeuMinerva")
+    ios_version = os.getenv("SAUCE_IOS_VERSION", "").strip()
+    appium_version = os.getenv("SAUCE_APPIUM_VERSION", "latest")
+
+    options = webdriver.SafariOptions()
+    options.set_capability("browserName", "safari")
+    options.set_capability("platformName", "iOS")
+    options.set_capability("appium:deviceName", device_name)
+    options.set_capability("appium:automationName", "XCUITest")
+
+    if ios_version:
+        options.set_capability("appium:platformVersion", ios_version)
+
+    options.set_capability("sauce:options", {
+        "name": nome_teste,
+        "build": build_name,
+        "project": project_name,
+        "appiumVersion": appium_version,
+    })
+
+    return webdriver.Remote(
+        command_executor=f"https://{sauce_user}:{sauce_key}@{hub.replace('https://', '')}",
         options=options
     )
