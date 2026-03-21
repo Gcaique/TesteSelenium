@@ -55,7 +55,7 @@ def pytest_addoption(parser):
     parser.addoption("--username", action="store", default=os.getenv("USERNAME", ""), help="Login")
     parser.addoption("--password", action="store", default=os.getenv("PASSWORD", ""), help="Senha")
     parser.addoption("--timeout", action="store", default=10, type=int, help="Timeout padrão do WebDriverWait")
-    parser.addoption("--grid", action="store", default="lt", help="lt|bs|local")
+    parser.addoption("--grid", action="store", default="lt", help="lt|bs|sauce|local")
     parser.addoption("--headless", action="store_true", help="Executa browser local em modo headless")
     parser.addoption("--resolution", action="store", default="1920x1080", help='Resolução desktop no formato LARGURAxALTURA. Ex: 1920x1080')
 
@@ -254,7 +254,6 @@ def setup_site(open_home, driver, region):
     click_if_present(driver, BTN_ACCEPT_COOKIES, seconds=20)
 
     # 4) Fecha modais ocasionais
-    click_if_present(driver, BTN_CLOSE_SPIN, seconds=8)
     click_if_present(driver, BTN_CLOSE_MODAL_GENERIC, seconds=8)
 
     # 5) Espera algo fixo da home
@@ -307,10 +306,6 @@ def pytest_runtest_makereport(item, call):
 
     caps = getattr(driver, "capabilities", {}) or {}
 
-    # Detecta BrowserStack de forma bem robusta:
-    # 1) chave bstack:options
-    # 2) user do browserstack
-    # 3) URL do hub contém browserstack
     hub_url = ""
     try:
         hub_url = getattr(getattr(driver, "command_executor", None), "_url", "") or ""
@@ -323,27 +318,38 @@ def pytest_runtest_makereport(item, call):
         or ("browserstack" in hub_url.lower())
     )
 
-    # DEBUG (uma vez por teste) — você pode remover depois
-    # print(f"[DEBUG] is_bs={is_bs} hub={hub_url} keys={list(caps.keys())[:15]}")
+    is_sauce = (
+        ("sauce:options" in caps)
+        or ("saucelabs" in hub_url.lower())
+        or ("ondemand." in hub_url.lower() and "saucelabs.com" in hub_url.lower())
+    )
 
-    if not is_bs:
-        return
-
-    # Marca status no final do CALL (quando o teste realmente passou/falhou)
     if rep.when != "call":
         return
 
     status = "passed" if rep.passed else "failed"
-    reason = "OK" if rep.passed else (rep.longreprtext[:250] if hasattr(rep, "longreprtext") else "Falha")
+    reason = "OK" if rep.passed else (
+        rep.longreprtext[:250] if hasattr(rep, "longreprtext") else "Falha"
+    )
 
-    payload = {
-        "action": "setSessionStatus",
-        "arguments": {"status": status, "reason": reason}
-    }
+    if is_bs:
+        payload = {
+            "action": "setSessionStatus",
+            "arguments": {"status": status, "reason": reason}
+        }
 
-    try:
-        driver.execute_script("browserstack_executor: " + json.dumps(payload))
-    except Exception as e:
-        print(f"[WARN] Não consegui marcar status no BrowserStack: {e}")
-        print(f"[WARN] hub_url={hub_url}")
-        print(f"[WARN] caps_keys={list(caps.keys())}")
+        try:
+            driver.execute_script("browserstack_executor: " + json.dumps(payload))
+        except Exception as e:
+            print(f"[WARN] Não consegui marcar status no BrowserStack: {e}")
+            print(f"[WARN] hub_url={hub_url}")
+            print(f"[WARN] caps_keys={list(caps.keys())}")
+
+    if is_sauce:
+        try:
+            passed_bool = "true" if rep.passed else "false"
+            driver.execute_script(f"sauce:job-result={passed_bool}")
+        except Exception as e:
+            print(f"[WARN] Não consegui marcar status no Sauce Labs: {e}")
+            print(f"[WARN] hub_url={hub_url}")
+            print(f"[WARN] caps_keys={list(caps.keys())}")
