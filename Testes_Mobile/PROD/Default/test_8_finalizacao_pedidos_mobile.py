@@ -183,7 +183,7 @@ def test_8_finalizacao_pedidos_mobile(driver, setup_site, wait):
     # 16) Acessando categoria + Adicionando produtos no carrinho
     mobile_click_strict(driver, MOBILE_MENU_HAMBURGER, timeout=10, retries=4, sleep_between=0.25)
     time.sleep(2)
-    mobile_click_strict(driver, MOBILE_MENU_PARENT_NEXT("cordeiros"), timeout=10, retries=4, sleep_between=0.25)
+    mobile_click_strict(driver, MOBILE_MENU_PARENT_NEXT("pescados"), timeout=10, retries=4, sleep_between=0.25)
     time.sleep(1)
     mobile_click_strict(driver, MOBILE_MENU_SEE_ALL, timeout=10, retries=4, sleep_between=0.25)
     clickable(driver, SORTER_SELECT, timeout=15)
