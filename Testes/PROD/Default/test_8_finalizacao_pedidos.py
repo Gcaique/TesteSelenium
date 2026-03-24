@@ -112,7 +112,7 @@ def test_8_finalizacao_pedidos(driver, setup_site, wait):
     click_when_clickable(wait, BTN_SELECIONAR_ENDERECO(2))
     time.sleep(5)
 
-    # 13) Selecionando o método cartão de crédito
+    # 13) Selecionando o metodo cartão de crédito
     click_when_clickable(wait, CARTAO)
     time.sleep(2)
 
@@ -139,7 +139,7 @@ def test_8_finalizacao_pedidos(driver, setup_site, wait):
     click_when_clickable(wait, BTN_IR_PARA_HOME)
 
     # 16) Acessando categoria + Adicionando produtos no carrinho
-    click_when_clickable(wait, CATEGORY_MENU("Cordeiros"))
+    click_when_clickable(wait, CATEGORY_MENU("Pescados"))
     wait_category_loaded(wait, driver)
 
     scroll_into_view(driver, TOOLBAR_AMOUNT)

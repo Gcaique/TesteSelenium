@@ -149,7 +149,8 @@ def criar_driver(
     sistema_operacional,
     device_name="",
     grid="lt",
-    headless=False
+    headless=False,
+    resolucao="1920x1080"
 ):
     """
     Decide qual provedor usar.
@@ -171,7 +172,7 @@ def criar_driver(
 
     if grid in ("browserstack", "bs"):
         if ambiente == "desktop":
-            return driver_desktop_browserstack(nome_teste, navegador, sistema_operacional)
+            return driver_desktop_browserstack(nome_teste, navegador, sistema_operacional, resolucao)
         else:
             so = (sistema_operacional or "").strip().lower()
             if so == "ios":
@@ -181,7 +182,7 @@ def criar_driver(
 
     if grid in ("sauce", "saucelabs", "sl"):
         if ambiente == "desktop":
-            return driver_desktop_saucelabs(nome_teste, navegador, sistema_operacional)
+            return driver_desktop_saucelabs(nome_teste, navegador, sistema_operacional, resolucao)
         else:
             so = (sistema_operacional or "").strip().lower()
             if so == "ios":
@@ -191,7 +192,7 @@ def criar_driver(
 
     # default: LambdaTest
     if ambiente == "desktop":
-        return driver_desktop_lambdatest(nome_teste, navegador, sistema_operacional)
+        return driver_desktop_lambdatest(nome_teste, navegador, sistema_operacional, resolucao)
     else:
         return driver_mobile_lambdatest(nome_teste, navegador, sistema_operacional, device_name)
 
@@ -320,6 +321,7 @@ def driver_desktop_browserstack(nome_teste, navegador, sistema_operacional, reso
         "buildName": build_name,
         "projectName": project_name,
         "seleniumVersion": "4.21.0",
+        "resolution": resolucao,
         "debug": True,
         "networkLogs": False,
         "consoleLogs": "errors",

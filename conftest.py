@@ -40,6 +40,14 @@ def sanitize_test_name(s: str, max_len: int = 180) -> str:
 # =============================================================================
 # CLI Options (pytest)
 # =============================================================================
+URLS = {
+    "prod": os.getenv("URL_PROD", os.getenv("URL")),
+    "stg1": os.getenv("URL_STG1"),
+    "stg2": os.getenv("URL_STG2"),
+    "local": os.getenv("URL_LOCAL"),
+}
+
+
 def pytest_addoption(parser):
     """
     O que faz:
@@ -50,7 +58,8 @@ def pytest_addoption(parser):
     parser.addoption("--navegador", action="store", default="chrome", help="chrome|firefox|edge|safari")
     parser.addoption("--so", action="store", default="Windows 11", help="Sistema operacional (LT/BS)")
     parser.addoption("--device", action="store", default="", help='Device name (mobile). Ex: "iPhone 14"')
-    parser.addoption("--base-url", action="store", default=os.getenv("URL"), help="URL base")
+    parser.addoption("--base-url", action="store", default="", help="URL base (sobrepõe target-env)")
+    parser.addoption("--target-env", action="store", default="prod", choices=["prod", "stg1", "stg2", "local", "outro"], help="Ambiente destino (mapeado em .env)")
     parser.addoption("--region", action="store", default="outras", help="outras|sul")
     parser.addoption("--username", action="store", default=os.getenv("USERNAME", ""), help="Login")
     parser.addoption("--password", action="store", default=os.getenv("PASSWORD", ""), help="Senha")
@@ -69,7 +78,18 @@ def base_url(request):
     O que faz:
     - Disponibiliza a URL base para os testes.
     """
-    return request.config.getoption("--base-url")
+    cli_url = request.config.getoption("--base-url")
+    if cli_url:
+        return cli_url
+
+    target_env = request.config.getoption("--target-env") or "prod"
+    resolved = URLS.get(target_env)
+    if resolved:
+        return resolved
+
+    pytest.fail(
+        f"URL não definida para target-env '{target_env}'. Configure URL_{target_env.upper()} no .env ou use --base-url."
+    )
 
 
 @pytest.fixture(scope="session")
@@ -107,6 +127,7 @@ def driver(request):
     device_name = request.config.getoption("--device")
     grid = (request.config.getoption("--grid") or "lt").strip().lower()
     headless = request.config.getoption("--headless")
+    resolucao = request.config.getoption("--resolution")
 
     # -------------------------
     # MOBILE "inteligente"
@@ -151,7 +172,8 @@ def driver(request):
         sistema_operacional=sistema_operacional,
         device_name=device_name,
         grid=grid,
-        headless=headless
+        headless=headless,
+        resolucao=resolucao
     )
     if ambiente != "mobile":
         driver.maximize_window()

@@ -7,12 +7,20 @@ import threading
 import subprocess
 from pathlib import Path
 import tkinter as tk
-from tkinter import messagebox
+from tkinter import messagebox, filedialog
 
 import customtkinter as ctk
 
 import tempfile
 import xml.etree.ElementTree as ET
+import json
+import csv
+from datetime import datetime
+
+try:
+    from fpdf import FPDF  # type: ignore
+except Exception:
+    FPDF = None
 
 # =============================================================================
 # Configuração inicial
@@ -20,6 +28,32 @@ import xml.etree.ElementTree as ET
 PROJECT_ROOT = Path(__file__).resolve().parent
 TEST_DIRS = [PROJECT_ROOT / "Testes", PROJECT_ROOT / "Testes_Mobile"]
 VENV_PYTHON = PROJECT_ROOT / ".venv" / "Scripts" / "python.exe"
+
+
+def _require_project_venv():
+    """Abort early if not running with the project's venv interpreter."""
+    expected = VENV_PYTHON.resolve()
+    current = Path(sys.executable).resolve()
+
+    # Alert also when the venv python does not exist (setup issue).
+    if not expected.exists() or current != expected:
+        msg = (
+            "Use o Python do venv para executar o GUI.\n"
+            f"Esperado: {expected}\n"
+            f"Atual:    {current}"
+        )
+        try:
+            # Avoid full Tk init; show a simple error dialog if possible.
+            root = tk.Tk()
+            root.withdraw()
+            messagebox.showerror("Executor de Testes", msg)
+            root.destroy()
+        except Exception:
+            print(msg, file=sys.stderr)
+        sys.exit(1)
+
+
+_require_project_venv()
 
 ctk.set_appearance_mode("dark")
 ctk.set_default_color_theme("blue")
@@ -55,11 +89,11 @@ COLOR_PLACEHOLDER_TEXT = "#8A8A90"
 COLOR_SCROLL = "#3b4a5a"
 COLOR_SCROLL_HOVER = "#4b6278"
 
-AMBIENTE_PLACEHOLDER = "Selecione o ambiente"
-GRID_PLACEHOLDER = "Selecione o grid"
+AMBIENTE_PLACEHOLDER = "Selecione a visualização"
+GRID_PLACEHOLDER = "Selecione a plataforma"
 NAVEGADOR_PLACEHOLDER = "Selecione o navegador"
 SO_PLACEHOLDER = "Selecione o sistema"
-DEVICE_PLACEHOLDER = "Selecione o device"
+DEVICE_PLACEHOLDER = "Selecione o dispositivo"
 RESOLUTION_PLACEHOLDER = "Selecione a resolução"
 TIMEOUT_PLACEHOLDER = "Selecione o timeout"
 
@@ -178,6 +212,10 @@ custom_resolution_entry = None
 custom_resolution_label_widget = None
 resolution_option_menu = None
 headless_var = None
+custom_url_var = None
+target_env_var = None
+custom_url_label_widget = None
+custom_url_entry_widget = None
 ambiente_option_menu = None
 grid_option_menu = None
 navegador_option_menu = None
@@ -193,6 +231,22 @@ test_results_by_status = {
 }
 
 last_junit_xml_path = None
+history_data = []
+last_run_command = ""
+last_selected_tests = []
+
+HISTORY_FILE = PROJECT_ROOT / ".test_history.json"
+history_window = None
+history_selection_vars = {}
+delete_selected_btn = None
+delete_all_btn = None
+history_start_day_var = None
+history_start_month_var = None
+history_start_year_var = None
+history_end_day_var = None
+history_end_month_var = None
+history_end_year_var = None
+today_checkbox_var = None
 
 
 # =============================================================================
@@ -400,6 +454,16 @@ def format_result_test_name(test_name):
     return test_name
 
 
+def format_selected_test(path_str):
+    try:
+        stem = Path(path_str).stem
+        if stem.lower().startswith("test_"):
+            return stem[5:]
+        return stem
+    except Exception:
+        return path_str
+
+
 def set_status(message, status_type="idle"):
     color_map = {
         "idle": COLOR_STATUS_IDLE,
@@ -412,6 +476,103 @@ def set_status(message, status_type="idle"):
         text=f"Status: {message}",
         text_color=color_map.get(status_type, COLOR_STATUS_IDLE)
     )
+
+
+def format_timestamp(ts: str):
+    """Return DD/MM/YYYY HH:MM for display; fallback to raw string."""
+    try:
+        return datetime.fromisoformat(ts).strftime("%d/%m/%Y %H:%M")
+    except Exception:
+        return ts
+
+
+def load_history():
+    global history_data
+    if HISTORY_FILE.exists():
+        try:
+            with open(HISTORY_FILE, "r", encoding="utf-8") as f:
+                history_data = json.load(f)
+        except Exception:
+            history_data = []
+    else:
+        history_data = []
+
+
+def save_history():
+    try:
+        with open(HISTORY_FILE, "w", encoding="utf-8") as f:
+            json.dump(history_data, f, ensure_ascii=False, indent=2)
+    except Exception as e:
+        append_log(f"\n[WARN] NÃ£o foi possÃ­vel salvar histÃ³rico: {e}\n")
+
+
+def add_history_entry(entry):
+    global history_data
+    history_data.insert(0, entry)
+    if len(history_data) > 500:
+        history_data = history_data[:500]
+    save_history()
+
+
+def filter_history_items(start_date=None, end_date=None, status_filter="all"):
+    items = history_data
+
+    def to_date(s):
+        try:
+            return datetime.fromisoformat(s).date()
+        except Exception:
+            return None
+
+    start_dt = start_date
+    end_dt = end_date
+
+    filtered = []
+    for it in items:
+        ts_date = to_date(it.get("timestamp", ""))
+        status_ok = status_filter in ("all", "", None) or it.get("status") == status_filter
+        date_ok = True
+        if start_dt and ts_date:
+            date_ok = ts_date >= start_dt
+        if end_dt and ts_date and date_ok:
+            date_ok = ts_date <= end_dt
+        if status_ok and date_ok:
+            filtered.append(it)
+    return filtered
+
+
+def delete_selected_history():
+    global history_data
+    if not history_selection_vars:
+        return
+
+    selected_ids = {key for key, var in history_selection_vars.items() if var.get()}
+    if not selected_ids:
+        return
+
+    if not messagebox.askyesno("Confirmar", "Excluir os históricos selecionados?"):
+        return
+
+    history_data = [it for it in history_data if (it.get("id") or it.get("timestamp")) not in selected_ids]
+    save_history()
+    rebuild_history_table()
+
+
+def delete_all_history():
+    global history_data
+    if not history_data:
+        return
+    if not messagebox.askyesno("Confirmar", "Excluir TODO o histórico?"):
+        return
+    history_data = []
+    save_history()
+    rebuild_history_table()
+
+
+def update_delete_buttons_state():
+    if delete_selected_btn is None:
+        return
+    has_selection = any(var.get() for var in history_selection_vars.values())
+    delete_selected_btn.configure(state="normal" if has_selection else "disabled")
 
 
 def on_device_choice(value):
@@ -469,6 +630,29 @@ def on_custom_resolution_change(*_args):
         resolution_var.set(custom_resolution_var.get().strip().replace(" ", ""))
 
 
+def build_date_from_select(day_val, month_val, year_val):
+    if not day_val or not month_val or not year_val:
+        return None
+    if day_val in ("DD", "") or month_val in ("MM", "") or year_val in ("AAAA", ""):
+        return None
+    try:
+        return datetime(int(year_val), int(month_val), int(day_val)).date()
+    except Exception:
+        return None
+
+
+def get_history_year_choices():
+    years = {datetime.now().year}
+    for item in history_data:
+        ts = item.get("timestamp")
+        try:
+            years.add(datetime.fromisoformat(ts).year)
+        except Exception:
+            continue
+    ordered = ["AAAA"] + [str(y) for y in sorted(years)]
+    return ordered
+
+
 def apply_menu_style(menu, is_placeholder):
     if not menu:
         return
@@ -507,8 +691,16 @@ def on_ambiente_change(*_args):
     is_placeholder = ambiente_var.get() == AMBIENTE_PLACEHOLDER
     apply_menu_style(ambiente_option_menu, is_placeholder)
 
-    # Se ambiente não selecionado, desabilita device e resolution
-    if is_placeholder:
+    # Limpa seleções incompatíveis ao trocar de ambiente
+    if env in ("desktop", "mobile"):
+        for var, path in left_test_vars:
+            if (env == "desktop" and path.startswith("Testes_Mobile/")) or (env == "mobile" and path.startswith("Testes/")):
+                var.set(False)
+        rebuild_left_tests(test_filter_var.get())
+        update_left_selected_counter()
+
+    # Reset: desabilita ambos antes de aplicar regras
+    def disable_device():
         device_choice_var.set(DEVICE_PLACEHOLDER)
         device_var.set("")
         custom_device_var.set("")
@@ -532,6 +724,7 @@ def on_ambiente_change(*_args):
             )
             custom_device_entry.grid_remove()
 
+    def disable_resolution():
         resolution_choice_var.set(RESOLUTION_PLACEHOLDER)
         resolution_var.set("")
         custom_resolution_var.set("")
@@ -554,42 +747,23 @@ def on_ambiente_change(*_args):
                 text_color=COLOR_DISABLED_TEXT,
             )
             custom_resolution_entry.grid_remove()
+
+    disable_device()
+    disable_resolution()
+
+    if is_placeholder:
         return
 
     if env == "desktop":
-        # Device desabilitado
-        device_choice_var.set(DEVICE_PLACEHOLDER)
-        device_var.set("")
-        custom_device_var.set("")
-        if device_option_menu:
-            device_option_menu.configure(
-                state="disabled",
-                fg_color=COLOR_DISABLED,
-                button_color=COLOR_DISABLED,
-                button_hover_color=COLOR_DISABLED,
-                text_color=COLOR_DISABLED_TEXT,
-                dropdown_text_color=COLOR_DISABLED_TEXT,
-            )
-        if custom_device_label_widget:
-            custom_device_label_widget.grid_remove()
-        if custom_device_entry:
-            custom_device_entry.configure(
-                state="disabled",
-                fg_color=COLOR_DISABLED,
-                border_color=COLOR_BORDER,
-                text_color=COLOR_DISABLED_TEXT,
-            )
-            custom_device_entry.grid_remove()
-
-        # Resolution habilitado (reset para placeholder)
+        # Resolution habilitado
         if resolution_option_menu:
             resolution_option_menu.configure(
                 state="normal",
-                fg_color=COLOR_PLACEHOLDER,
-                button_color=COLOR_PLACEHOLDER,
-                button_hover_color=COLOR_PLACEHOLDER,
-                text_color=COLOR_PLACEHOLDER_TEXT,
-                dropdown_text_color=COLOR_PLACEHOLDER_TEXT,
+                fg_color=COLOR_PRIMARY,
+                button_color=COLOR_PRIMARY,
+                button_hover_color=COLOR_PRIMARY_HOVER,
+                text_color=COLOR_TEXT,
+                dropdown_text_color=COLOR_TEXT,
             )
         if custom_resolution_entry:
             custom_resolution_entry.configure(
@@ -603,39 +777,15 @@ def on_ambiente_change(*_args):
         custom_resolution_var.set("")
 
     elif env == "mobile":
-        # Resolution desabilitado
-        resolution_choice_var.set("")
-        resolution_var.set("")
-        custom_resolution_var.set("")
-        if resolution_option_menu:
-            resolution_option_menu.configure(
-                state="disabled",
-                fg_color=COLOR_DISABLED,
-                button_color=COLOR_DISABLED,
-                button_hover_color=COLOR_DISABLED,
-                text_color=COLOR_DISABLED_TEXT,
-                dropdown_text_color=COLOR_DISABLED_TEXT,
-            )
-        if custom_resolution_label_widget:
-            custom_resolution_label_widget.grid_remove()
-        if custom_resolution_entry:
-            custom_resolution_entry.configure(
-                state="disabled",
-                fg_color=COLOR_DISABLED,
-                border_color=COLOR_BORDER,
-                text_color=COLOR_DISABLED_TEXT,
-            )
-            custom_resolution_entry.grid_remove()
-
-        # Device habilitado (reset para placeholder)
+        # Device habilitado
         if device_option_menu:
             device_option_menu.configure(
                 state="normal",
-                fg_color=COLOR_PLACEHOLDER,
-                button_color=COLOR_PLACEHOLDER,
-                button_hover_color=COLOR_PLACEHOLDER,
-                text_color=COLOR_PLACEHOLDER_TEXT,
-                dropdown_text_color=COLOR_PLACEHOLDER_TEXT,
+                fg_color=COLOR_PRIMARY,
+                button_color=COLOR_PRIMARY,
+                button_hover_color=COLOR_PRIMARY_HOVER,
+                text_color=COLOR_TEXT,
+                dropdown_text_color=COLOR_TEXT,
             )
         if custom_device_entry:
             custom_device_entry.configure(
@@ -648,7 +798,7 @@ def on_ambiente_change(*_args):
         device_var.set("")
         custom_device_var.set("")
     else:
-        # fallback: tudo habilitado
+        # fallback: habilita ambos
         if device_option_menu:
             device_option_menu.configure(state="normal")
             apply_menu_style(device_option_menu, device_choice_var.get() == DEVICE_PLACEHOLDER)
@@ -706,23 +856,26 @@ def clear_left_tests():
 
 
 def format_test_display_name(test_path):
-    normalized = test_path.replace("\\", "/")
-
-    if normalized.startswith("Testes/"):
-        normalized = normalized[len("Testes/"):]
-    elif normalized.startswith("Testes_Mobile/"):
-        normalized = normalized[len("Testes_Mobile/"):]
-
-    if normalized.startswith("PROD/"):
-        normalized = normalized[len("PROD/"):]
-
-    return normalized
+    try:
+        stem = Path(test_path).stem
+        if stem.lower().startswith("test_"):
+            return stem[5:]
+        return stem
+    except Exception:
+        return test_path
 
 
 def rebuild_left_tests(filter_text=""):
     clear_left_tests()
 
     filter_text = (filter_text or "").strip().lower()
+
+    ambiente = (ambiente_var.get() or "").lower()
+    ambiente_filter = None
+    if ambiente == "desktop":
+        ambiente_filter = "Desktop"
+    elif ambiente == "mobile":
+        ambiente_filter = "Mobile"
 
     grouped = {
         "Desktop": {"Default": [], "Sul": [], "Outros": []},
@@ -735,14 +888,19 @@ def rebuild_left_tests(filter_text=""):
         if filter_text and filter_text not in display_name.lower():
             continue
 
-        if test_path.startswith("Testes_Mobile/"):
+        normalized_path = test_path.replace("\\", "/").lower()
+
+        if normalized_path.startswith("testes_mobile/"):
             platform = "Mobile"
         else:
             platform = "Desktop"
 
-        if "default/" in display_name.lower():
+        if ambiente_filter and platform != ambiente_filter:
+            continue
+
+        if "/default/" in normalized_path:
             subgroup = "Default"
-        elif "sul/" in display_name.lower():
+        elif "/sul/" in normalized_path:
             subgroup = "Sul"
         else:
             subgroup = "Outros"
@@ -879,6 +1037,12 @@ def build_pytest_command():
     timeout = timeout_var.get().strip()
     resolution = resolution_var.get().strip()
     headless = headless_var.get()
+    target_env = target_env_var.get().strip() if 'target_env_var' in globals() else ""
+    custom_url = custom_url_var.get().strip() if 'custom_url_var' in globals() else ""
+
+    if target_env.lower() == "outro" and not custom_url:
+        messagebox.showerror("Ambiente", "Selecione 'Outro' apenas informando uma URL custom.")
+        return None
 
     if ambiente and ambiente != AMBIENTE_PLACEHOLDER:
         cmd.extend(["--ambiente", ambiente])
@@ -901,6 +1065,11 @@ def build_pytest_command():
     if headless:
         cmd.append("--headless")
 
+    if target_env:
+        cmd.extend(["--target-env", target_env])
+    if custom_url:
+        cmd.extend(["--base-url", custom_url])
+
     temp_xml = Path(tempfile.gettempdir()) / "pytest_gui_results.xml"
     last_junit_xml_path = str(temp_xml)
     cmd.extend(["--junitxml", last_junit_xml_path])
@@ -910,6 +1079,8 @@ def build_pytest_command():
 
 def preview_command():
     cmd = build_pytest_command()
+    if not cmd:
+        return
     set_command_preview(command_to_string(cmd))
 
 
@@ -925,7 +1096,7 @@ def validate_before_run():
 # Execução
 # =============================================================================
 def run_tests():
-    global process, test_results_by_status
+    global process, test_results_by_status, last_run_command, last_selected_tests
 
     if process and process.poll() is None:
         messagebox.showwarning("Aviso", "Já existe uma execução em andamento.")
@@ -940,7 +1111,11 @@ def run_tests():
         return
 
     cmd = build_pytest_command()
+    if not cmd:
+        return
     cmd_text = command_to_string(cmd)
+    last_run_command = cmd_text
+    last_selected_tests = get_selected_tests()
 
     set_command_preview(cmd_text)
     clear_logs()
@@ -1010,6 +1185,36 @@ def read_process_output():
 
     log_queue.put(("summary", (total, passed, failed, skipped)))
     log_queue.put(("finished", return_code))
+
+    status = "passed" if return_code == 0 else "failed"
+    timestamp = datetime.now().isoformat(timespec="seconds")
+    formatted_selected = [format_selected_test(t) for t in last_selected_tests]
+    passed_list = [format_result_test_name(t) for t in test_results_by_status.get("passed", [])]
+    failed_list = [format_result_test_name(t) for t in test_results_by_status.get("failed", [])]
+    skipped_list = [format_result_test_name(t) for t in test_results_by_status.get("skipped", [])]
+    entry = {
+        "id": timestamp,
+        "timestamp": timestamp,
+        "status": status,
+        "total": total,
+        "passed": passed,
+        "failed": failed,
+        "skipped": skipped,
+        "grid": grid_var.get().strip(),
+        "ambiente": ambiente_var.get().strip(),
+        "navegador": navegador_var.get().strip(),
+        "so": so_var.get().strip(),
+        "device": device_var.get().strip(),
+        "resolution": resolution_var.get().strip(),
+        "headless": bool(headless_var.get()),
+        "command": last_run_command,
+        "tests": formatted_selected,
+        "tests_passed": passed_list,
+        "tests_failed": failed_list,
+        "tests_skipped": skipped_list,
+    }
+    add_history_entry(entry)
+    log_queue.put(("history_updated", None))
 
 
 def stop_tests():
@@ -1099,6 +1304,9 @@ def poll_log_queue():
 
                 append_log(f"\n[PROCESSO FINALIZADO] Código de saída: {return_code}\n")
 
+            elif item_type == "history_updated":
+                rebuild_history_table()
+
     except queue.Empty:
         pass
 
@@ -1128,8 +1336,8 @@ def create_summary_card(parent, title, value_text, column, status_key):
         border_color=COLOR_BORDER,
         border_width=1,
         cursor="hand2",
-        width=220,
-        height=96
+        width=180,
+        height=82
     )
     card.grid(row=0, column=column, padx=12, pady=8)
     card.grid_propagate(False)
@@ -1138,7 +1346,7 @@ def create_summary_card(parent, title, value_text, column, status_key):
         card,
         text=title,
         text_color=COLOR_TEXT_MUTED,
-        font=ctk.CTkFont(size=18)
+        font=ctk.CTkFont(size=16)
     )
     title_label.place(relx=0.5, rely=0.28, anchor="center")
 
@@ -1146,7 +1354,7 @@ def create_summary_card(parent, title, value_text, column, status_key):
         card,
         text=value_text,
         text_color=COLOR_TEXT,
-        font=ctk.CTkFont(size=38, weight="bold")
+        font=ctk.CTkFont(size=32, weight="bold")
     )
     value_label.place(relx=0.5, rely=0.68, anchor="center")
 
@@ -1217,7 +1425,7 @@ def create_device_selector(parent, row, column):
 
     label = ctk.CTkLabel(
         parent,
-        text="Device",
+        text="Dispositivos Mobile",
         text_color=COLOR_TEXT_MUTED,
         font=ctk.CTkFont(size=14)
     )
@@ -1263,7 +1471,7 @@ def create_resolution_selector(parent, row, column):
 
     label = ctk.CTkLabel(
         parent,
-        text="Resolution",
+        text="Resolução Desktop",
         text_color=COLOR_TEXT_MUTED,
         font=ctk.CTkFont(size=14)
     )
@@ -1332,6 +1540,410 @@ def create_timeout_selector(parent, row, column):
 
 
 # =============================================================================
+# Historico
+# =============================================================================
+history_rows_frame = None
+history_status_filter_var = None
+history_start_filter_var = None
+history_end_filter_var = None
+history_empty_label = None
+
+
+def on_history_filter_change(*_args):
+    rebuild_history_table()
+
+
+def export_history_csv():
+    items = get_filtered_history()
+    if not items:
+        messagebox.showinfo("Exportar CSV", "Nenhum item para exportar.")
+        return
+    path = filedialog.asksaveasfilename(
+        defaultextension=".csv",
+        filetypes=[("CSV", "*.csv")],
+        initialfile="historico_testes.csv"
+    )
+    if not path:
+        return
+    try:
+        with open(path, "w", newline="", encoding="utf-8") as f:
+            writer = csv.writer(f, delimiter=";")
+            writer.writerow(["datetime", "status", "total", "passed", "failed",
+                             "grid", "ambiente", "navegador", "so", "resolution", "device", "headless", "tests", "command"])
+            for it in items:
+                writer.writerow([
+                    it.get("timestamp", ""),
+                    it.get("status", ""),
+                    it.get("total", 0),
+                    it.get("passed", 0),
+                    it.get("failed", 0),
+                    it.get("grid", ""),
+                    it.get("ambiente", ""),
+                    it.get("navegador", ""),
+                    it.get("so", ""),
+                    it.get("resolution", ""),
+                    it.get("device", ""),
+                    str(it.get("headless", False)),
+                    ";".join(it.get("tests", [])),
+                    it.get("command", ""),
+                ])
+        messagebox.showinfo("Exportar CSV", f"CSV salvo em:\n{path}")
+    except Exception as e:
+        messagebox.showerror("Exportar CSV", f"Erro ao salvar CSV:\n{e}")
+
+
+def export_history_pdf():
+    if FPDF is None:
+        messagebox.showerror("Exportar PDF", "Pacote fpdf2 nÃ£o estÃ¡ instalado.")
+        return
+    items = get_filtered_history()
+    if not items:
+        messagebox.showinfo("Exportar PDF", "Nenhum item para exportar.")
+        return
+    path = filedialog.asksaveasfilename(
+        defaultextension=".pdf",
+        filetypes=[("PDF", "*.pdf")],
+        initialfile="historico_testes.pdf"
+    )
+    if not path:
+        return
+    try:
+        pdf = FPDF(format="A4")
+        pdf.set_margins(15, 15, 15)
+        pdf.set_auto_page_break(auto=True, margin=20)
+        pdf.add_page()
+        try:
+            pdf.add_font("ArialUnicode", "", "C:\\Windows\\Fonts\\arial.ttf")
+            pdf.set_font("ArialUnicode", size=12)
+        except Exception:
+            pdf.set_font("Arial", size=12)
+        from fpdf.enums import XPos, YPos
+        pdf.cell(0, 10, "Histórico de Testes", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+        try:
+            pdf.set_font("ArialUnicode", size=9)
+        except Exception:
+            pdf.set_font("Arial", size=9)
+
+        usable_width = pdf.epw
+
+        for it in items:
+            header = f"{format_timestamp(it.get('timestamp', ''))}"
+            status_line = f"Status: {it.get('status','').upper()}"
+            totals_line = f"Totais -> T:{it.get('total',0)}  P:{it.get('passed',0)}  F:{it.get('failed',0)}"
+            grid_line = f"Grid: {it.get('grid','')}  Ambiente: {it.get('ambiente','')}"
+            nav_line = f"Navegador: {it.get('navegador','')}  SO: {it.get('so','')}"
+            device_line = f"Resolução: {it.get('resolution','')}  Device: {it.get('device','')}  Headless: {it.get('headless', False)}"
+            tests_lines = []
+            for name in it.get("tests_passed", []):
+                tests_lines.append(f"{name} -> Passed")
+            for name in it.get("tests_failed", []):
+                tests_lines.append(f"{name} -> Failed")
+            if not tests_lines and it.get("tests"):
+                tests_lines.extend(it.get("tests"))
+
+            for ln in (header, status_line, totals_line, grid_line, nav_line, device_line):
+                pdf.multi_cell(usable_width, 6, ln, new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+            if tests_lines:
+                for tl in tests_lines:
+                    pdf.multi_cell(usable_width, 6, f"- {tl}", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+            pdf.ln(3)
+        pdf.output(path)
+        messagebox.showinfo("Exportar PDF", f"PDF salvo em:\n{path}")
+    except Exception as e:
+        messagebox.showerror("Exportar PDF", f"Erro ao salvar PDF:\n{e}")
+
+
+def get_filtered_history():
+    start_dt = build_date_from_select(
+        history_start_day_var.get(),
+        history_start_month_var.get(),
+        history_start_year_var.get()
+    )
+    end_dt = build_date_from_select(
+        history_end_day_var.get(),
+        history_end_month_var.get(),
+        history_end_year_var.get()
+    )
+    status_val = history_status_filter_var.get().strip().lower()
+    return filter_history_items(start_dt, end_dt, status_val if status_val else "all")
+
+
+def open_history_window():
+    global history_window, history_rows_frame, history_empty_label
+    global delete_selected_btn, delete_all_btn
+
+    if history_window and tk.Toplevel.winfo_exists(history_window):
+        history_window.deiconify()
+        try:
+            history_window.state("normal")
+        except Exception:
+            pass
+        history_window.update_idletasks()
+        history_window.lift()
+        history_window.attributes("-topmost", True)
+        history_window.after(500, lambda: history_window.attributes("-topmost", False))
+        history_window.transient(app)
+        history_window.focus_force()
+        rebuild_history_table()
+        return
+
+    def close_history():
+        global history_window
+        if history_window and tk.Toplevel.winfo_exists(history_window):
+            history_window.destroy()
+            history_window = None
+
+    history_window = ctk.CTkToplevel(app)
+    history_window.title("Histórico de execuções")
+    history_window.geometry("900x600")
+    history_window.configure(fg_color=COLOR_BG)
+    history_window.protocol("WM_DELETE_WINDOW", close_history)
+    history_window.transient(app)
+    history_window.attributes("-topmost", True)
+    history_window.after(500, lambda: history_window.attributes("-topmost", False))
+    history_window.grid_columnconfigure(0, weight=1)
+    history_window.grid_rowconfigure(1, weight=0)
+    history_window.grid_rowconfigure(2, weight=1)
+
+    header = ctk.CTkLabel(
+        history_window,
+        text="Histórico de execuções",
+        text_color=COLOR_TEXT,
+        font=ctk.CTkFont(size=18, weight="bold")
+    )
+    header.grid(row=0, column=0, sticky="w", padx=16, pady=(14, 6))
+
+    # Filtros + export
+    history_filter_frame = ctk.CTkFrame(history_window, fg_color=COLOR_PANEL, corner_radius=8)
+    history_filter_frame.grid(row=1, column=0, sticky="new", padx=14, pady=(0, 8))
+    history_filter_frame.grid_columnconfigure((0, 1, 2, 3), weight=1)
+
+    def _date_label(day_var, month_var, year_var, default_text):
+        if day_var.get() in ("DD", "") or month_var.get() in ("MM", "") or year_var.get() in ("AAAA", ""):
+            return default_text
+        return f"{day_var.get()}/{month_var.get()}/{year_var.get()}"
+
+    def open_date_picker(target):
+        picker = ctk.CTkToplevel(history_window)
+        picker.title("Selecionar data")
+        picker.geometry("280x200")
+        picker.configure(fg_color=COLOR_BG)
+        picker.transient(history_window)
+        picker.attributes("-topmost", True)
+
+        day_values = ["DD"] + [f"{i:02d}" for i in range(1, 32)]
+        month_values = ["MM"] + [f"{i:02d}" for i in range(1, 13)]
+        year_values = get_history_year_choices()
+
+        ctk.CTkLabel(picker, text="Escolha dia/mês/ano", text_color=COLOR_TEXT).pack(pady=8)
+
+        if target == "start":
+            d_var, m_var, y_var = history_start_day_var, history_start_month_var, history_start_year_var
+        else:
+            d_var, m_var, y_var = history_end_day_var, history_end_month_var, history_end_year_var
+
+        day_menu = ctk.CTkOptionMenu(picker, variable=d_var, values=day_values, fg_color=COLOR_PLACEHOLDER, button_color=COLOR_PLACEHOLDER, button_hover_color=COLOR_PLACEHOLDER, text_color=COLOR_TEXT)
+        month_menu = ctk.CTkOptionMenu(picker, variable=m_var, values=month_values, fg_color=COLOR_PLACEHOLDER, button_color=COLOR_PLACEHOLDER, button_hover_color=COLOR_PLACEHOLDER, text_color=COLOR_TEXT)
+        year_menu = ctk.CTkOptionMenu(picker, variable=y_var, values=year_values, fg_color=COLOR_PLACEHOLDER, button_color=COLOR_PLACEHOLDER, button_hover_color=COLOR_PLACEHOLDER, text_color=COLOR_TEXT)
+        day_menu.pack(pady=4)
+        month_menu.pack(pady=4)
+        year_menu.pack(pady=4)
+
+        def _confirm():
+            start_label_btn.configure(text=_date_label(history_start_day_var, history_start_month_var, history_start_year_var, "Início"))
+            end_label_btn.configure(text=_date_label(history_end_day_var, history_end_month_var, history_end_year_var, "Fim"))
+            picker.destroy()
+            on_history_filter_change()
+
+        ctk.CTkButton(picker, text="Aplicar", command=_confirm, fg_color=COLOR_PRIMARY, hover_color=COLOR_PRIMARY_HOVER).pack(pady=8)
+
+    def apply_today_filter():
+        if today_checkbox_var.get():
+            today = datetime.now().date()
+            history_start_day_var.set(f"{today.day:02d}")
+            history_start_month_var.set(f"{today.month:02d}")
+            history_start_year_var.set(str(today.year))
+            history_end_day_var.set(f"{today.day:02d}")
+            history_end_month_var.set(f"{today.month:02d}")
+            history_end_year_var.set(str(today.year))
+        else:
+            history_start_day_var.set("DD")
+            history_start_month_var.set("MM")
+            history_start_year_var.set("AAAA")
+            history_end_day_var.set("DD")
+            history_end_month_var.set("MM")
+            history_end_year_var.set("AAAA")
+
+        start_label_btn.configure(text=_date_label(history_start_day_var, history_start_month_var, history_start_year_var, "Início"))
+        end_label_btn.configure(text=_date_label(history_end_day_var, history_end_month_var, history_end_year_var, "Fim"))
+        on_history_filter_change()
+
+    status_combo = ctk.CTkOptionMenu(
+        history_filter_frame,
+        variable=history_status_filter_var,
+        values=["all", "passed", "failed"],
+        fg_color=COLOR_PRIMARY,
+        button_color=COLOR_PRIMARY,
+        button_hover_color=COLOR_PRIMARY_HOVER,
+        text_color=COLOR_TEXT
+    )
+    status_combo.grid(row=0, column=0, padx=6, pady=8, sticky="ew")
+
+    start_label_btn = ctk.CTkButton(
+        history_filter_frame,
+        text=_date_label(history_start_day_var, history_start_month_var, history_start_year_var, "Início"),
+        command=lambda: open_date_picker("start"),
+        fg_color=COLOR_CARD,
+        hover_color=COLOR_PRIMARY_HOVER,
+        text_color=COLOR_TEXT
+    )
+    start_label_btn.grid(row=0, column=1, padx=6, pady=8, sticky="ew")
+
+    end_label_btn = ctk.CTkButton(
+        history_filter_frame,
+        text=_date_label(history_end_day_var, history_end_month_var, history_end_year_var, "Fim"),
+        command=lambda: open_date_picker("end"),
+        fg_color=COLOR_CARD,
+        hover_color=COLOR_PRIMARY_HOVER,
+        text_color=COLOR_TEXT
+    )
+    end_label_btn.grid(row=0, column=2, padx=6, pady=8, sticky="ew")
+
+    today_checkbox = ctk.CTkCheckBox(
+        history_filter_frame,
+        text="Hoje",
+        variable=today_checkbox_var,
+        command=apply_today_filter,
+        fg_color=COLOR_PRIMARY,
+        hover_color=COLOR_PRIMARY_HOVER,
+        border_color=COLOR_BORDER,
+        text_color=COLOR_TEXT
+    )
+    today_checkbox.grid(row=0, column=3, padx=6, pady=8, sticky="e")
+
+    delete_selected_btn = ctk.CTkButton(
+        history_filter_frame,
+        text="Excluir selecionados",
+        command=delete_selected_history,
+        state="disabled",
+        fg_color=COLOR_DANGER,
+        hover_color=COLOR_DANGER_HOVER,
+        text_color=COLOR_TEXT
+    )
+    delete_selected_btn.grid(row=1, column=0, padx=6, pady=8, sticky="ew")
+
+    delete_all_btn = ctk.CTkButton(
+        history_filter_frame,
+        text="Excluir todos",
+        command=delete_all_history,
+        fg_color=COLOR_DANGER,
+        hover_color=COLOR_DANGER_HOVER,
+        text_color=COLOR_TEXT
+    )
+    delete_all_btn.grid(row=1, column=1, padx=6, pady=8, sticky="ew")
+
+    export_csv_btn = ctk.CTkButton(
+        history_filter_frame,
+        text="Exportar CSV",
+        command=export_history_csv,
+        fg_color=COLOR_CARD,
+        hover_color=COLOR_PRIMARY_HOVER,
+        text_color=COLOR_TEXT
+    )
+    export_csv_btn.grid(row=1, column=2, padx=6, pady=8, sticky="ew")
+
+    export_pdf_btn = ctk.CTkButton(
+        history_filter_frame,
+        text="Exportar PDF",
+        command=export_history_pdf,
+        fg_color=COLOR_CARD,
+        hover_color=COLOR_PRIMARY_HOVER,
+        text_color=COLOR_TEXT
+    )
+    export_pdf_btn.grid(row=1, column=3, padx=6, pady=8, sticky="ew")
+
+    history_rows_container = ctk.CTkScrollableFrame(history_window, fg_color=COLOR_PANEL, corner_radius=10)
+    history_rows_container.grid(row=2, column=0, sticky="nsew", padx=14, pady=(0, 14))
+    history_rows_container.grid_columnconfigure(0, weight=1)
+
+    history_empty_label = ctk.CTkLabel(
+        history_rows_container,
+        text="Nenhuma execução registrada ainda.",
+        text_color=COLOR_TEXT_MUTED,
+        font=ctk.CTkFont(size=13)
+    )
+    history_empty_label.grid(row=0, column=0, padx=10, pady=10)
+
+    history_rows_frame_local = ctk.CTkFrame(history_rows_container, fg_color="transparent")
+    history_rows_frame_local.grid(row=1, column=0, sticky="nsew")
+    history_rows_frame_local.grid_columnconfigure(0, weight=1)
+
+    history_rows_frame = history_rows_frame_local
+    rebuild_history_table()
+
+
+def rebuild_history_table():
+    global history_selection_vars
+
+    if history_rows_frame is None or not history_rows_frame.winfo_exists():
+        return
+
+    for widget in history_rows_frame.winfo_children():
+        widget.destroy()
+
+    history_selection_vars.clear()
+    items = get_filtered_history()
+
+    if not items:
+        history_empty_label.grid()
+        update_delete_buttons_state()
+        return
+    history_empty_label.grid_remove()
+
+    history_selection_vars = {}
+
+    for idx, it in enumerate(items, start=1):
+        row = ctk.CTkFrame(history_rows_frame, fg_color=COLOR_CARD, border_color=COLOR_BORDER, border_width=1, corner_radius=8)
+        row.pack(fill="x", padx=4, pady=4)
+
+        status_color = COLOR_SUCCESS if it.get("status") == "passed" else COLOR_DANGER
+        key = it.get("id") or it.get("timestamp", f"row{idx}")
+        sel_var = tk.BooleanVar(value=False)
+        history_selection_vars[key] = sel_var
+
+        header_frame = ctk.CTkFrame(row, fg_color="transparent")
+        header_frame.pack(anchor="w", fill="x", padx=6, pady=(6, 2))
+        select_cb = ctk.CTkCheckBox(
+            header_frame,
+            text="",
+            variable=sel_var,
+            width=18,
+            fg_color=COLOR_PRIMARY,
+            hover_color=COLOR_PRIMARY_HOVER,
+            border_color=COLOR_BORDER,
+            command=update_delete_buttons_state
+        )
+        select_cb.pack(side="left", padx=(4, 6))
+        header = ctk.CTkLabel(header_frame, text=f"{format_timestamp(it.get('timestamp',''))} — {it.get('status','').upper()}", text_color=status_color, font=ctk.CTkFont(size=13, weight="bold"))
+        header.pack(side="left", padx=(0, 6))
+
+        summary_text = (
+            f"T:{it.get('total',0)}  P:{it.get('passed',0)}  F:{it.get('failed',0)}"
+            f"   Grid:{it.get('grid','')}  Env:{it.get('ambiente','')}  Nav:{it.get('navegador','')}  SO:{it.get('so','')}"
+        )
+        summary = ctk.CTkLabel(row, text=summary_text, text_color=COLOR_TEXT, font=ctk.CTkFont(size=12))
+        summary.pack(anchor="w", padx=10, pady=(0, 4))
+        tests_passed = it.get("tests_passed", [])
+        tests_failed = it.get("tests_failed", [])
+        lines = [f"{name} -> Passed" for name in tests_passed] + [f"{name} -> Failed" for name in tests_failed]
+        tests_text = "\n".join(lines) if lines else "(nenhum teste registrado)"
+        tests_label = ctk.CTkLabel(row, text=tests_text, text_color=COLOR_TEXT_MUTED, font=ctk.CTkFont(size=12), justify="left")
+        tests_label.pack(anchor="w", padx=10, pady=(0, 6))
+
+    update_delete_buttons_state()
+
+
+# =============================================================================
 # UI
 # =============================================================================
 def create_ui():
@@ -1340,11 +1952,17 @@ def create_ui():
     global run_button, stop_button
     global total_value_label, passed_value_label, failed_value_label
     global left_tests_frame
-    global test_filter_var, ambiente_var, grid_var, navegador_var, so_var
+    global test_filter_var, ambiente_var, grid_var, navegador_var, so_var, target_env_var, custom_url_var
     global device_var, device_choice_var, custom_device_var, custom_device_entry, device_option_menu
     global timeout_var, timeout_choice_var, timeout_option_menu
     global resolution_var, resolution_choice_var, custom_resolution_var, custom_resolution_entry, resolution_option_menu
     global headless_var
+    global custom_url_label_widget, custom_url_entry_widget
+    global history_rows_frame, history_status_filter_var, history_empty_label
+    global history_start_day_var, history_start_month_var, history_start_year_var
+    global history_end_day_var, history_end_month_var, history_end_year_var
+    global today_checkbox_var
+    global delete_selected_btn, delete_all_btn
 
     app = ctk.CTk(fg_color=COLOR_BG)
     app.title("Executor de Testes")
@@ -1360,6 +1978,8 @@ def create_ui():
     grid_var = tk.StringVar(value=GRID_PLACEHOLDER)
     navegador_var = tk.StringVar(value=NAVEGADOR_PLACEHOLDER)
     so_var = tk.StringVar(value=SO_PLACEHOLDER)
+    target_env_var = tk.StringVar(value="prod")
+    custom_url_var = tk.StringVar(value="")
     device_choice_var = tk.StringVar(value=DEVICE_PLACEHOLDER)
     custom_device_var = tk.StringVar(value="")
     device_var = tk.StringVar(value="")
@@ -1369,6 +1989,14 @@ def create_ui():
     custom_resolution_var = tk.StringVar(value="")
     resolution_var = tk.StringVar(value="")
     headless_var = tk.BooleanVar(value=False)
+    history_status_filter_var = tk.StringVar(value="all")
+    today_checkbox_var = tk.BooleanVar(value=False)
+    history_start_day_var = tk.StringVar(value="DD")
+    history_start_month_var = tk.StringVar(value="MM")
+    history_start_year_var = tk.StringVar(value="AAAA")
+    history_end_day_var = tk.StringVar(value="DD")
+    history_end_month_var = tk.StringVar(value="MM")
+    history_end_year_var = tk.StringVar(value="AAAA")
 
     custom_device_var.trace_add("write", on_custom_device_change)
     custom_resolution_var.trace_add("write", on_custom_resolution_change)
@@ -1377,6 +2005,14 @@ def create_ui():
     navegador_var.trace_add("write", lambda *_: on_option_placeholder_change(navegador_var, NAVEGADOR_PLACEHOLDER, navegador_option_menu))
     so_var.trace_add("write", lambda *_: on_option_placeholder_change(so_var, SO_PLACEHOLDER, so_option_menu))
     timeout_choice_var.trace_add("write", lambda *_: on_option_placeholder_change(timeout_choice_var, TIMEOUT_PLACEHOLDER, timeout_option_menu))
+    target_env_var.trace_add("write", on_target_env_change)
+    history_status_filter_var.trace_add("write", on_history_filter_change)
+    history_start_day_var.trace_add("write", on_history_filter_change)
+    history_start_month_var.trace_add("write", on_history_filter_change)
+    history_start_year_var.trace_add("write", on_history_filter_change)
+    history_end_day_var.trace_add("write", on_history_filter_change)
+    history_end_month_var.trace_add("write", on_history_filter_change)
+    history_end_year_var.trace_add("write", on_history_filter_change)
 
     # =========================================================================
     # Coluna esquerda
@@ -1522,14 +2158,51 @@ def create_ui():
     )
     config_title.grid(row=0, column=0, columnspan=4, padx=12, pady=(12, 10), sticky="w")
 
-    ambiente_option_menu = create_labeled_option(config_frame, "Ambiente", ambiente_var, [AMBIENTE_PLACEHOLDER, "desktop", "mobile"], 1, 0)
-    grid_option_menu = create_labeled_option(config_frame, "Grid", grid_var, [GRID_PLACEHOLDER, "lt", "bs", "sauce", "local"], 1, 1)
+    ambiente_option_menu = create_labeled_option(config_frame, "Visualização", ambiente_var, [AMBIENTE_PLACEHOLDER, "desktop", "mobile"], 1, 0)
+    grid_option_menu = create_labeled_option(config_frame, "Plataforma", grid_var, [GRID_PLACEHOLDER, "lt", "bs", "sauce", "local"], 1, 1)
     navegador_option_menu = create_labeled_option(config_frame, "Navegador", navegador_var, [NAVEGADOR_PLACEHOLDER, "chrome", "firefox", "edge", "safari"], 1, 2)
     so_option_menu = create_labeled_option(config_frame, "Sistema Operacional", so_var, [SO_PLACEHOLDER, "Windows 11", "Android", "iOS"], 1, 3)
 
     create_device_selector(config_frame, 3, 0)
     create_timeout_selector(config_frame, 3, 1)
     create_resolution_selector(config_frame, 3, 2)
+
+    target_env_label = ctk.CTkLabel(
+        config_frame,
+        text="Ambiente",
+        text_color=COLOR_TEXT_MUTED,
+        font=ctk.CTkFont(size=14)
+    )
+    target_env_label.grid(row=7, column=0, padx=10, pady=(14, 4), sticky="w")
+    target_env_menu = ctk.CTkOptionMenu(
+        config_frame,
+        variable=target_env_var,
+        values=["prod", "stg1", "stg2", "local", "outro"],
+        fg_color=COLOR_PRIMARY,
+        button_color=COLOR_PRIMARY,
+        button_hover_color=COLOR_PRIMARY_HOVER,
+        text_color=COLOR_TEXT,
+        dropdown_text_color=COLOR_TEXT
+    )
+    target_env_menu.grid(row=8, column=0, padx=10, pady=(0, 12), sticky="ew")
+
+    custom_url_label_widget = ctk.CTkLabel(
+        config_frame,
+        text="URL custom (sobrepõe ambiente)",
+        text_color=COLOR_TEXT_MUTED,
+        font=ctk.CTkFont(size=14)
+    )
+    custom_url_label_widget.grid(row=7, column=1, padx=10, pady=(14, 4), sticky="w")
+    custom_url_entry_widget = ctk.CTkEntry(
+        config_frame,
+        textvariable=custom_url_var,
+        fg_color=COLOR_INPUT,
+        border_color=COLOR_BORDER,
+        text_color=COLOR_TEXT,
+        placeholder_text="https://..."
+    )
+    custom_url_entry_widget.grid(row=8, column=1, padx=10, pady=(0, 12), sticky="ew")
+    on_target_env_change()
 
     headless_label = ctk.CTkLabel(
         config_frame,
@@ -1639,14 +2312,28 @@ def create_ui():
     passed_value_label = create_summary_card(summary_frame, "Passed", "0", 2, "passed")
     failed_value_label = create_summary_card(summary_frame, "Failed", "0", 3, "failed")
 
-    # Logs
+    # Logs + Histórico trigger
+    logs_header = ctk.CTkFrame(right_panel, fg_color="transparent")
+    logs_header.grid(row=7, column=0, padx=20, pady=(0, 5), sticky="ew")
+    logs_header.grid_columnconfigure(0, weight=1)
+
     logs_label = ctk.CTkLabel(
-        right_panel,
+        logs_header,
         text="Logs",
         text_color=COLOR_TEXT,
         font=ctk.CTkFont(size=15)
     )
-    logs_label.grid(row=7, column=0, padx=20, pady=(0, 5), sticky="w")
+    logs_label.grid(row=0, column=0, sticky="w")
+
+    history_button = ctk.CTkButton(
+        logs_header,
+        text="Histórico",
+        command=open_history_window,
+        fg_color=COLOR_CARD,
+        hover_color=COLOR_PRIMARY_HOVER,
+        text_color=COLOR_TEXT
+    )
+    history_button.grid(row=0, column=1, sticky="e")
 
     log_box = ctk.CTkTextbox(
         right_panel,
@@ -1671,6 +2358,19 @@ def create_ui():
     return app
 
 
+def on_target_env_change(*_args):
+    show_custom = (target_env_var.get() or "").strip().lower() == "outro"
+    if custom_url_label_widget and custom_url_entry_widget:
+        if show_custom:
+            custom_url_label_widget.grid()
+            custom_url_entry_widget.grid()
+            custom_url_entry_widget.configure(state="normal")
+        else:
+            custom_url_var.set("")
+            custom_url_label_widget.grid_remove()
+            custom_url_entry_widget.grid_remove()
+
+
 # =============================================================================
 # Inicialização
 # =============================================================================
@@ -1681,11 +2381,14 @@ def load_tests():
 
 
 def main():
+    load_history()
     create_ui()
     load_tests()
+    rebuild_history_table()
     poll_log_queue()
     app.mainloop()
 
 
 if __name__ == "__main__":
     main()
+
