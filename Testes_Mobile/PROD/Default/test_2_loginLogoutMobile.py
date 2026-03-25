@@ -1,7 +1,10 @@
 import pytest
 
+from conftest import click_if_present
+
 from locators.home import LAST_ORDERS
 from locators.lastOrders_lastItems import EMPTY_GRID_ORDERS
+from locators.common import COOKIE_ACCEPT
 
 from helpers.auth import *
 from helpers.waiters import *
@@ -24,6 +27,7 @@ VALID_PASS = "Min@1234"
 @pytest.mark.mobile
 def test_2_loginLogout_mobile(driver, setup_site, wait):
     # 1) Abrir modal de login
+    click_if_present(driver, COOKIE_ACCEPT, seconds=20)
     mobile_open_login_modal_from_dropdown(driver, timeout=12)
 
     # 2) Username inválido: email não encontrado

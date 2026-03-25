@@ -4,14 +4,17 @@ import pytest
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 
+from conftest import click_if_present
+
 from locators.header import *
 from locators.home import LAST_ORDERS, LAST_ITEMS
 from locators.plp import *
 from locators.pdp import BTN_ENTRAR_PDP
+from locators.common import COOKIE_ACCEPT
 
 from helpers.actions import click_when_clickable, safe_click_loc_retry, scroll_into_view, mobile_click_strict
 from helpers.waiters import visible, wait_category_loaded
-from helpers.plp import clear_filters_strict, sort_strict, apply_filter_conservacao_congelado_mobile, try_go_to_page_mobile, open_filter_panel_mobile
+from helpers.plp import clear_filters_strict, sort_strict, try_go_to_page_mobile, open_filter_panel_mobile
 from helpers.region import open_region_modal_mobile, select_region
 from helpers.auth import expect_login_popup_mobile
 from helpers.home import header_requires_login_mobile, go_home
@@ -24,6 +27,7 @@ from helpers.dropdown import  mobile_open_quero_ser_cliente_from_dropdown, mobil
 @pytest.mark.mobile
 def test_14_userDeslogado_mobile_sul(driver, setup_site, wait):
     # 1) Termos de uso (mobile: dropdown -> Acesso -> Termos)
+    click_if_present(driver, COOKIE_ACCEPT, seconds=20)
     mobile_open_login_modal_from_dropdown(driver)
     click_when_clickable(wait, BTN_TERMS)
     click_when_clickable(wait, BTN_CLOSE_MODAL)

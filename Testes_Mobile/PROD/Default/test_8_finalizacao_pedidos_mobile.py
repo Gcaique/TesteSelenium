@@ -1,6 +1,10 @@
 import time
 
 import pytest
+
+from conftest import click_if_present
+
+from locators.common import COOKIE_ACCEPT
 from locators.plp import *
 from locators.checkout import *
 from locators.home import QTY_INPUT_FIRST
@@ -24,6 +28,7 @@ VALID_PASS = "Min@1234"
 @pytest.mark.mobile
 def test_8_finalizacao_pedidos_mobile(driver, setup_site, wait):
     # 1) Login (fonte da verdade = mini-cart)
+    click_if_present(driver, COOKIE_ACCEPT, seconds=20)
     ensure_logged_in_mobile(driver, VALID_USER, VALID_PASS)
     wait.until(EC.visibility_of_element_located(MINICART_ICON))
     try_close_popups(driver)

@@ -150,7 +150,8 @@ def criar_driver(
     device_name="",
     grid="lt",
     headless=False,
-    resolucao="1920x1080"
+    resolucao="1920x1080",
+    build_name=None
 ):
     """
     Decide qual provedor usar.
@@ -172,35 +173,35 @@ def criar_driver(
 
     if grid in ("browserstack", "bs"):
         if ambiente == "desktop":
-            return driver_desktop_browserstack(nome_teste, navegador, sistema_operacional, resolucao)
+            return driver_desktop_browserstack(nome_teste, navegador, sistema_operacional, resolucao, build_name)
         else:
             so = (sistema_operacional or "").strip().lower()
             if so == "ios":
-                return driver_mobile_browserstack_ios_safari(nome_teste, device_name)
+                return driver_mobile_browserstack_ios_safari(nome_teste, device_name, build_name)
             else:
-                return driver_mobile_browserstack_android_chrome(nome_teste, device_name)
+                return driver_mobile_browserstack_android_chrome(nome_teste, device_name, build_name)
 
     if grid in ("sauce", "saucelabs", "sl"):
         if ambiente == "desktop":
-            return driver_desktop_saucelabs(nome_teste, navegador, sistema_operacional, resolucao)
+            return driver_desktop_saucelabs(nome_teste, navegador, sistema_operacional, resolucao, build_name)
         else:
             so = (sistema_operacional or "").strip().lower()
             if so == "ios":
-                return driver_mobile_saucelabs_ios_safari(nome_teste, device_name)
+                return driver_mobile_saucelabs_ios_safari(nome_teste, device_name, build_name)
             else:
-                return driver_mobile_saucelabs_android_chrome(nome_teste, device_name)
+                return driver_mobile_saucelabs_android_chrome(nome_teste, device_name, build_name)
 
     # default: LambdaTest
     if ambiente == "desktop":
-        return driver_desktop_lambdatest(nome_teste, navegador, sistema_operacional, resolucao)
+        return driver_desktop_lambdatest(nome_teste, navegador, sistema_operacional, resolucao, build_name)
     else:
-        return driver_mobile_lambdatest(nome_teste, navegador, sistema_operacional, device_name)
+        return driver_mobile_lambdatest(nome_teste, navegador, sistema_operacional, device_name, build_name)
 
 
 # ============================
 # 💻 Desktop (LambdaTest)
 # ============================
-def driver_desktop_lambdatest(nome_teste, navegador, sistema_operacional, resolucao="1920x1080"):
+def driver_desktop_lambdatest(nome_teste, navegador, sistema_operacional, resolucao="1920x1080", build_name=None):
     """
     Desktop remoto no LambdaTest.
     """
@@ -224,7 +225,7 @@ def driver_desktop_lambdatest(nome_teste, navegador, sistema_operacional, resolu
     options.set_capability("LT:Options", {
         "platformName": sistema_operacional,
         "resolution": resolucao,
-        "build": "Smoke - Desktop",
+        "build": build_name or os.getenv("LT_BUILD_NAME", "Smoke - Desktop"),
         "name": nome_teste,
         "selenium_version": "4.21.0",
     })
@@ -238,7 +239,7 @@ def driver_desktop_lambdatest(nome_teste, navegador, sistema_operacional, resolu
 # ============================
 # 📱 Mobile web (LambdaTest)
 # ============================
-def driver_mobile_lambdatest(nome_teste, navegador, sistema_operacional, device_name):
+def driver_mobile_lambdatest(nome_teste, navegador, sistema_operacional, device_name, build_name=None):
     """
     Mobile web remoto no LambdaTest (geralmente emulado / device cloud conforme conta).
     """
@@ -273,7 +274,7 @@ def driver_mobile_lambdatest(nome_teste, navegador, sistema_operacional, device_
         "platformName": sistema_operacional,
         "deviceName": device_name,
         "isRealMobile": False,
-        "build": "Smoke - Mobile",
+        "build": build_name or os.getenv("LT_BUILD_NAME", "Smoke - Mobile"),
         "name": nome_teste,
         "selenium_version": "4.21.0",
     })
@@ -287,7 +288,7 @@ def driver_mobile_lambdatest(nome_teste, navegador, sistema_operacional, device_
 # ============================
 # 💻 Desktop (BrowserStack)
 # ============================
-def driver_desktop_browserstack(nome_teste, navegador, sistema_operacional, resolucao="1920x1080"):
+def driver_desktop_browserstack(nome_teste, navegador, sistema_operacional, resolucao="1920x1080", build_name=None):
     """
     Desktop web no BrowserStack (Windows/macOS + Chrome/Firefox/Edge/Safari).
     """
@@ -307,7 +308,7 @@ def driver_desktop_browserstack(nome_teste, navegador, sistema_operacional, reso
         raise Exception("Navegador desktop não suportado no BS (chrome|firefox|edge|safari).")
 
     # BuildName dinâmico (você pode setar no .env)
-    build_name = os.getenv("BS_BUILD_NAME", "Smoke - Desktop")
+    build_name = build_name or os.getenv("BS_BUILD_NAME", "Smoke - Desktop")
     project_name = os.getenv("BS_PROJECT_NAME", "MeuMinerva")
 
     options.set_capability("browserName", nav)
@@ -336,7 +337,7 @@ def driver_desktop_browserstack(nome_teste, navegador, sistema_operacional, reso
 # ============================
 # 📱 iOS REAL + Safari (BrowserStack)
 # ============================
-def driver_mobile_browserstack_ios_safari(nome_teste, device_name):
+def driver_mobile_browserstack_ios_safari(nome_teste, device_name, build_name=None):
     """
     iOS REAL DEVICE + Safari (BrowserStack Automate Mobile Web).
     device_name: ex "iPhone 14", "iPhone 15", etc.
@@ -347,7 +348,7 @@ def driver_mobile_browserstack_ios_safari(nome_teste, device_name):
     if not device_name:
         raise Exception('No BrowserStack iOS real, informe --device (ex: "iPhone 14").')
 
-    build_name = os.getenv("BS_BUILD_NAME", "Smoke - iOS Safari")
+    build_name = build_name or os.getenv("BS_BUILD_NAME", "Smoke - iOS Safari")
     project_name = os.getenv("BS_PROJECT_NAME", "MeuMinerva")
     ios_version = os.getenv("BS_IOS_VERSION", "17")
 
@@ -375,7 +376,7 @@ def driver_mobile_browserstack_ios_safari(nome_teste, device_name):
 # ============================
 # 📱 Android REAL + Chrome (BrowserStack)
 # ============================
-def driver_mobile_browserstack_android_chrome(nome_teste, device_name):
+def driver_mobile_browserstack_android_chrome(nome_teste, device_name, build_name=None):
     """
     Android REAL DEVICE + Chrome (BrowserStack Automate Mobile Web).
     device_name: ex "Samsung Galaxy S23", "Google Pixel 7", etc.
@@ -386,7 +387,7 @@ def driver_mobile_browserstack_android_chrome(nome_teste, device_name):
     if not device_name:
         raise Exception('No BrowserStack Android real, informe --device (ex: "Google Pixel 7").')
 
-    build_name = os.getenv("BS_BUILD_NAME", "Smoke - Android Chrome")
+    build_name = build_name or os.getenv("BS_BUILD_NAME", "Smoke - Android Chrome")
     project_name = os.getenv("BS_PROJECT_NAME", "MeuMinerva")
     android_version = os.getenv("BS_ANDROID_VERSION", "13")
 
@@ -414,7 +415,7 @@ def driver_mobile_browserstack_android_chrome(nome_teste, device_name):
 # ============================
 # 💻 Desktop (Sauce Labs)
 # ============================
-def driver_desktop_saucelabs(nome_teste, navegador, sistema_operacional, resolucao="1920x1080"):
+def driver_desktop_saucelabs(nome_teste, navegador, sistema_operacional, resolucao="1920x1080", build_name=None):
     """
     Desktop web no Sauce Labs.
     """
@@ -434,7 +435,7 @@ def driver_desktop_saucelabs(nome_teste, navegador, sistema_operacional, resoluc
     else:
         raise Exception("Navegador desktop não suportado no Sauce (chrome|firefox|edge|safari).")
 
-    build_name = os.getenv("SAUCE_BUILD_NAME", "Smoke - Desktop")
+    build_name = build_name or os.getenv("SAUCE_BUILD_NAME", "Smoke - Desktop")
     project_name = os.getenv("SAUCE_PROJECT_NAME", "MeuMinerva")
 
     # Mapeamento básico de plataforma
@@ -467,7 +468,7 @@ def driver_desktop_saucelabs(nome_teste, navegador, sistema_operacional, resoluc
 # ============================
 # 📱 Android REAL + Chrome (Sauce Labs)
 # ============================
-def driver_mobile_saucelabs_android_chrome(nome_teste, device_name):
+def driver_mobile_saucelabs_android_chrome(nome_teste, device_name, build_name=None):
     """
     Android mobile web no Sauce Labs.
     """
@@ -477,7 +478,7 @@ def driver_mobile_saucelabs_android_chrome(nome_teste, device_name):
     if not device_name:
         raise Exception('No Sauce Android, informe --device (ex: "Google Pixel 7").')
 
-    build_name = os.getenv("SAUCE_BUILD_NAME", "Smoke - Android Chrome")
+    build_name = build_name or os.getenv("SAUCE_BUILD_NAME", "Smoke - Android Chrome")
     project_name = os.getenv("SAUCE_PROJECT_NAME", "MeuMinerva")
     android_version = os.getenv("SAUCE_ANDROID_VERSION", "14")
     appium_version = os.getenv("SAUCE_APPIUM_VERSION", "latest")
@@ -505,14 +506,14 @@ def driver_mobile_saucelabs_android_chrome(nome_teste, device_name):
 # ============================
 # 📱 iOS REAL + Safari (Sauce Labs)
 # ============================
-def driver_mobile_saucelabs_ios_safari(nome_teste, device_name):
+def driver_mobile_saucelabs_ios_safari(nome_teste, device_name, build_name=None):
     sauce_user, sauce_key = _get_sauce_credentials()
     hub = _get_sauce_hub()
 
     if not device_name:
         raise Exception('No Sauce iOS, informe --device (ex: "iPhone 14").')
 
-    build_name = os.getenv("SAUCE_BUILD_NAME", "Smoke - iOS Safari")
+    build_name = build_name or os.getenv("SAUCE_BUILD_NAME", "Smoke - iOS Safari")
     project_name = os.getenv("SAUCE_PROJECT_NAME", "MeuMinerva")
     ios_version = os.getenv("SAUCE_IOS_VERSION", "").strip()
     appium_version = os.getenv("SAUCE_APPIUM_VERSION", "latest")

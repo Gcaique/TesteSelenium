@@ -11,7 +11,6 @@ from helpers.actions import click, fill, scroll_into_view, safe_click_loc_retry,
 from helpers.auth import ensure_logged_in_mobile
 from helpers.dropdown import validate_user_dropdown_mobile
 from helpers.region import switch_region_mobile
-from helpers.minicart import wait_minicart_loading
 from helpers.avise_me import open_pdp_from_first_avise_in_plp, find_avise_me_plp_mobile
 from helpers.plp import open_filter_panel_mobile, scroll_to_avise, clear_filters_strict
 

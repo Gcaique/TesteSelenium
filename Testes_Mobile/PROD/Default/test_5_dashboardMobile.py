@@ -2,12 +2,14 @@ import time
 
 import pytest
 
+from conftest import click_if_present
+
+from locators.common import COOKIE_ACCEPT
+
 from helpers.auth import ensure_logged_in_mobile, logout
 from helpers.minicart import minicart_visible
 from helpers.popups import try_close_popups
-
 from helpers.dashboard import *
-
 from helpers.auth import (login_expect_email_not_found_mobile, login_expect_wrong_password, login_password)
 
 
@@ -27,6 +29,7 @@ NEW_PASS = "Min@1234567"
 @pytest.mark.mobile
 def test_5_dashboard_mobile(driver, setup_site, wait):
     # 1) Login inicial
+    click_if_present(driver, COOKIE_ACCEPT, seconds=20)
     ensure_logged_in_mobile(driver, VALID_USER, VALID_PASS)
     assert minicart_visible(driver), "Era para estar logado, mas o minicart não apareceu."
     try_close_popups(driver)

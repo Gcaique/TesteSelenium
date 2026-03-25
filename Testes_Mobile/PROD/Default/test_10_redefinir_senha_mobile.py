@@ -1,6 +1,9 @@
 import pytest
 import os
 
+from conftest import click_if_present
+
+from locators.common import COOKIE_ACCEPT
 
 from locators.header import MOBILE_LOGIN_ACESSO
 from helpers.redefinir_senha import *
@@ -20,6 +23,7 @@ VALID_USER = "caique.oliveira@infobase.com.br"
 @pytest.mark.mobile
 def test_10_redefinir_senha_mobile(driver, setup_site, wait):
     # 1) Abre login
+    click_if_present(driver, COOKIE_ACCEPT, seconds=20)
     mobile_open_login_modal_from_dropdown(driver, timeout=12)
 
     # 2) Username válido: abrir senha

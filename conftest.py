@@ -44,7 +44,6 @@ URLS = {
     "prod": os.getenv("URL_PROD", os.getenv("URL")),
     "stg1": os.getenv("URL_STG1"),
     "stg2": os.getenv("URL_STG2"),
-    "local": os.getenv("URL_LOCAL"),
 }
 
 
@@ -59,7 +58,7 @@ def pytest_addoption(parser):
     parser.addoption("--so", action="store", default="Windows 11", help="Sistema operacional (LT/BS)")
     parser.addoption("--device", action="store", default="", help='Device name (mobile). Ex: "iPhone 14"')
     parser.addoption("--base-url", action="store", default="", help="URL base (sobrepõe target-env)")
-    parser.addoption("--target-env", action="store", default="prod", choices=["prod", "stg1", "stg2", "local", "outro"], help="Ambiente destino (mapeado em .env)")
+    parser.addoption("--target-env", action="store", default="prod", choices=["prod", "stg1", "stg2", "outro"], help="Ambiente destino (mapeado em .env)")
     parser.addoption("--region", action="store", default="outras", help="outras|sul")
     parser.addoption("--username", action="store", default=os.getenv("USERNAME", ""), help="Login")
     parser.addoption("--password", action="store", default=os.getenv("PASSWORD", ""), help="Senha")
@@ -67,6 +66,7 @@ def pytest_addoption(parser):
     parser.addoption("--grid", action="store", default="lt", help="lt|bs|sauce|local")
     parser.addoption("--headless", action="store_true", help="Executa browser local em modo headless")
     parser.addoption("--resolution", action="store", default="1920x1080", help='Resolução desktop no formato LARGURAxALTURA. Ex: 1920x1080')
+    parser.addoption("--build-name", action="store", default="", help="Nome da build/suite no provider (agrupa execuções)")
 
 
 # =============================================================================
@@ -128,6 +128,7 @@ def driver(request):
     grid = (request.config.getoption("--grid") or "lt").strip().lower()
     headless = request.config.getoption("--headless")
     resolucao = request.config.getoption("--resolution")
+    build_name = (request.config.getoption("--build-name") or "").strip()
 
     # -------------------------
     # MOBILE "inteligente"
@@ -173,7 +174,8 @@ def driver(request):
         device_name=device_name,
         grid=grid,
         headless=headless,
-        resolucao=resolucao
+        resolucao=resolucao,
+        build_name=build_name or None
     )
     if ambiente != "mobile":
         driver.maximize_window()
