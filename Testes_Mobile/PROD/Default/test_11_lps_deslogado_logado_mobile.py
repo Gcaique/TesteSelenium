@@ -5,6 +5,9 @@ from helpers.auth import submit_username_valid, login_password
 from helpers.minicart import remove_simple_delete_mobile
 from helpers.popups import try_close_popups
 
+from conftest import click_if_present
+
+from locators.common import COOKIE_ACCEPT
 from locators.cart import MOBILE_MINICART_ICON, MOBILE_MINICART_OPENED
 
 
@@ -21,6 +24,7 @@ VALID_PASS = "Min@1234"
 @pytest.mark.mobile
 def test_11_lp_marcas_mobile(driver, setup_site, wait):
     # 1) Acessar LP Alma lusa pelo carrossel da HOME
+    click_if_present(driver, COOKIE_ACCEPT, seconds=20)
     entrar_alma_lusa_via_home_mobile(driver, wait)
 
     # 2) Alma Lusa DESLOGADO

@@ -213,6 +213,7 @@ custom_resolution_label_widget = None
 resolution_option_menu = None
 headless_var = None
 custom_url_var = None
+build_name_var = None
 target_env_var = None
 custom_url_label_widget = None
 custom_url_entry_widget = None
@@ -328,9 +329,9 @@ def set_command_preview(text):
 
 
 def update_summary(total=0, passed=0, failed=0, skipped=0):
-    total_value_label.configure(text=str(total))
-    passed_value_label.configure(text=str(passed))
-    failed_value_label.configure(text=str(failed))
+    total_value_label.configure(text=f"{getattr(total_value_label, 'base_text', 'Total')} - {total}")
+    passed_value_label.configure(text=f"{getattr(passed_value_label, 'base_text', 'Passed')} - {passed}")
+    failed_value_label.configure(text=f"{getattr(failed_value_label, 'base_text', 'Failed')} - {failed}")
 
 
 def parse_pytest_summary(output_text):
@@ -1037,6 +1038,7 @@ def build_pytest_command():
     timeout = timeout_var.get().strip()
     resolution = resolution_var.get().strip()
     headless = headless_var.get()
+    build_name = build_name_var.get().strip() if 'build_name_var' in globals() else ""
     target_env = target_env_var.get().strip() if 'target_env_var' in globals() else ""
     custom_url = custom_url_var.get().strip() if 'custom_url_var' in globals() else ""
 
@@ -1064,6 +1066,9 @@ def build_pytest_command():
 
     if headless:
         cmd.append("--headless")
+
+    if build_name:
+        cmd.extend(["--build-name", build_name])
 
     if target_env:
         cmd.extend(["--target-env", target_env])
@@ -1207,6 +1212,8 @@ def read_process_output():
         "device": device_var.get().strip(),
         "resolution": resolution_var.get().strip(),
         "headless": bool(headless_var.get()),
+        "target_env": target_env_var.get().strip(),
+        "build_name": build_name_var.get().strip(),
         "command": last_run_command,
         "tests": formatted_selected,
         "tests_passed": passed_list,
@@ -1332,42 +1339,38 @@ def create_summary_card(parent, title, value_text, column, status_key):
     card = ctk.CTkFrame(
         parent,
         fg_color=card_color_map.get(status_key, COLOR_CARD),
-        corner_radius=12,
+        corner_radius=10,
         border_color=COLOR_BORDER,
         border_width=1,
         cursor="hand2",
-        width=180,
-        height=82
+        width=100,
+        height=36
     )
-    card.grid(row=0, column=column, padx=12, pady=8)
+    card.grid(row=0, column=column, padx=6, pady=0)
     card.grid_propagate(False)
 
     title_label = ctk.CTkLabel(
         card,
         text=title,
         text_color=COLOR_TEXT_MUTED,
-        font=ctk.CTkFont(size=16)
+        font=ctk.CTkFont(size=11, weight="bold")
     )
-    title_label.place(relx=0.5, rely=0.28, anchor="center")
-
-    value_label = ctk.CTkLabel(
-        card,
-        text=value_text,
-        text_color=COLOR_TEXT,
-        font=ctk.CTkFont(size=32, weight="bold")
-    )
-    value_label.place(relx=0.5, rely=0.68, anchor="center")
+    title_label.place(relx=0.5, rely=0.5, anchor="center")
+    title_label.base_text = title.split(" -")[0]
+    value_label = title_label  # usamos o próprio título para atualizar o número
 
     def on_click(_event=None):
         show_tests_by_status(status_key, title)
 
     def on_enter(_event=None):
-        card.configure(fg_color=hover_color_map.get(status_key, COLOR_PANEL))
+        card.configure(fg_color=hover_color_map.get(status_key, COLOR_PANEL), border_width=2)
+        card.grid_configure(pady=0)
 
     def on_leave(_event=None):
-        card.configure(fg_color=card_color_map.get(status_key, COLOR_CARD))
+        card.configure(fg_color=card_color_map.get(status_key, COLOR_CARD), border_width=1)
+        card.grid_configure(pady=0)
 
-    for widget in (card, title_label, value_label):
+    for widget in (card, title_label):
         widget.bind("<Button-1>", on_click)
         widget.bind("<Enter>", on_enter)
         widget.bind("<Leave>", on_leave)
@@ -1568,9 +1571,15 @@ def export_history_csv():
     try:
         with open(path, "w", newline="", encoding="utf-8") as f:
             writer = csv.writer(f, delimiter=";")
-            writer.writerow(["datetime", "status", "total", "passed", "failed",
-                             "grid", "ambiente", "navegador", "so", "resolution", "device", "headless", "tests", "command"])
+            writer.writerow([
+                "datetime", "status", "total", "passed", "failed",
+                "grid", "ambiente", "navegador", "so", "amb_exec",
+                "mobile_device", "desktop_resolution", "headless", "tests", "command"
+            ])
             for it in items:
+                ambiente_exec = it.get("ambiente", "")
+                mobile_device = it.get("device", "") if ambiente_exec == "mobile" else ""
+                desktop_resolution = it.get("resolution", "") if ambiente_exec == "desktop" else ""
                 writer.writerow([
                     it.get("timestamp", ""),
                     it.get("status", ""),
@@ -1581,8 +1590,9 @@ def export_history_csv():
                     it.get("ambiente", ""),
                     it.get("navegador", ""),
                     it.get("so", ""),
-                    it.get("resolution", ""),
-                    it.get("device", ""),
+                    it.get("target_env", ""),
+                    mobile_device,
+                    desktop_resolution,
                     str(it.get("headless", False)),
                     ";".join(it.get("tests", [])),
                     it.get("command", ""),
@@ -1630,9 +1640,14 @@ def export_history_pdf():
             header = f"{format_timestamp(it.get('timestamp', ''))}"
             status_line = f"Status: {it.get('status','').upper()}"
             totals_line = f"Totais -> T:{it.get('total',0)}  P:{it.get('passed',0)}  F:{it.get('failed',0)}"
-            grid_line = f"Grid: {it.get('grid','')}  Ambiente: {it.get('ambiente','')}"
-            nav_line = f"Navegador: {it.get('navegador','')}  SO: {it.get('so','')}"
-            device_line = f"Resolução: {it.get('resolution','')}  Device: {it.get('device','')}  Headless: {it.get('headless', False)}"
+            grid_line = f"Plat.: {it.get('grid','')}  Vis.: {it.get('ambiente','')}  Amb.: {it.get('target_env','')}"
+            nav_line = f"Nav: {it.get('navegador','')}  SO: {it.get('so','')}"
+            is_mobile = it.get('ambiente', '') == 'mobile'
+            device_line = (
+                f"Mob.: {it.get('device','')}  Headless: {it.get('headless', False)}"
+                if is_mobile else
+                f"Res.: {it.get('resolution','')}  Headless: {it.get('headless', False)}"
+            )
             tests_lines = []
             for name in it.get("tests_passed", []):
                 tests_lines.append(f"{name} -> Passed")
@@ -1927,9 +1942,21 @@ def rebuild_history_table():
         header = ctk.CTkLabel(header_frame, text=f"{format_timestamp(it.get('timestamp',''))} — {it.get('status','').upper()}", text_color=status_color, font=ctk.CTkFont(size=13, weight="bold"))
         header.pack(side="left", padx=(0, 6))
 
+        ambiente_exec = it.get("ambiente", "")
+        platform_label = it.get("grid", "")
+        vis_label = ambiente_exec
+        target_env_label = it.get("target_env", "")
+        nav_label = it.get("navegador", "")
+        so_label = it.get("so", "")
+        device_label = it.get("device", "") if ambiente_exec == "mobile" else ""
+        res_label = it.get("resolution", "") if ambiente_exec == "desktop" else ""
+
         summary_text = (
             f"T:{it.get('total',0)}  P:{it.get('passed',0)}  F:{it.get('failed',0)}"
-            f"   Grid:{it.get('grid','')}  Env:{it.get('ambiente','')}  Nav:{it.get('navegador','')}  SO:{it.get('so','')}"
+            f"   Plat.:{platform_label}  Vis.:{vis_label}  Nav:{nav_label}  SO:{so_label}"
+            f"  Amb.:{target_env_label}"
+            f"{f'  Mob.:{device_label}' if device_label else ''}"
+            f"{f'  Res.:{res_label}' if res_label else ''}"
         )
         summary = ctk.CTkLabel(row, text=summary_text, text_color=COLOR_TEXT, font=ctk.CTkFont(size=12))
         summary.pack(anchor="w", padx=10, pady=(0, 4))
@@ -1952,7 +1979,7 @@ def create_ui():
     global run_button, stop_button
     global total_value_label, passed_value_label, failed_value_label
     global left_tests_frame
-    global test_filter_var, ambiente_var, grid_var, navegador_var, so_var, target_env_var, custom_url_var
+    global test_filter_var, ambiente_var, grid_var, navegador_var, so_var, target_env_var, custom_url_var, build_name_var
     global device_var, device_choice_var, custom_device_var, custom_device_entry, device_option_menu
     global timeout_var, timeout_choice_var, timeout_option_menu
     global resolution_var, resolution_choice_var, custom_resolution_var, custom_resolution_entry, resolution_option_menu
@@ -1980,6 +2007,13 @@ def create_ui():
     so_var = tk.StringVar(value=SO_PLACEHOLDER)
     target_env_var = tk.StringVar(value="prod")
     custom_url_var = tk.StringVar(value="")
+    default_build_name = (
+        os.getenv("BS_BUILD_NAME")
+        or os.getenv("LT_BUILD_NAME")
+        or os.getenv("SAUCE_BUILD_NAME")
+        or ""
+    )
+    build_name_var = tk.StringVar(value=default_build_name)
     device_choice_var = tk.StringVar(value=DEVICE_PLACEHOLDER)
     custom_device_var = tk.StringVar(value="")
     device_var = tk.StringVar(value="")
@@ -2136,8 +2170,8 @@ def create_ui():
     )
     right_panel.grid(row=0, column=1, sticky="nsew")
     right_panel.grid_columnconfigure(0, weight=1)
-    right_panel.grid_rowconfigure(6, weight=2)
-    right_panel.grid_rowconfigure(8, weight=3)
+    right_panel.grid_rowconfigure(6, weight=1)
+    right_panel.grid_rowconfigure(8, weight=4)
 
     # Configurações
     config_frame = ctk.CTkFrame(
@@ -2158,14 +2192,32 @@ def create_ui():
     )
     config_title.grid(row=0, column=0, columnspan=4, padx=12, pady=(12, 10), sticky="w")
 
-    ambiente_option_menu = create_labeled_option(config_frame, "Visualização", ambiente_var, [AMBIENTE_PLACEHOLDER, "desktop", "mobile"], 1, 0)
-    grid_option_menu = create_labeled_option(config_frame, "Plataforma", grid_var, [GRID_PLACEHOLDER, "lt", "bs", "sauce", "local"], 1, 1)
-    navegador_option_menu = create_labeled_option(config_frame, "Navegador", navegador_var, [NAVEGADOR_PLACEHOLDER, "chrome", "firefox", "edge", "safari"], 1, 2)
-    so_option_menu = create_labeled_option(config_frame, "Sistema Operacional", so_var, [SO_PLACEHOLDER, "Windows 11", "Android", "iOS"], 1, 3)
+    build_label = ctk.CTkLabel(
+        config_frame,
+        text="Build Name",
+        text_color=COLOR_TEXT_MUTED,
+        font=ctk.CTkFont(size=14)
+    )
+    build_label.grid(row=1, column=0, columnspan=4, padx=10, pady=(6, 4), sticky="w")
 
-    create_device_selector(config_frame, 3, 0)
-    create_timeout_selector(config_frame, 3, 1)
-    create_resolution_selector(config_frame, 3, 2)
+    build_entry = ctk.CTkEntry(
+        config_frame,
+        textvariable=build_name_var,
+        fg_color=COLOR_INPUT,
+        border_color=COLOR_BORDER,
+        text_color=COLOR_TEXT,
+        placeholder_text="Ex.: Checkout Smoke 2026-03-24"
+    )
+    build_entry.grid(row=2, column=0, columnspan=4, padx=10, pady=(0, 12), sticky="ew")
+
+    ambiente_option_menu = create_labeled_option(config_frame, "Visualização", ambiente_var, [AMBIENTE_PLACEHOLDER, "desktop", "mobile"], 3, 0)
+    grid_option_menu = create_labeled_option(config_frame, "Plataforma", grid_var, [GRID_PLACEHOLDER, "lt", "bs", "sauce", "local"], 3, 1)
+    navegador_option_menu = create_labeled_option(config_frame, "Navegador", navegador_var, [NAVEGADOR_PLACEHOLDER, "chrome", "firefox", "edge", "safari"], 3, 2)
+    so_option_menu = create_labeled_option(config_frame, "Sistema Operacional", so_var, [SO_PLACEHOLDER, "Windows 11", "Android", "iOS"], 3, 3)
+
+    create_device_selector(config_frame, 5, 0)
+    create_timeout_selector(config_frame, 5, 1)
+    create_resolution_selector(config_frame, 5, 2)
 
     target_env_label = ctk.CTkLabel(
         config_frame,
@@ -2173,18 +2225,18 @@ def create_ui():
         text_color=COLOR_TEXT_MUTED,
         font=ctk.CTkFont(size=14)
     )
-    target_env_label.grid(row=7, column=0, padx=10, pady=(14, 4), sticky="w")
+    target_env_label.grid(row=9, column=0, padx=10, pady=(6, 4), sticky="w")
     target_env_menu = ctk.CTkOptionMenu(
         config_frame,
         variable=target_env_var,
-        values=["prod", "stg1", "stg2", "local", "outro"],
+        values=["prod", "stg1", "stg2", "outro"],
         fg_color=COLOR_PRIMARY,
         button_color=COLOR_PRIMARY,
         button_hover_color=COLOR_PRIMARY_HOVER,
         text_color=COLOR_TEXT,
         dropdown_text_color=COLOR_TEXT
     )
-    target_env_menu.grid(row=8, column=0, padx=10, pady=(0, 12), sticky="ew")
+    target_env_menu.grid(row=10, column=0, padx=10, pady=(0, 12), sticky="ew")
 
     custom_url_label_widget = ctk.CTkLabel(
         config_frame,
@@ -2192,7 +2244,7 @@ def create_ui():
         text_color=COLOR_TEXT_MUTED,
         font=ctk.CTkFont(size=14)
     )
-    custom_url_label_widget.grid(row=7, column=1, padx=10, pady=(14, 4), sticky="w")
+    custom_url_label_widget.grid(row=9, column=1, padx=10, pady=(6, 4), sticky="w")
     custom_url_entry_widget = ctk.CTkEntry(
         config_frame,
         textvariable=custom_url_var,
@@ -2201,7 +2253,7 @@ def create_ui():
         text_color=COLOR_TEXT,
         placeholder_text="https://..."
     )
-    custom_url_entry_widget.grid(row=8, column=1, padx=10, pady=(0, 12), sticky="ew")
+    custom_url_entry_widget.grid(row=10, column=1, padx=10, pady=(0, 12), sticky="ew")
     on_target_env_change()
 
     headless_label = ctk.CTkLabel(
@@ -2210,7 +2262,7 @@ def create_ui():
         text_color=COLOR_TEXT_MUTED,
         font=ctk.CTkFont(size=14)
     )
-    headless_label.grid(row=3, column=3, padx=10, pady=(4, 4), sticky="w")
+    headless_label.grid(row=5, column=3, padx=10, pady=(4, 4), sticky="w")
 
     headless_checkbox = ctk.CTkCheckBox(
         config_frame,
@@ -2221,7 +2273,7 @@ def create_ui():
         border_color=COLOR_BORDER,
         text_color=COLOR_TEXT
     )
-    headless_checkbox.grid(row=4, column=3, padx=10, pady=(6, 10), sticky="w")
+    headless_checkbox.grid(row=6, column=3, padx=10, pady=(6, 10), sticky="w")
 
     # Botões
     buttons_frame = ctk.CTkFrame(right_panel, fg_color="transparent")
@@ -2268,13 +2320,9 @@ def create_ui():
     preview_button.grid(row=0, column=2, padx=6, sticky="ew")
 
     # Comando
-    command_title = ctk.CTkLabel(
-        right_panel,
-        text="Comando montado",
-        text_color=COLOR_TEXT_MUTED,
-        font=ctk.CTkFont(size=14)
-    )
-    command_title.grid(row=3, column=0, padx=20, pady=(0, 5), sticky="w")
+    command_header = ctk.CTkFrame(right_panel, fg_color="transparent")
+    command_header.grid(row=3, column=0, padx=20, pady=(0, 5), sticky="ew")
+    command_header.grid_columnconfigure(0, weight=1)
 
     command_preview = ctk.CTkTextbox(
         right_panel,
@@ -2287,6 +2335,31 @@ def create_ui():
     command_preview.grid(row=4, column=0, padx=20, pady=(0, 12), sticky="ew")
     command_preview.insert("1.0", "A prévia do comando aparecerá aqui.")
     command_preview.configure(state="disabled")
+    command_preview_visible = tk.BooleanVar(value=True)
+
+    def toggle_command_preview():
+        if command_preview_visible.get():
+            command_preview.grid_remove()
+            command_toggle.configure(text="Comando montado ▸")
+            command_preview_visible.set(False)
+        else:
+            command_preview.grid()
+            command_toggle.configure(text="Comando montado ▾")
+            command_preview_visible.set(True)
+
+    command_toggle = ctk.CTkButton(
+        command_header,
+        text="Comando montado ▾",
+        command=toggle_command_preview,
+        height=30,
+        fg_color="transparent",
+        hover_color=COLOR_CARD,
+        text_color=COLOR_TEXT_MUTED,
+        font=ctk.CTkFont(size=14),
+        corner_radius=6,
+        border_width=0
+    )
+    command_toggle.grid(row=0, column=0, sticky="w")
 
     # Status
     status_label = ctk.CTkLabel(
@@ -2298,27 +2371,23 @@ def create_ui():
     status_label.grid(row=5, column=0, padx=20, pady=(0, 12), sticky="w")
 
     # Resumo
-    summary_frame = ctk.CTkFrame(right_panel, fg_color=COLOR_BG)
-    summary_frame.grid(row=6, column=0, padx=20, pady=(0, 12), sticky="ew")
+    # Resumo + Logs header alinhados
+    header_frame = ctk.CTkFrame(right_panel, fg_color="transparent")
+    header_frame.grid(row=6, column=0, padx=20, pady=(0, 4), sticky="ew")
+    header_frame.grid_columnconfigure(0, weight=1)  # Logs label
+    header_frame.grid_columnconfigure(1, weight=0)  # spacer left cards
+    header_frame.grid_columnconfigure(2, weight=0)  # card1
+    header_frame.grid_columnconfigure(3, weight=0)  # card2
+    header_frame.grid_columnconfigure(4, weight=0)  # card3
+    header_frame.grid_columnconfigure(5, weight=1)  # spacer right cards
+    header_frame.grid_columnconfigure(6, weight=0)  # histórico btn
 
-    # cria 3 colunas centrais + 2 espaçadores laterais
-    summary_frame.grid_columnconfigure(0, weight=1)  # esquerda (vazio)
-    summary_frame.grid_columnconfigure(1, weight=0)  # total
-    summary_frame.grid_columnconfigure(2, weight=0)  # passed
-    summary_frame.grid_columnconfigure(3, weight=0)  # failed
-    summary_frame.grid_columnconfigure(4, weight=1)  # direita (vazio)
-
-    total_value_label = create_summary_card(summary_frame, "Total", "0", 1, "total")
-    passed_value_label = create_summary_card(summary_frame, "Passed", "0", 2, "passed")
-    failed_value_label = create_summary_card(summary_frame, "Failed", "0", 3, "failed")
-
-    # Logs + Histórico trigger
-    logs_header = ctk.CTkFrame(right_panel, fg_color="transparent")
-    logs_header.grid(row=7, column=0, padx=20, pady=(0, 5), sticky="ew")
-    logs_header.grid_columnconfigure(0, weight=1)
+    total_value_label = create_summary_card(header_frame, "Total - 0", "", 2, "total")
+    passed_value_label = create_summary_card(header_frame, "Passed - 0", "", 3, "passed")
+    failed_value_label = create_summary_card(header_frame, "Failed - 0", "", 4, "failed")
 
     logs_label = ctk.CTkLabel(
-        logs_header,
+        header_frame,
         text="Logs",
         text_color=COLOR_TEXT,
         font=ctk.CTkFont(size=15)
@@ -2326,14 +2395,14 @@ def create_ui():
     logs_label.grid(row=0, column=0, sticky="w")
 
     history_button = ctk.CTkButton(
-        logs_header,
+        header_frame,
         text="Histórico",
         command=open_history_window,
         fg_color=COLOR_CARD,
         hover_color=COLOR_PRIMARY_HOVER,
         text_color=COLOR_TEXT
     )
-    history_button.grid(row=0, column=1, sticky="e")
+    history_button.grid(row=0, column=6, sticky="e")
 
     log_box = ctk.CTkTextbox(
         right_panel,
@@ -2342,7 +2411,7 @@ def create_ui():
         border_color=COLOR_BORDER,
         text_color=COLOR_TEXT
     )
-    log_box.grid(row=8, column=0, padx=20, pady=(0, 20), sticky="nsew")
+    log_box.grid(row=8, column=0, padx=20, pady=(0, 24), sticky="nsew")
     log_box.insert("1.0", "Os logs da execução aparecerão aqui...\n")
     log_box.configure(state="disabled")
 

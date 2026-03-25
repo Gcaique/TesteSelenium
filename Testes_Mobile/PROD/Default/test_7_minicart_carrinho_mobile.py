@@ -4,6 +4,9 @@ import time
 import pytest
 from selenium.webdriver.common.keys import Keys
 
+from conftest import click_if_present
+
+from locators.common import COOKIE_ACCEPT
 from locators.checkout import *
 from locators.pdp import ADDRESSES_SELECT
 
@@ -26,6 +29,7 @@ VALID_PASS = "Min@1234"
 @pytest.mark.mobile
 def test_7_minicart_carrinho_mobile(driver, setup_site, wait):
     # 1) Login
+    click_if_present(driver, COOKIE_ACCEPT, seconds=20)
     ensure_logged_in_mobile(driver, VALID_USER, VALID_PASS)
     wait.until(EC.visibility_of_element_located(MINICART_ICON))
     try_close_popups(driver)
