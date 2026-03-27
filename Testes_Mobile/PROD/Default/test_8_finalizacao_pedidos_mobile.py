@@ -100,8 +100,6 @@ def test_8_finalizacao_pedidos_mobile(driver, setup_site, wait):
     mobile_click_strict(driver, MOBILE_CLOSE_SUMARY, timeout=12, retries=4, sleep_between=0.25)
     time.sleep(0.5)
 
-    mobile_click_strict(driver, TERMS_PIX, timeout=12, retries=4, sleep_between=0.25)
-    time.sleep(1)
     mobile_click_strict(driver, BTN_FINALIZAR_COMPRA_PIX, timeout=12, retries=4, sleep_between=0.25)
 
     wait.until(EC.visibility_of_element_located(PIX_SUCESSO))
@@ -172,8 +170,6 @@ def test_8_finalizacao_pedidos_mobile(driver, setup_site, wait):
     mobile_click_strict(driver, BOLETO_SELECT, timeout=12, retries=4, sleep_between=0.25)
     mobile_click_strict(driver, BOLETO_OPTION_21, timeout=12, retries=4, sleep_between=0.25)
     time.sleep(5)
-    mobile_click_strict(driver, TERMS_BOLETO, timeout=12, retries=4, sleep_between=0.25)
-    time.sleep(1)
     
     mobile_click_strict(driver, MOBILE_OPEN_SUMARY, timeout=12, retries=4, sleep_between=0.25)
     visible(driver, MOBILE_CLOSE_SUMARY, timeout=10)
@@ -242,7 +238,6 @@ def test_8_finalizacao_pedidos_mobile(driver, setup_site, wait):
     mobile_click_strict(driver, MOBILE_CLOSE_SUMARY, timeout=12, retries=4, sleep_between=0.25)
     time.sleep(0.5)
 
-    mobile_click_strict(driver, TERMS_CARTAO, timeout=12, retries=4, sleep_between=0.25)
     mobile_click_strict(driver, BTN_FINALIZAR_COMPRA_CARTAO, timeout=12, retries=4, sleep_between=0.25)
 
     visible(driver, ERRO_CARTAO, timeout=20)
@@ -250,7 +245,5 @@ def test_8_finalizacao_pedidos_mobile(driver, setup_site, wait):
     # 22 Finalizar pedido com PIX
     mobile_click_strict(driver, PIX, timeout=12, retries=4, sleep_between=0.25)
     time.sleep(5)
-    mobile_click_strict(driver, TERMS_PIX, timeout=12, retries=4, sleep_between=0.25)
-    time.sleep(1)
     mobile_click_strict(driver, BTN_FINALIZAR_COMPRA_PIX, timeout=12, retries=4, sleep_between=0.25)
     visible(driver, PIX_COPIAR, timeout=20)

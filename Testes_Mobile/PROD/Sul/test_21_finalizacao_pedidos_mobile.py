@@ -96,8 +96,6 @@ def test_21_finalizacao_pedidos_mobile_sul(driver, setup_site, wait):
     mobile_click_strict(driver, BOLETO_SELECT, timeout=12, retries=4, sleep_between=0.25)
     mobile_click_strict(driver, BOLETO_OPTION_21, timeout=12, retries=4, sleep_between=0.25)
     time.sleep(5)
-    mobile_click_strict(driver, TERMS_BOLETO, timeout=12, retries=4, sleep_between=0.25)
-    time.sleep(1)
     mobile_click_strict(driver, BTN_FINALIZAR_COMPRA_BOLETO_SUL, timeout=12, retries=4, sleep_between=0.25)
 
     wait.until(EC.visibility_of_element_located(PAGINA_SUCESSO))
@@ -162,8 +160,6 @@ def test_21_finalizacao_pedidos_mobile_sul(driver, setup_site, wait):
     mobile_click_strict(driver, BOLETO_SELECT, timeout=12, retries=4, sleep_between=0.25)
     mobile_click_strict(driver, BOLETO_OPTION_21, timeout=12, retries=4, sleep_between=0.25)
     time.sleep(5)
-    mobile_click_strict(driver, TERMS_BOLETO, timeout=12, retries=4, sleep_between=0.25)
-    time.sleep(1)
 
     mobile_click_strict(driver, MOBILE_OPEN_SUMARY, timeout=12, retries=4, sleep_between=0.25)
     visible(driver, MOBILE_CLOSE_SUMARY, timeout=10)
@@ -221,8 +217,6 @@ def test_21_finalizacao_pedidos_mobile_sul(driver, setup_site, wait):
     mobile_click_strict(driver, BOLETO_SELECT, timeout=12, retries=4, sleep_between=0.25)
     mobile_click_strict(driver, BOLETO_OPTION_21, timeout=12, retries=4, sleep_between=0.25)
     time.sleep(5)
-    mobile_click_strict(driver, TERMS_BOLETO, timeout=12, retries=4, sleep_between=0.25)
-    time.sleep(1)
     mobile_click_strict(driver, BTN_FINALIZAR_COMPRA_BOLETO_SUL, timeout=12, retries=4, sleep_between=0.25)
 
     wait.until(EC.visibility_of_element_located(PAGINA_SUCESSO))
