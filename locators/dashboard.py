@@ -23,6 +23,10 @@ LINK_PEDIDOS_RECENTES = (By.XPATH, "//a[contains(@class,'hj-account-order_histor
 # MEUS PEDIDOS (Pedidos)
 GRID_ORDERS_READY = (By.XPATH, "//*[@class='order-pagination __items-per-page']//select")
 FIRST_ORDER_DETAILS = (By.XPATH, "(//table[@id='my-orders-table']//a[@class='action view'])[1]")
+FORMA_PAGAMENTO_COL = (By.XPATH, "(//th[@class='col status sort'])[3]")
+ORDER_DETAIL_FIRST = (By.XPATH, "(//table[@id='my-orders-table']//a[@class='action view'])[1]",) # Acessar detalhes do pedido
+ORDERS_TABLE = (By.XPATH, "//table[@id='my-orders-table']")
+REORDER_BTN = (By.XPATH, "//a[@class='reorder']")
 
 # MEUS PEDIDOS (Pix copy)
 BTN_COPY_PIX = (By.XPATH, "//*[@class='dux-pix-customer-area __action']//button")
@@ -122,6 +126,7 @@ MOBILE_BTN_COPY_PIX = (By.XPATH,
     "//button[.//span[contains(normalize-space(.),'Copiar código PIX')]]"
 )
 MOBILE_BTN_CLEAR_FILTER = (By.XPATH, "//*[@class='order-filter __item __clear __mobile']/a")
+MOBILE_ORDER_DETAIL_FIRST = (By.XPATH, "(//tr[@class='mobile-only']//a[@class='action view'])[4]",) # Acessar detalhes do pedido
 
 # MEUS PONTOS
 MOBILE_REWARD_FILTER_SELECT = (By.ID, "reward-filter-select")

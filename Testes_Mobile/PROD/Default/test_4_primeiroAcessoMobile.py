@@ -4,10 +4,14 @@ import pytest
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 
+from conftest import click_if_present
+
 from locators.header import LOGIN_MENU, USERNAME_INPUT, BTN_AVANCAR, MOBILE_LOGIN_ACESSO
+from locators.common import COOKIE_ACCEPT
 
 from helpers.firstAcess import *
 from helpers.waiters import minicart_visible
+
 
 # =========================
 # Credenciais
@@ -20,9 +24,8 @@ VALID_USER = "caique.oliveira2@infobase.com.br"
 @pytest.mark.primeiroAcesso
 @pytest.mark.mobile
 def test_4_primeiro_acesso_mobile(driver, setup_site, wait):
-
-
     # 1) Abre login
+    click_if_present(driver, COOKIE_ACCEPT, seconds=20)
     wait.until(EC.element_to_be_clickable(LOGIN_MENU)).click()
     wait.until(EC.visibility_of_element_located(MOBILE_LOGIN_ACESSO)).click()
     wait.until(EC.visibility_of_element_located(USERNAME_INPUT))

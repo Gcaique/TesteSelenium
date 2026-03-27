@@ -326,7 +326,7 @@ def add_favorite_from_category_first_item_mobile(driver, wait):
     '''Favoritar primeiro item da lista (PLP)'''
     mobile_click_strict(driver, MOBILE_MENU_HAMBURGER, timeout=12, retries=4, sleep_between=0.25)
     time.sleep(1)
-    mobile_click_strict(driver, MOBILE_MENU_PARENT_NEXT("pescados"), timeout=12, retries=4, sleep_between=0.25)
+    mobile_click_strict(driver, MOBILE_MENU_PARENT_NEXT("bovinos"), timeout=12, retries=4, sleep_between=0.25)
     time.sleep(1)
     mobile_click_strict(driver, MOBILE_MENU_SEE_ALL, timeout=12, retries=4, sleep_between=0.25)
     time.sleep(5)
@@ -359,7 +359,7 @@ def open_product_with_avise_by_pagination_mobile(driver, wait, pages=(1, 2, 3, 4
     # entra na categoria
     mobile_click_strict(driver, MOBILE_MENU_HAMBURGER, timeout=12, retries=4, sleep_between=0.25)
     time.sleep(1)
-    mobile_click_strict(driver, MOBILE_MENU_PARENT_NEXT("cordeiros"), timeout=12, retries=4, sleep_between=0.25) # Para alterar a categoria é só alterar a string
+    mobile_click_strict(driver, MOBILE_MENU_PARENT_NEXT("bovinos"), timeout=12, retries=4, sleep_between=0.25) # Para alterar a categoria é só alterar a string
     time.sleep(1)
     mobile_click_strict(driver, MOBILE_MENU_SEE_ALL, timeout=12, retries=4, sleep_between=0.25)
     time.sleep(2)
@@ -373,7 +373,6 @@ def open_product_with_avise_by_pagination_mobile(driver, wait, pages=(1, 2, 3, 4
         except Exception:
             pass
 
-        # reutiliza função existente
         if open_pdp_from_first_avise_in_plp(driver):
             return True
 

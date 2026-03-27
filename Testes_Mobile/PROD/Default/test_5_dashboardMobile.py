@@ -2,13 +2,16 @@ import time
 
 import pytest
 
+from conftest import click_if_present
+
+from locators.common import COOKIE_ACCEPT
+
 from helpers.auth import ensure_logged_in_mobile, logout
 from helpers.minicart import minicart_visible
 from helpers.popups import try_close_popups
-
 from helpers.dashboard import *
-
 from helpers.auth import (login_expect_email_not_found_mobile, login_expect_wrong_password, login_password)
+
 
 # =========================
 # Credenciais
@@ -25,15 +28,8 @@ NEW_PASS = "Min@1234567"
 @pytest.mark.dashboard
 @pytest.mark.mobile
 def test_5_dashboard_mobile(driver, setup_site, wait):
-    """
-    Parte A: Login + Compra + Checkout Pix
-    Parte B: Minha Conta / Dashboard (endereços, pedidos, filtros, favoritos, endereços)
-    Parte C: Pontos / Relatórios / Cadastro de redes / Cupons / Missões
-    Parte D: Info da conta (editar email + trocar senha)  <-- obrigatório
-    Parte E: Logout + validações login + login com senha nova + voltar email  <-- obrigatório
-    """
-
     # 1) Login inicial
+    click_if_present(driver, COOKIE_ACCEPT, seconds=20)
     ensure_logged_in_mobile(driver, VALID_USER, VALID_PASS)
     assert minicart_visible(driver), "Era para estar logado, mas o minicart não apareceu."
     try_close_popups(driver)
@@ -109,9 +105,8 @@ def test_5_dashboard_mobile(driver, setup_site, wait):
     mobile_click_strict(driver, MOBILE_NAV_MINHAS_MISSOES, timeout=12, retries=4, sleep_between=0.25)
     visible(driver, MISSIONS_READY, timeout=25)
 
-    # ------------------------------------------------------------
-    # 15) OBRIGATÓRIO: Info da conta: whatsapp + editar email
-    # ------------------------------------------------------------
+    # 15) Info da conta: whatsapp + editar email
+
     # WhatsApp
     open_minha_conta_mobile(driver, timeout=20)
     mobile_click_strict(driver, MOBILE_NAV_INFO_CONTA, timeout=12, retries=4, sleep_between=0.25)
@@ -120,14 +115,10 @@ def test_5_dashboard_mobile(driver, setup_site, wait):
     # Alterar email
     account_change_email_flow_mobile(driver, wait, new_email=NEW_EMAIL, current_password=VALID_PASS)
 
-    # ------------------------------------------------------------
-    # 16) OBRIGATÓRIO: Troca senha (aplica)
-    # ------------------------------------------------------------
+    # 16) Troca senha (aplica)
     change_password_flow_mobile(driver, wait, current_password=VALID_PASS, new_password=NEW_PASS)
 
-    # ------------------------------------------------------------
-    # 17) OBRIGATÓRIO: Logout e validações de login
-    # ------------------------------------------------------------
+    # 17) Logout e validações de login
     logout(driver)
 
     # email antigo não encontrado

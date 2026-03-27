@@ -8,6 +8,7 @@ from helpers.dashboard import *
 
 from helpers.auth import (login_expect_email_not_found, login_expect_wrong_password, login_password)
 
+
 # =========================
 # Credenciais
 # =========================
@@ -22,14 +23,6 @@ NEW_PASS = "Min@1234567"
 @pytest.mark.default
 @pytest.mark.dashboard
 def test_5_dashboard(driver, setup_site, wait):
-    """
-    Parte A: Login + Compra + Checkout Pix
-    Parte B: Minha Conta / Dashboard (endereços, pedidos, filtros, favoritos, endereços)
-    Parte C: Pontos / Relatórios / Cadastro de redes / Cupons / Missões
-    Parte D: Info da conta (editar email + trocar senha)  <-- obrigatório
-    Parte E: Logout + validações login + login com senha nova + voltar email  <-- obrigatório
-    """
-
     # 1) Login inicial
     ensure_logged_in(driver, VALID_USER, VALID_PASS)
     assert minicart_visible(driver), "Era para estar logado, mas o minicart não apareceu."
@@ -76,23 +69,17 @@ def test_5_dashboard(driver, setup_site, wait):
     # 14) Minhas missões
     misssoes_flow(driver, wait)
 
-    # ------------------------------------------------------------
-    # 15) OBRIGATÓRIO: Info da conta: whatsapp + editar email + cancelar
-    # ------------------------------------------------------------
+    # 15) Info da conta: whatsapp + editar email + cancelar
     # WhatsApp
     account_whatsapp_toggle_flow(driver, wait)
 
     # Alterar email
     account_change_email_flow(driver, wait, new_email=NEW_EMAIL, current_password=VALID_PASS)
 
-    # ------------------------------------------------------------
-    # 16) OBRIGATÓRIO: Troca senha (aplica)
-    # ------------------------------------------------------------
+    # 16) Troca senha (aplica)
     change_password_flow(driver, wait, current_password=VALID_PASS, new_password=NEW_PASS)
 
-    # ------------------------------------------------------------
-    # 17) OBRIGATÓRIO: Logout e validações de login
-    # ------------------------------------------------------------
+    # 17) Logout e validações de login
     logout(driver)
 
     # email antigo não encontrado

@@ -48,3 +48,43 @@ def open_dropdown_item_mobile(driver, locator, timeout=10):
     """Abre item específico do dropdown"""
     open_user_dropdown_mobile(driver)
     mobile_click_strict(driver, locator, timeout=10, retries=4, sleep_between=0.25)
+
+def validate_user_dropdown_mobile(driver, wait):
+    """
+    Valida os links do dropdown do usuario no mobile.
+    """
+
+    # Minha conta
+    open_dropdown_item_mobile(driver, MOBILE_DD_MINHA_CONTA, timeout=15)
+    wait.until(lambda d: "/customer/account/" in d.current_url)
+    time.sleep(2)
+
+    # Comparar produtos
+    open_dropdown_item_mobile(driver, MOBILE_DD_COMPARAR, timeout=15)
+    wait.until(lambda d: "/catalog/product_compare/" in d.current_url)
+    time.sleep(2)
+
+    # Meus pedidos
+    open_dropdown_item_mobile(driver, MOBILE_DD_MEUS_PEDIDOS, timeout=15)
+    wait.until(lambda d: "/sales/order/history/" in d.current_url)
+    time.sleep(2)
+
+    # Lista de favoritos
+    open_dropdown_item_mobile(driver, MOBILE_DD_FAVORITOS, timeout=15)
+    wait.until(lambda d: "/wishlist/" in d.current_url)
+    time.sleep(2)
+
+    # Meus pontos
+    open_dropdown_item_mobile(driver, MOBILE_DD_MEUS_PONTOS, timeout=15)
+    wait.until(lambda d: "/reward/customer/info/" in d.current_url)
+    time.sleep(2)
+
+    # Meus cupons
+    open_dropdown_item_mobile(driver, MOBILE_DD_MEUS_CUPONS, timeout=15)
+    wait.until(lambda d: "/mycoupons/customer/coupons/" in d.current_url)
+    time.sleep(2)
+
+    # Minhas missões
+    open_dropdown_item_mobile(driver, MOBILE_DD_MINHAS_MISSOES, timeout=15)
+    wait.until(lambda d: "/rewardquests/customer/missions/" in d.current_url)
+    time.sleep(2)
