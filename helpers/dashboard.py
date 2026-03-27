@@ -49,9 +49,6 @@ def buy_first_product_and_checkout_pix(driver, wait):
     visible(driver, PIX, timeout=30)
     safe_click_loc(driver, wait, PIX, timeout=12)
 
-    visible(driver, TERMS_PIX, timeout=25)
-    safe_click_loc(driver, wait, TERMS_PIX, timeout=12)
-
     visible(driver, BTN_FINALIZAR_COMPRA_PIX, timeout=25)
     safe_click_loc(driver, wait, BTN_FINALIZAR_COMPRA_PIX, timeout=12)
 
@@ -337,9 +334,6 @@ def buy_first_product_and_checkout_pix_mobile(driver, wait):
     # payment -> PIX + termos + finalizar
     visible(driver, PIX, timeout=30)
     select_pix_payment(driver, timeout=25)
-
-    visible(driver, TERMS_PIX, timeout=25)
-    mobile_click_strict(driver, TERMS_PIX, timeout=12,retries=4, sleep_between=0.25)
 
     visible(driver, MOBILE_BTN_FINALIZAR_COMPRA_PIX, timeout=25)
     mobile_click_strict(driver, MOBILE_BTN_FINALIZAR_COMPRA_PIX, timeout=12,retries=4, sleep_between=0.25)

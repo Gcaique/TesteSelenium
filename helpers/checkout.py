@@ -47,9 +47,6 @@ def selecionar_boleto_e_finalizar(driver, wait, condicao_locator):
     wait.until(EC.invisibility_of_element_located(BODY_AJAX_LOADING))
     time.sleep(3)
 
-    # Aceita termos
-    click_when_clickable(wait, TERMS_BOLETO)
-
     # Finaliza compra
     click_when_clickable(wait, btn_finalizar)
 
@@ -128,9 +125,6 @@ def selecionar_boleto_e_finalizar_mobile(driver, wait, condicao_locator):
     mobile_click_strict(driver, condicao_locator, 10, 4, 0.25)
 
     time.sleep(3)
-
-    # Aceita termos
-    mobile_click_strict(driver, TERMS_BOLETO, 10, 4, 0.25)
 
     # Finaliza compra
     mobile_click_strict(driver, btn_finalizar, 10, 4, 0.25)

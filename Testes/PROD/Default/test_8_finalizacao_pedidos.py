@@ -78,8 +78,6 @@ def test_8_finalizacao_pedidos(driver, setup_site, wait):
     wait.until(EC.invisibility_of_element_located(PARTIAL_BILLING_REJECT))
 
     # 8) Finalizando pedido via PIX + copiar codigo pix via pagina de sucesso + ir para home
-    click_when_clickable(wait, TERMS_PIX)
-    time.sleep(1)
     click_when_clickable(wait, BTN_FINALIZAR_COMPRA_PIX)
     wait.until(EC.visibility_of_element_located(PIX_SUCESSO))
     click_when_clickable(wait, PIX_COPIAR)
@@ -132,8 +130,6 @@ def test_8_finalizacao_pedidos(driver, setup_site, wait):
     click_when_clickable(wait, BOLETO_SELECT)
     click_when_clickable(wait, BOLETO_OPTION_21)
     time.sleep(5)
-    click_when_clickable(wait, TERMS_BOLETO)
-    time.sleep(1)
     click_when_clickable(wait, BTN_FINALIZAR_COMPRA_BOLETO)
     wait.until(EC.visibility_of_element_located(PAGINA_SUCESSO))
     click_when_clickable(wait, BTN_IR_PARA_HOME)
@@ -190,14 +186,11 @@ def test_8_finalizacao_pedidos(driver, setup_site, wait):
     click_when_clickable(wait, OPTION_ANO_CARTAO)
     fill_input(driver, wait, INPUT_CVV_CARTAO, "898", timeout=20)
 
-    click_when_clickable(wait, TERMS_CARTAO)
     click_when_clickable(wait, BTN_FINALIZAR_COMPRA_CARTAO)
     visible(driver, ERRO_CARTAO, timeout=20)
 
     # 22 Finalizar pedido com PIX
     click_when_clickable(wait, PIX)
     time.sleep(5)
-    click_when_clickable(wait, TERMS_PIX)
-    time.sleep(1)
     click_when_clickable(wait, BTN_FINALIZAR_COMPRA_PIX)
     wait.until(EC.visibility_of_element_located(PIX_SUCESSO))
