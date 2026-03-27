@@ -6,7 +6,6 @@ from selenium.webdriver.support import expected_conditions as EC
 from locators.header import *
 from locators.plp import *
 from locators.pdp import BTN_ENTRAR_PDP, PRODUCT_TITLES
-from locators.home import LAST_ORDERS, LAST_ITEMS
 
 from helpers.actions import *
 from helpers.waiters import *
@@ -20,11 +19,6 @@ from helpers.auth import *
 @pytest.mark.default
 @pytest.mark.deslogado
 def test_1_userDeslogado(driver, setup_site, wait):
-    """
-    Usuário deslogado (visão default).
-    Passa por modais, scroll, busca e cenários por categoria.
-    """
-
     # 1) Termos de uso
     click_when_clickable(wait, LOGIN_MENU)
     click_when_clickable(wait, BTN_TERMS)

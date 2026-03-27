@@ -14,6 +14,8 @@ LOGIN_NAME_CONTAINER = (By.ID, "login-name")  # área do usuário (logado)
 USERNAME_INPUT = (By.ID, "username")  # input e-mail/cnpj/cpf
 PASSWORD_INPUT = (By.XPATH, "//*[@name='login[password]']")  # input senha
 BTN_AVANCAR = (By.ID, "send2")  # botão "Avançar"
+LINK_ESQUECI_SENHA = (By.XPATH, "//a[@class='action remind hj-fgt-pwd-modal_opener-action']")
+BTN_MOSTRAR_SENHA = (By.XPATH, "//*[contains(@data-bind,'showPassword')]/label")
 
 #ALERTAS
 ERROR_EMAIL_NOT_FOUND = (By.XPATH, "//*[@class='message-error error message']//*[contains(normalize-space(),'Verifique o dado informado')]")
@@ -55,11 +57,11 @@ MOBILE_SEARCH_BUTTON = (By.XPATH, "//button[@title='Buscar']")
 MOBILE_SEARCH_SUGGEST_ADD_1 = (By.XPATH, "(//div[@class='product-add-to-cart ']//button)[1]")
 
 # Dropdown do usuário (links)
-MOBILE_DD_MINHA_CONTA = (By.CSS_SELECTOR, "#login-dropdown a.hj-header__dropdown-customer_account")
-MOBILE_DD_COMPARAR = (By.CSS_SELECTOR, "#login-dropdown a[href*='/catalog/product_compare/']")
-MOBILE_DD_MEUS_PEDIDOS = (By.CSS_SELECTOR, "#login-dropdown a.hj-header__dropdown-order_history")
-MOBILE_DD_FAVORITOS = (By.CSS_SELECTOR, "#login-dropdown a.hj-header__dropdown-customer_wishlist")
-MOBILE_DD_MEUS_PONTOS = (By.CSS_SELECTOR, "#login-dropdown a.hj-header__dropdown-customer_rewards")
-MOBILE_DD_MEUS_CUPONS = (By.CSS_SELECTOR, "#login-dropdown a.hj-header__dropdown-customer_coupons")
-MOBILE_DD_MINHAS_MISSOES = (By.CSS_SELECTOR, "#login-dropdown a.hj-header__dropdown-customer_rewardquests")
-MOBILE_DD_SAIR = (By.CSS_SELECTOR, "#login-dropdown a#action-logout.hj-header__dropdown-customer_logout")
+MOBILE_DD_MINHA_CONTA = (By.CSS_SELECTOR, "#login-dropdown a[href*='customer/account']")
+MOBILE_DD_COMPARAR = (By.CSS_SELECTOR, "#login-dropdown a[href*='product_compare']")
+MOBILE_DD_MEUS_PEDIDOS = (By.CSS_SELECTOR, "#login-dropdown a[href*='sales/order/history']")
+MOBILE_DD_FAVORITOS = (By.XPATH, "//div[@id='login-dropdown']//a[normalize-space(.)='Lista de favoritos' and not(contains(@style,'display:none'))]")
+MOBILE_DD_MEUS_PONTOS = (By.CSS_SELECTOR, "#login-dropdown a[href*='reward']")
+MOBILE_DD_MEUS_CUPONS = (By.XPATH, "//div[@id='login-dropdown']//a[normalize-space(.)='Meus cupons']")
+MOBILE_DD_MINHAS_MISSOES = (By.CSS_SELECTOR, "#login-dropdown a[href*='mission']")
+MOBILE_DD_SAIR = (By.CSS_SELECTOR, "#login-dropdown a[href*='logout']")

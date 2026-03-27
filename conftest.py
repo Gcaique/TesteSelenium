@@ -40,6 +40,13 @@ def sanitize_test_name(s: str, max_len: int = 180) -> str:
 # =============================================================================
 # CLI Options (pytest)
 # =============================================================================
+URLS = {
+    "prod": os.getenv("URL_PROD", os.getenv("URL")),
+    "stg1": os.getenv("URL_STG1"),
+    "stg2": os.getenv("URL_STG2"),
+}
+
+
 def pytest_addoption(parser):
     """
     O que faz:
@@ -50,13 +57,16 @@ def pytest_addoption(parser):
     parser.addoption("--navegador", action="store", default="chrome", help="chrome|firefox|edge|safari")
     parser.addoption("--so", action="store", default="Windows 11", help="Sistema operacional (LT/BS)")
     parser.addoption("--device", action="store", default="", help='Device name (mobile). Ex: "iPhone 14"')
-    parser.addoption("--base-url", action="store", default="https://meuminerva.com/", help="URL base")
+    parser.addoption("--base-url", action="store", default="", help="URL base (sobrepõe target-env)")
+    parser.addoption("--target-env", action="store", default="prod", choices=["prod", "stg1", "stg2", "outro"], help="Ambiente destino (mapeado em .env)")
     parser.addoption("--region", action="store", default="outras", help="outras|sul")
     parser.addoption("--username", action="store", default=os.getenv("USERNAME", ""), help="Login")
     parser.addoption("--password", action="store", default=os.getenv("PASSWORD", ""), help="Senha")
     parser.addoption("--timeout", action="store", default=10, type=int, help="Timeout padrão do WebDriverWait")
-    parser.addoption("--grid", action="store", default="lt", help="lt|bs|local")
+    parser.addoption("--grid", action="store", default="lt", help="lt|bs|sauce|local")
     parser.addoption("--headless", action="store_true", help="Executa browser local em modo headless")
+    parser.addoption("--resolution", action="store", default="1920x1080", help='Resolução desktop no formato LARGURAxALTURA. Ex: 1920x1080')
+    parser.addoption("--build-name", action="store", default="", help="Nome da build/suite no provider (agrupa execuções)")
 
 
 # =============================================================================
@@ -68,7 +78,18 @@ def base_url(request):
     O que faz:
     - Disponibiliza a URL base para os testes.
     """
-    return request.config.getoption("--base-url")
+    cli_url = request.config.getoption("--base-url")
+    if cli_url:
+        return cli_url
+
+    target_env = request.config.getoption("--target-env") or "prod"
+    resolved = URLS.get(target_env)
+    if resolved:
+        return resolved
+
+    pytest.fail(
+        f"URL não definida para target-env '{target_env}'. Configure URL_{target_env.upper()} no .env ou use --base-url."
+    )
 
 
 @pytest.fixture(scope="session")
@@ -106,6 +127,8 @@ def driver(request):
     device_name = request.config.getoption("--device")
     grid = (request.config.getoption("--grid") or "lt").strip().lower()
     headless = request.config.getoption("--headless")
+    resolucao = request.config.getoption("--resolution")
+    build_name = (request.config.getoption("--build-name") or "").strip()
 
     # -------------------------
     # MOBILE "inteligente"
@@ -150,8 +173,12 @@ def driver(request):
         sistema_operacional=sistema_operacional,
         device_name=device_name,
         grid=grid,
-        headless=headless
+        headless=headless,
+        resolucao=resolucao,
+        build_name=build_name or None
     )
+    if ambiente != "mobile":
+        driver.maximize_window()
 
     yield driver
     driver.quit()
@@ -241,17 +268,16 @@ def setup_site(open_home, driver, region):
     # 1) Espera body carregar
     w.until(EC.presence_of_element_located((By.TAG_NAME, "body")))
 
-    # 2) Cookies
-    click_if_present(driver, BTN_ACCEPT_COOKIES, seconds=20)
-
-    # 3) Região
+    # 2) Região
     if region == "sul":
         click_if_present(driver, BTN_REGION_SUL, seconds=15)
     else:
         click_if_present(driver, BTN_REGION_OUTRAS, seconds=15)
 
+    # 3) Cookies
+    click_if_present(driver, BTN_ACCEPT_COOKIES, seconds=20)
+
     # 4) Fecha modais ocasionais
-    click_if_present(driver, BTN_CLOSE_SPIN, seconds=8)
     click_if_present(driver, BTN_CLOSE_MODAL_GENERIC, seconds=8)
 
     # 5) Espera algo fixo da home
@@ -304,10 +330,6 @@ def pytest_runtest_makereport(item, call):
 
     caps = getattr(driver, "capabilities", {}) or {}
 
-    # Detecta BrowserStack de forma bem robusta:
-    # 1) chave bstack:options
-    # 2) user do browserstack
-    # 3) URL do hub contém browserstack
     hub_url = ""
     try:
         hub_url = getattr(getattr(driver, "command_executor", None), "_url", "") or ""
@@ -320,27 +342,38 @@ def pytest_runtest_makereport(item, call):
         or ("browserstack" in hub_url.lower())
     )
 
-    # DEBUG (uma vez por teste) — você pode remover depois
-    # print(f"[DEBUG] is_bs={is_bs} hub={hub_url} keys={list(caps.keys())[:15]}")
+    is_sauce = (
+        ("sauce:options" in caps)
+        or ("saucelabs" in hub_url.lower())
+        or ("ondemand." in hub_url.lower() and "saucelabs.com" in hub_url.lower())
+    )
 
-    if not is_bs:
-        return
-
-    # Marca status no final do CALL (quando o teste realmente passou/falhou)
     if rep.when != "call":
         return
 
     status = "passed" if rep.passed else "failed"
-    reason = "OK" if rep.passed else (rep.longreprtext[:250] if hasattr(rep, "longreprtext") else "Falha")
+    reason = "OK" if rep.passed else (
+        rep.longreprtext[:250] if hasattr(rep, "longreprtext") else "Falha"
+    )
 
-    payload = {
-        "action": "setSessionStatus",
-        "arguments": {"status": status, "reason": reason}
-    }
+    if is_bs:
+        payload = {
+            "action": "setSessionStatus",
+            "arguments": {"status": status, "reason": reason}
+        }
 
-    try:
-        driver.execute_script("browserstack_executor: " + json.dumps(payload))
-    except Exception as e:
-        print(f"[WARN] Não consegui marcar status no BrowserStack: {e}")
-        print(f"[WARN] hub_url={hub_url}")
-        print(f"[WARN] caps_keys={list(caps.keys())}")
+        try:
+            driver.execute_script("browserstack_executor: " + json.dumps(payload))
+        except Exception as e:
+            print(f"[WARN] Não consegui marcar status no BrowserStack: {e}")
+            print(f"[WARN] hub_url={hub_url}")
+            print(f"[WARN] caps_keys={list(caps.keys())}")
+
+    if is_sauce:
+        try:
+            passed_bool = "true" if rep.passed else "false"
+            driver.execute_script(f"sauce:job-result={passed_bool}")
+        except Exception as e:
+            print(f"[WARN] Não consegui marcar status no Sauce Labs: {e}")
+            print(f"[WARN] hub_url={hub_url}")
+            print(f"[WARN] caps_keys={list(caps.keys())}")

@@ -13,7 +13,6 @@ from locators.header import *
 
 def ensure_logged_in(driver, user: str, passwd: str):
     """Garante login (idempotente)"""
-
     # abre login
     click(driver, LOGIN_MENU, timeout=10)
     visible(driver, USERNAME_INPUT, timeout=10)
@@ -252,6 +251,12 @@ def login_expect_wrong_password(driver, wait, email, wrong_password):
     safe_click_loc(driver, wait, BTN_AVANCAR, timeout=12)
 
     visible(driver, ERROR_WRONG_PASSWORD, timeout=20)
+
+
+def clicar_esqueci_senha(driver, wait):
+    """Clica no link 'Esqueci minha senha'."""
+    wait.until(EC.element_to_be_clickable(LINK_ESQUECI_SENHA)).click()
+    time.sleep(3)
 
 
 #---------------------------------------------------------------

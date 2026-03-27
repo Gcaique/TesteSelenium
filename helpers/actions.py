@@ -7,9 +7,11 @@ from selenium.webdriver.remote.webelement import WebElement
 from selenium.webdriver.common.actions.action_builder import ActionBuilder
 from selenium.webdriver.common.actions.pointer_input import PointerInput
 from selenium.webdriver.common.actions import interaction
+from selenium.webdriver.common.keys import Keys
 
 from helpers.waiters import clickable, visible
-
+import time
+from selenium.webdriver.support import expected_conditions as EC
 
 def click(driver, locator, timeout=10):
     """Clique robusto com fallback JS"""
@@ -179,6 +181,33 @@ def fill_input(driver, wait, locator, value: str, timeout=10):
     except Exception:
         driver.execute_script("arguments[0].value='';", el)
     el.send_keys(value)
+
+def clear_and_type(driver, locator, texto):
+    """Limpa o campo e digita o texto."""
+    campo = driver.find_element(*locator)
+    campo.clear()
+    time.sleep(1)
+    campo.send_keys(texto)
+    time.sleep(1)
+
+def scroll_to_middle(driver, wait, locator, timeout=10):
+    """Faz scroll ate o elemento ficar centralizado na viewport."""
+    el = wait.until(EC.presence_of_element_located(locator))
+    driver.execute_script(
+        "arguments[0].scrollIntoView({block: 'center', behavior: 'smooth'});",
+        el,
+    )
+    return el
+
+
+def scroll_to_top(driver, wait, locator, timeout=10):
+    """Faz scroll ate o elemento ficar no topo da viewport."""
+    el = wait.until(EC.presence_of_element_located(locator))
+    driver.execute_script(
+        "arguments[0].scrollIntoView({block: 'start', behavior: 'smooth'});",
+        el,
+    )
+    return el
 
 
 #---------------------------------------------------------------

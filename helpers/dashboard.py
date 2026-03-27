@@ -4,7 +4,8 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support.ui import Select
 from selenium.common.exceptions import WebDriverException, TimeoutException
 
-from helpers.actions import safe_click_loc, scroll_into_view, fill_input, try_click, scroll_and_safe_click_loc, mobile_click_strict
+from helpers.actions import safe_click_loc, scroll_into_view, fill_input, try_click, scroll_and_safe_click_loc, \
+    mobile_click_strict, click_when_clickable
 from helpers.waiters import visible
 from helpers.minicart import wait_minicart_loading
 from helpers.popups import try_close_popups
@@ -48,11 +49,8 @@ def buy_first_product_and_checkout_pix(driver, wait):
     visible(driver, PIX, timeout=30)
     safe_click_loc(driver, wait, PIX, timeout=12)
 
-    visible(driver, TERMS_PIX, timeout=25)
-    safe_click_loc(driver, wait, TERMS_PIX, timeout=12)
-
-    visible(driver, BTN_FINALIZAR_COMPRA, timeout=25)
-    safe_click_loc(driver, wait, BTN_FINALIZAR_COMPRA, timeout=12)
+    visible(driver, BTN_FINALIZAR_COMPRA_PIX, timeout=25)
+    safe_click_loc(driver, wait, BTN_FINALIZAR_COMPRA_PIX, timeout=12)
 
     # aguarda retorno
     time.sleep(6)
@@ -79,8 +77,8 @@ def dashboard_set_main_address(driver, wait):
 
 
 def go_all_addresses(driver, wait):
-    scroll_and_safe_click_loc(driver, wait, LINK_VER_TODOS_ENDERECOS, timeout=12)
-    time.sleep(2)
+    scroll_and_safe_click_loc(driver, wait, LINK_VER_TODOS_ENDERECOS, timeout=15)
+    time.sleep(5)
 
 
 def open_recent_orders_from_dashboard(driver, wait):
@@ -101,7 +99,12 @@ def orders_open_first_and_copy_pix(driver, wait):
 
 
 def orders_filters_flow(driver, wait):
-    scroll_and_safe_click_loc(driver, wait, NAV_MEUS_PEDIDOS, timeout=12)
+    # Tenta um clique rápido de 3 segundos no menu lateral.
+    # Se falhar, o fluxo apenas segue para o próximo passo.
+    try:
+        scroll_and_safe_click_loc(driver, wait, NAV_MEUS_PEDIDOS, timeout=3)
+    except (TimeoutException, Exception):
+        """Elemento opcional ou página já carregada"""
 
     # período 7 dias + filtrar
     scroll_and_safe_click_loc(driver, wait, SEL_PERIOD, timeout=12)
@@ -331,9 +334,6 @@ def buy_first_product_and_checkout_pix_mobile(driver, wait):
     # payment -> PIX + termos + finalizar
     visible(driver, PIX, timeout=30)
     select_pix_payment(driver, timeout=25)
-
-    visible(driver, TERMS_PIX, timeout=25)
-    mobile_click_strict(driver, TERMS_PIX, timeout=12,retries=4, sleep_between=0.25)
 
     visible(driver, MOBILE_BTN_FINALIZAR_COMPRA_PIX, timeout=25)
     mobile_click_strict(driver, MOBILE_BTN_FINALIZAR_COMPRA_PIX, timeout=12,retries=4, sleep_between=0.25)

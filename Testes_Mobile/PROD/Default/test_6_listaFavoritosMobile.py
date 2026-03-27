@@ -2,15 +2,15 @@ import time
 
 import pytest
 
+from conftest import click_if_present
+
+from locators.common import COOKIE_ACCEPT
+
 from helpers.auth import ensure_logged_in_mobile
 from helpers.wishlist import *
 from helpers.home import add_favorite_from_home_first_carousel_mobile
 from helpers.plp import add_favorite_from_category_first_item_mobile, search_and_add_favorite_by_index_mobile
 from helpers.pdp import open_out_of_stock_product_and_add_to_favorites_mobile
-
-from locators.plp import *
-
-
 
 
 # =========================
@@ -25,15 +25,8 @@ VALID_PASS = "Min@1234"
 @pytest.mark.favoritos
 @pytest.mark.mobile
 def test_6_lista_de_favoritos_mobile(driver, setup_site, wait):
-    """
-      - Login
-      - Favoritar itens: Home, Pescados, Busca, Bovinos (paginando) + PDP
-      - Abrir Lista de favoritos
-      - Interações: qty, add all, inc/dec, add item, avise-me (não opcional)
-      - Toggle favoritos e remoções + esvaziar minicart e voltar pra Home
-    """
-
     # 1) Login
+    click_if_present(driver, COOKIE_ACCEPT, 20)
     ensure_logged_in_mobile(driver, VALID_USER, VALID_PASS)
     assert minicart_visible(driver), "Era para estar logado, mas o minicart não apareceu."
     try_close_popups(driver)
@@ -45,7 +38,7 @@ def test_6_lista_de_favoritos_mobile(driver, setup_site, wait):
     add_favorite_from_category_first_item_mobile(driver, wait)
 
     # 4) Busca "peixe" e favorita o item 6 (igual script)
-    search_and_add_favorite_by_index_mobile(driver, wait, term="costela")
+    search_and_add_favorite_by_index_mobile(driver, wait, term="peixe")
 
     # 5) Favorita na PDP um produto fora de estoque
     open_out_of_stock_product_and_add_to_favorites_mobile(driver, wait, pages=(1,2,3,4,5,6))
@@ -57,8 +50,8 @@ def test_6_lista_de_favoritos_mobile(driver, setup_site, wait):
     wishlist_increment_by_index_mobile(driver, wait, 2)
 
     # 8) Incrementa item 3
-    wishlist_increment_by_index_mobile(driver, wait, 3)
-    wishlist_increment_by_index_mobile(driver, wait, 3)
+    wishlist_increment_by_index_mobile(driver, wait, 1)
+    wishlist_increment_by_index_mobile(driver, wait, 1)
 
     # 9) Adicionar todos ao carrinho + abrir minicart e fechar
     wishlist_add_all_to_cart_mobile(driver, wait)

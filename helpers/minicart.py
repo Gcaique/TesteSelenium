@@ -4,12 +4,12 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.common.exceptions import TimeoutException, StaleElementReferenceException
 
 from helpers.waiters import wait, visible
-from helpers.actions import click, safe_click_loc_retry
+from helpers.actions import click, safe_click_loc_retry, mobile_click_strict
 
 from locators.common import (MINICART_WRAPPER)
 from locators.cart import *
 from locators.wishlist import *
-
+from helpers.actions import click_when_clickable
 
 def minicart_visible(driver) -> bool:
     """Fonte da verdade para usuário logado"""
@@ -23,35 +23,36 @@ def minicart_visible(driver) -> bool:
 
 
 def wait_minicart_loading(driver):
-    """Espera loading do minicart (duas variações de classe)"""
+    """Espera loading do minicart (três variações de classe)"""
     try:
-        wait(driver, 8).until(
-            EC.visibility_of_element_located(MINICART_LOADING_2)
-        )
+        wait(driver, 10).until(EC.visibility_of_element_located(MINICART_LOADING_1))
     except Exception:
         pass
 
     try:
-        wait(driver, 20).until(
-            EC.invisibility_of_element_located(MINICART_LOADING_2)
-        )
+        wait(driver, 10).until(EC.invisibility_of_element_located(MINICART_LOADING_1))
     except Exception:
         pass
 
     try:
-        wait(driver, 8).until(
-            EC.visibility_of_element_located(MINICART_LOADING_1)
-        )
+        wait(driver, 10).until(EC.visibility_of_element_located(MINICART_LOADING_2))
     except Exception:
         pass
 
     try:
-        wait(driver, 20).until(
-            EC.invisibility_of_element_located(MINICART_LOADING_1)
-        )
+        wait(driver, 10).until(EC.invisibility_of_element_located(MINICART_LOADING_2))
     except Exception:
         pass
 
+    try:
+        wait(driver, 10).until(EC.visibility_of_element_located(MINICART_LOADING_3))
+    except Exception:
+        pass
+
+    try:
+        wait(driver, 10).until(EC.invisibility_of_element_located(MINICART_LOADING_3))
+    except Exception:
+        pass
 
 def wait_minicart_ready(driver, timeout=20):
     """
@@ -194,6 +195,88 @@ def minicart_empty(driver, wait, max_removals: int = 30):
 
         remove_simple_delete(driver, wait, idx=1)
         wait_remove_alert_cycle(driver, timeout=25)
+
+    # se estourou limite
+    raise AssertionError("Minicart não ficou vazio após tentativas de remoção.")
+
+def minicart_increment_qty(driver, wait):
+    "Incrementa quantidade do produto no minicart"
+    click_when_clickable(wait, MINICART_INCREMENT_BTN)
+    wait_minicart_loading(driver)
+
+def minicart_decrement_qty(driver, wait):
+    "Decrementa quantidade do produto no minicart"
+    click_when_clickable(wait, MINICART_DECREMENT_BTN)
+    wait_minicart_loading(driver)
+
+
+#---------------------------------------------------------------
+# 📱 MOBILE
+#---------------------------------------------------------------
+def remove_simple_delete_mobile(driver, wait, idx: int = 1):
+    """Remove produto do minicart e confirma modal."""
+    mobile_click_strict(driver, MOBILE_REMOVE_SIMPLE_DELETE_BY_INDEX(idx), timeout=15, retries=6, sleep_between=0.25)
+    visible(driver, CONFIRM_MODAL_ACCEPT, timeout=15)
+    mobile_click_strict(driver, CONFIRM_MODAL_ACCEPT, timeout=15, retries=6, sleep_between=0.25)
+
+
+def wait_remove_alert_cycle_mobile(driver, timeout=25):
+    """
+    Regras:
+      - se o alerta aparecer, NÃO faça mais nada até ele sumir
+      - quando ele sumir, a remoção terminou
+    """
+    # Se já está vazio, não precisa esperar alerta
+    if driver.find_elements(*MINICART_EMPTY_VIEW_PRODUCTS):
+        return
+
+    # 1) espera alerta aparecer
+    try:
+        WebDriverWait(driver, 4, poll_frequency=0.1).until(
+            EC.visibility_of_element_located(MINICART_REMOVE_ALERT)
+        )
+    except TimeoutException:
+        # pode acontecer do alerta não aparecer em alguns casos
+        return
+
+    # 2) espera o alerta SUMIR (remoção terminou)
+    WebDriverWait(driver, timeout, poll_frequency=0.1).until(
+        EC.invisibility_of_element_located(MINICART_REMOVE_ALERT)
+    )
+
+
+def minicart_empty_mobile(driver, wait, max_removals: int = 30):
+    """
+    Remove item por item:
+      - remove sempre o index 1
+      - depois aguarda o ciclo completo do alerta (aparecer -> sumir)
+      - só então remove o próximo
+    """
+    # já vazio
+    if driver.find_elements(*MINICART_EMPTY_VIEW_PRODUCTS):
+        return True
+
+    for _ in range(max_removals):
+        # se ficou vazio entre ciclos
+        if driver.find_elements(*MINICART_EMPTY_VIEW_PRODUCTS):
+            return True
+
+        # se o alerta está VISIVEL, espera ficar INVISIVEL antes de tentar qualquer clique
+        try:
+            if driver.find_elements(*MINICART_REMOVE_ALERT):
+                WebDriverWait(driver, 25, poll_frequency=0.1).until(
+                    EC.invisibility_of_element_located(MINICART_REMOVE_ALERT)
+                )
+        except Exception:
+            pass
+
+        # tenta remover o primeiro item (se não existe mais botão, acabou)
+        if not driver.find_elements(*MOBILE_REMOVE_SIMPLE_DELETE_BY_INDEX(1)):
+            # sem botão remover => considera vazio / ok
+            return True
+
+        remove_simple_delete_mobile(driver, wait, idx=1)
+        wait_remove_alert_cycle_mobile(driver, timeout=25)
 
     # se estourou limite
     raise AssertionError("Minicart não ficou vazio após tentativas de remoção.")

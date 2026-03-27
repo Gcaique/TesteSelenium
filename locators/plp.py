@@ -53,6 +53,9 @@ CATEGORY_PESCADOS = (By.XPATH, "//*[@id='nav-menu-desktop']//span[normalize-spac
 CATEGORY_CORDEIROS = (By.XPATH, "//*[@id='nav-menu-desktop']//span[normalize-space(text())='Cordeiros']")
 CATEGORY_BOVINOS_PREMIUM = (By.XPATH, "//*[@id='nav-menu-desktop']//span[normalize-space()='Bovinos Premium']")
 CATEGORY_BOVINOS = (By.XPATH, "//*[@id='nav-menu-desktop']//span[normalize-space(text())='Bovinos']")
+CATEGORY_MARCAS = (By.XPATH,"//*[@id='nav-menu-desktop']//span[normalize-space(text())='Marcas']")
+CATEGORY_MAIS_VENDIDOS = (By.XPATH,"//*[@id='nav-menu-desktop']//span[normalize-space(text())='Mais Vendidos']")
+CATEGORY_PROMOCOES_SUL = (By.XPATH, "//*[@id='nav-menu-desktop']//span[contains(normalize-space(text()), 'Promoções')]")
 
 # Avise-me (PLP/PDP)
 AVISE_DISABLED_ANY = (By.CSS_SELECTOR, "a[id^='button_disabled_']")
@@ -64,6 +67,8 @@ BTN_ENTRAR_LISTA = (By.XPATH, "//a[contains(@class,'loggin-btn') and .//span[nor
 # Botões de ações (card)
 BTN_INCREMENT_QTY = (By.XPATH, "(//div[@class='product actions product-item-actions']//button[contains(@class,'increment-qty')])[1]")
 BTN_ADD_TO_CART = (By.XPATH, "(//button[contains(@class,'action tocart') and contains(@class,'primary')])[1]")
+PLP_ADD_TO_CART_BY_INDEX = lambda idx: (By.XPATH, f"(//button[contains(@class,'action tocart') and contains(@class,'primary')])[{idx}]")
+PLP_INCREMENT_BY_INDEX = lambda idx: (By.XPATH, f"(//div[@class='product actions product-item-actions']//button[contains(@class,'increment-qty')])[{idx}]")
 
 TOOLBAR_AMOUNT = (By.ID, "toolbar-amount")
 
@@ -73,7 +78,8 @@ PLP_LIMITER = (By.ID, "limiter")
 PLP_PRODUCT_IMAGE_WRAPPER_BY_INDEX = lambda idx: (By.XPATH, f"(//*[contains(@id,'product-item-info')]//span[@class='product-image-wrapper'])[{idx}]",)
 
 # Botão do favorito
-PLP_WISHLIST_BTN_BY_INDEX = lambda idx: (By.XPATH, f"(//button[contains(@id,'button_wishlist')])[{idx}]",)
+PLP_WISHLIST_BTN_BY_INDEX = lambda idx: (By.XPATH, f"(.//button[contains(@class,'towishlist')])[{idx}]",)
+
 
 
 #---------------------------------------------------------------
@@ -87,7 +93,16 @@ MOBILE_MENU_SEE_ALL = (By.XPATH, "//*[@class='mm-panel mm-panel_opened']//a[norm
 
 # abrir submenu (setinha) pelo slug (usa o <a class="mm-btn mm-btn_next ... href='#mm-8'>)
 def MOBILE_MENU_PARENT_NEXT(slug: str):
-    return (By.XPATH, f"//nav[@id='custom-menu']//li[a[contains(@href,'/{slug}.html')]]//a[contains(@class,'mm-btn_next')]")
+    return (
+        By.XPATH,
+        f"//nav[@id='custom-menu']//li[contains(@class,'hj-menu-{slug}')]//a[contains(@class,'mm-btn_next')]"
+    )
+
+def MOBILE_MENU_PARENT(slug: str):
+    return (
+        By.XPATH,
+        f"//nav[@id='custom-menu']//li[contains(@class,'hj-menu-{slug}')]//a[contains(@class,'mm-listitem__text')]"
+    )
 
 # Paginação
 MOBILE_PAGINATION_CONTAINER = (By.CSS_SELECTOR, "ul.pages-items")

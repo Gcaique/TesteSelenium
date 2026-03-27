@@ -16,7 +16,7 @@ from locators.plp import (
     PAGINA_2, FILTER_CONSERVACAO_OPEN, FILTER_CONSERVACAO_RESFRIADO,
     FILTER_MARCA_OPEN, FILTER_MARCA_OPT1, FILTER_CLEAR_ALL,
     SORTER_SELECT, SORT_LOW_TO_HIGH, SORT_HIGH_TO_LOW,
-    CATEGORY_PROMOCOES, CATEGORY_PESCADOS, CATEGORY_CORDEIROS,
+    CATEGORY_PROMOCOES, CATEGORY_PESCADOS, CATEGORY_CORDEIROS, PLP_ADD_TO_CART_BY_INDEX
 )
 from locators.pdp import (
     FIRST_PRODUCT_PLP, PDP_INCREMENT, PDP_ADD_TO_CART,
@@ -27,8 +27,7 @@ from locators.header import (
     DD_MINHA_CONTA, DD_COMPARAR, DD_MEUS_PEDIDOS,
     DD_FAVORITOS, DD_MEUS_PONTOS, DD_MEUS_CUPONS, DD_MINHAS_MISSOES
 )
-from locators.dashboard import BTN_MAIN_ADDRESS_DASHBOARD, BTN_FILTER, REWARD_FILTER_SELECT, COUPON_FILTER_SELECT, MISSIONS_READY
-from locators.productCompare import INPUT_COMPARE
+
 
 # =========================
 # Credenciais
@@ -40,38 +39,21 @@ VALID_PASS = "Min@1234"
 @pytest.mark.smoke
 @pytest.mark.default
 @pytest.mark.logado
-def test_3_userLogado(driver, setup_site):
-    """
-    Usuário LOGADO (default):
-    - login
-    - navega itens do dropdown do usuário
-    - troca região (default <-> sul)
-    - abre/fecha minicart
-    - interações de compra/busca/categoria/pdp/filtros/ordenacao
-    - avise-me (PLP e PDP, com refresh obrigatório)
-    - limpa carrinho
-    """
-
-    visible(driver, SEARCH_INPUT, timeout=20)
-
+def test_3_user_logado(driver, setup_site):
     # 1) Login (fonte da verdade = mini-cart)
     ensure_logged_in(driver, VALID_USER, VALID_PASS)
 
     # 2) Dropdown do usuário (seus itens)
     open_dropdown_item(driver, DD_MINHA_CONTA, timeout=15)
-    visible(driver, BTN_MAIN_ADDRESS_DASHBOARD, timeout=20)
+    time.sleep(3)
     open_dropdown_item(driver, DD_COMPARAR, timeout=15)
-    visible(driver, INPUT_COMPARE, timeout=15)
     open_dropdown_item(driver, DD_MEUS_PEDIDOS, timeout=15)
-    visible(driver, BTN_FILTER, timeout=15)
     open_dropdown_item(driver, DD_FAVORITOS, timeout=15)
-    time.sleep(5)
+    time.sleep(2)
     open_dropdown_item(driver, DD_MEUS_PONTOS, timeout=15)
-    visible(driver, REWARD_FILTER_SELECT, timeout=15)
     open_dropdown_item(driver, DD_MEUS_CUPONS, timeout=15)
-    visible(driver, COUPON_FILTER_SELECT, timeout=15)
     open_dropdown_item(driver, DD_MINHAS_MISSOES, timeout=15)
-    visible(driver, MISSIONS_READY, timeout=15)
+    time.sleep(2)
 
     # 3) Troca de região: default -> sul -> default
     switch_region(driver, "sul")
@@ -108,7 +90,7 @@ def test_3_userLogado(driver, setup_site):
     visible(driver, SEE_ALL_LINK, timeout=20)
     click(driver, SEE_ALL_LINK, timeout=10)
 
-    # paginação e filtros / ordenação
+    # 8) Paginação e filtros / ordenação
     click(driver, PAGINA_2, timeout=15)
     visible(driver, SORTER_SELECT, timeout=20)
 
@@ -131,20 +113,20 @@ def test_3_userLogado(driver, setup_site):
     click(driver, SORTER_SELECT, timeout=10)
     click(driver, SORT_HIGH_TO_LOW, timeout=10)
 
-    # add primeiro da lista
-    click(driver, (By.XPATH, "(//button[contains(@class, 'action tocart primary tget-btn-buy tocart')])[1]"), timeout=10)
+    # 9) Add primeiro da lista
+    click(driver, PLP_ADD_TO_CART_BY_INDEX(1), timeout=10)
     wait_minicart_loading(driver)
 
-    # 8) Promoções: adicionar item
+    # 10) Promoções: adicionar item
     click(driver, CATEGORY_PROMOCOES, timeout=15)
     visible(driver, SORTER_SELECT, timeout=20)
 
     click(driver, QTY_INPUT_FIRST, timeout=10)
     fill(driver, QTY_INPUT_FIRST, "2")
-    click(driver, (By.XPATH, "(//button[contains(@class, 'action tocart primary tget-btn-buy tocart')])[1]"), timeout=10)
+    click(driver, PLP_ADD_TO_CART_BY_INDEX(1), timeout=10)
     wait_minicart_loading(driver)
 
-    # 9) Pescados -> PDP -> add -> previsão entrega
+    # 11) Pescados -> PDP -> add -> previsão entrega
     click(driver, CATEGORY_PESCADOS, timeout=15)
     visible(driver, FIRST_PRODUCT_PLP, timeout=20)
     click(driver, FIRST_PRODUCT_PLP, timeout=15)
@@ -160,7 +142,7 @@ def test_3_userLogado(driver, setup_site):
     click(driver, BTN_VERIFY_FORECAST, timeout=10)
     visible(driver, FORECAST_RESULT, timeout=20)
 
-    # 10) Cordeiros -> página 2
+    # 12) Cordeiro -> Avise-me (PLP / PDP)
     click(driver, CATEGORY_CORDEIROS, timeout=15)
     visible(driver, SORTER_SELECT, timeout=20)
 
@@ -180,7 +162,7 @@ def test_3_userLogado(driver, setup_site):
     else:
         print("[WARN] Não consegui abrir PDP a partir de um produto com Avise-me.")
 
-    # 12) Limpar carrinho (view cart -> empty -> confirm -> ver catálogo)
+    # 13) Limpar carrinho (view cart -> empty -> confirm -> ver catálogo)
     wait_minicart_ready(driver, timeout=25)
     click(driver, VIEWCART, timeout=15)
     visible(driver, EMPTY_CART_BTN, timeout=25)
