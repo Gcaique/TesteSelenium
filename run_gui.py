@@ -10,6 +10,10 @@ import tkinter as tk
 from tkinter import messagebox, filedialog
 
 import customtkinter as ctk
+try:
+    from tkcalendar import Calendar  # type: ignore
+except Exception:
+    Calendar = None
 
 import tempfile
 import xml.etree.ElementTree as ET
@@ -181,6 +185,9 @@ command_preview = None
 log_box = None
 status_label = None
 left_selected_count_label = None
+clear_selection_var = None
+left_render_after_id = None
+filter_after_id = None
 
 run_button = None
 stop_button = None
@@ -329,9 +336,16 @@ def set_command_preview(text):
 
 
 def update_summary(total=0, passed=0, failed=0, skipped=0):
-    total_value_label.configure(text=f"{getattr(total_value_label, 'base_text', 'Total')} - {total}")
-    passed_value_label.configure(text=f"{getattr(passed_value_label, 'base_text', 'Passed')} - {passed}")
-    failed_value_label.configure(text=f"{getattr(failed_value_label, 'base_text', 'Failed')} - {failed}")
+    total_text = f"{getattr(total_value_label, 'base_text', 'Total')} - {total}"
+    passed_text = f"{getattr(passed_value_label, 'base_text', 'Passed')} - {passed}"
+    failed_text = f"{getattr(failed_value_label, 'base_text', 'Failed')} - {failed}"
+
+    if total_value_label.cget("text") != total_text:
+        total_value_label.configure(text=total_text)
+    if passed_value_label.cget("text") != passed_text:
+        passed_value_label.configure(text=passed_text)
+    if failed_value_label.cget("text") != failed_text:
+        failed_value_label.configure(text=failed_text)
 
 
 def parse_pytest_summary(output_text):
@@ -396,8 +410,11 @@ def parse_junit_xml_results(xml_path):
 def show_tests_by_status(status_key, title):
     tests = test_results_by_status.get(status_key, [])
 
+    base_title = title.split(" -")[0] if " -" in title else title
+    count_text = f"{base_title} ({len(tests)})"
+
     window = ctk.CTkToplevel(app)
-    window.title(title)
+    window.title(count_text)
     window.geometry("650x420")
     window.configure(fg_color=COLOR_BG)
 
@@ -417,7 +434,7 @@ def show_tests_by_status(status_key, title):
 
     header = ctk.CTkLabel(
         container,
-        text=f"{title} ({len(tests)})",
+        text=count_text,
         text_color=COLOR_TEXT,
         font=ctk.CTkFont(size=20, weight="bold")
     )
@@ -849,6 +866,13 @@ def update_left_selected_counter():
 
 
 def clear_left_tests():
+    global left_render_after_id
+    if left_render_after_id:
+        try:
+            app.after_cancel(left_render_after_id)
+        except Exception:
+            pass
+        left_render_after_id = None
     for widget in left_tests_frame.winfo_children():
         widget.destroy()
 
@@ -909,6 +933,7 @@ def rebuild_left_tests(filter_text=""):
         grouped[platform][subgroup].append((test_path, display_name))
 
     current_row = 0
+    test_rows = []
 
     def add_group_title(title, row):
         label = ctk.CTkLabel(
@@ -976,9 +1001,21 @@ def rebuild_left_tests(filter_text=""):
                 continue
 
             for original_path, display_name in tests:
-                current_row = add_test_checkbox(original_path, display_name, current_row)
+                test_rows.append((current_row, original_path, display_name))
+                current_row += 1
 
-    update_left_selected_counter()
+    def process_batch(start_index=0, batch_size=200):
+        global left_render_after_id
+        batch = test_rows[start_index:start_index + batch_size]
+        for row_index, original_path, display_name in batch:
+            add_test_checkbox(original_path, display_name, row_index)
+        if start_index + batch_size < len(test_rows):
+            left_render_after_id = app.after_idle(lambda: process_batch(start_index + batch_size, batch_size))
+        else:
+            left_render_after_id = None
+            update_left_selected_counter()
+
+    process_batch()
 
 
 def apply_filter():
@@ -990,6 +1027,16 @@ def apply_filter():
             clear_filter_button.grid()
         else:
             clear_filter_button.grid_remove()
+
+
+def apply_filter_debounced(delay_ms=350):
+    global filter_after_id
+    if filter_after_id:
+        try:
+            app.after_cancel(filter_after_id)
+        except Exception:
+            pass
+    filter_after_id = app.after(delay_ms, apply_filter)
 
 
 def select_all_tests():
@@ -1011,11 +1058,12 @@ def get_selected_tests():
 # =============================================================================
 # Montagem do comando
 # =============================================================================
-def build_pytest_command():
+def build_pytest_command(selected_tests=None):
     global last_junit_xml_path
     cmd = [get_python_executable(), "-m", "pytest"]
 
-    selected_tests = get_selected_tests()
+    if selected_tests is None:
+        selected_tests = get_selected_tests()
     if selected_tests:
         cmd.extend(selected_tests)
 
@@ -1110,17 +1158,22 @@ def run_tests():
     if not validate_before_run():
         return
 
+    selected_tests = get_selected_tests()
+
     python_exec = get_python_executable()
     if not Path(python_exec).exists():
         messagebox.showerror("Erro", "Não foi encontrado um executável Python válido.")
         return
 
-    cmd = build_pytest_command()
+    cmd = build_pytest_command(selected_tests)
     if not cmd:
         return
     cmd_text = command_to_string(cmd)
     last_run_command = cmd_text
-    last_selected_tests = get_selected_tests()
+    last_selected_tests = list(selected_tests)
+
+    if clear_selection_var.get():
+        deselect_all_tests()
 
     set_command_preview(cmd_text)
     clear_logs()
@@ -1287,13 +1340,14 @@ def stop_tests():
 
 def poll_log_queue():
     global process
+    log_buffer = []
 
     try:
         while True:
             item_type, payload = log_queue.get_nowait()
 
             if item_type == "log":
-                append_log(payload)
+                log_buffer.append(payload)
 
             elif item_type == "summary":
                 total, passed, failed, skipped = payload
@@ -1304,6 +1358,9 @@ def poll_log_queue():
                 run_button.configure(state="normal")
                 stop_button.configure(state="disabled")
 
+                if clear_selection_var and clear_selection_var.get():
+                    deselect_all_tests()
+
                 if return_code == 0:
                     set_status("execução concluída com sucesso", "success")
                 else:
@@ -1312,12 +1369,16 @@ def poll_log_queue():
                 append_log(f"\n[PROCESSO FINALIZADO] Código de saída: {return_code}\n")
 
             elif item_type == "history_updated":
-                rebuild_history_table()
+                if history_window and tk.Toplevel.winfo_exists(history_window):
+                    rebuild_history_table()
 
     except queue.Empty:
         pass
 
-    app.after(100, poll_log_queue)
+    if log_buffer:
+        append_log("".join(log_buffer))
+
+    app.after(250, poll_log_queue)
 
 
 # =============================================================================
@@ -1739,38 +1800,90 @@ def open_history_window():
         return f"{day_var.get()}/{month_var.get()}/{year_var.get()}"
 
     def open_date_picker(target):
+        if Calendar is None:
+            messagebox.showerror(
+                "Calendário",
+                "Dependência 'tkcalendar' não encontrada.\nInstale com: pip install tkcalendar"
+            )
+            return
+
         picker = ctk.CTkToplevel(history_window)
         picker.title("Selecionar data")
-        picker.geometry("280x200")
+        picker.geometry("380x420")
         picker.configure(fg_color=COLOR_BG)
         picker.transient(history_window)
         picker.attributes("-topmost", True)
-
-        day_values = ["DD"] + [f"{i:02d}" for i in range(1, 32)]
-        month_values = ["MM"] + [f"{i:02d}" for i in range(1, 13)]
-        year_values = get_history_year_choices()
-
-        ctk.CTkLabel(picker, text="Escolha dia/mês/ano", text_color=COLOR_TEXT).pack(pady=8)
 
         if target == "start":
             d_var, m_var, y_var = history_start_day_var, history_start_month_var, history_start_year_var
         else:
             d_var, m_var, y_var = history_end_day_var, history_end_month_var, history_end_year_var
 
-        day_menu = ctk.CTkOptionMenu(picker, variable=d_var, values=day_values, fg_color=COLOR_PLACEHOLDER, button_color=COLOR_PLACEHOLDER, button_hover_color=COLOR_PLACEHOLDER, text_color=COLOR_TEXT)
-        month_menu = ctk.CTkOptionMenu(picker, variable=m_var, values=month_values, fg_color=COLOR_PLACEHOLDER, button_color=COLOR_PLACEHOLDER, button_hover_color=COLOR_PLACEHOLDER, text_color=COLOR_TEXT)
-        year_menu = ctk.CTkOptionMenu(picker, variable=y_var, values=year_values, fg_color=COLOR_PLACEHOLDER, button_color=COLOR_PLACEHOLDER, button_hover_color=COLOR_PLACEHOLDER, text_color=COLOR_TEXT)
-        day_menu.pack(pady=4)
-        month_menu.pack(pady=4)
-        year_menu.pack(pady=4)
+        selected_date = build_date_from_select(d_var.get(), m_var.get(), y_var.get()) or datetime.now().date()
+        try:
+            cal = Calendar(
+                picker,
+                selectmode="day",
+                year=selected_date.year,
+                month=selected_date.month,
+                day=selected_date.day,
+                date_pattern="dd/mm/yyyy",
+                firstweekday="sunday",
+                showweeknumbers=False,
+                locale="pt_BR"
+            )
+        except Exception as e:
+            messagebox.showwarning("Calendário", f"Locale pt_BR indisponível ({e}). Usando padrão.")
+            cal = Calendar(
+                picker,
+                selectmode="day",
+                year=selected_date.year,
+                month=selected_date.month,
+                day=selected_date.day,
+                date_pattern="dd/mm/yyyy",
+                firstweekday="sunday",
+                showweeknumbers=False
+            )
+        cal.pack(pady=12, padx=10, fill="both", expand=True)
 
-        def _confirm():
+        buttons_frame = ctk.CTkFrame(picker, fg_color="transparent")
+        buttons_frame.pack(pady=8, padx=10, fill="x")
+        buttons_frame.grid_columnconfigure((0, 1, 2), weight=1)
+
+        def _set_vars_from_date(date_obj):
+            d_var.set(f"{date_obj.day:02d}")
+            m_var.set(f"{date_obj.month:02d}")
+            y_var.set(str(date_obj.year))
+            start_label_btn.configure(text=_date_label(history_start_day_var, history_start_month_var, history_start_year_var, "Início"))
+            end_label_btn.configure(text=_date_label(history_end_day_var, history_end_month_var, history_end_year_var, "Fim"))
+            on_history_filter_change()
+
+        def _apply():
+            try:
+                chosen = cal.selection_get()
+            except Exception:
+                chosen = datetime.now().date()
+            _set_vars_from_date(chosen)
+            picker.destroy()
+
+        def _today():
+            today = datetime.now().date()
+            cal.selection_set(today)
+            _set_vars_from_date(today)
+            picker.destroy()
+
+        def _clear():
+            d_var.set("DD")
+            m_var.set("MM")
+            y_var.set("AAAA")
             start_label_btn.configure(text=_date_label(history_start_day_var, history_start_month_var, history_start_year_var, "Início"))
             end_label_btn.configure(text=_date_label(history_end_day_var, history_end_month_var, history_end_year_var, "Fim"))
             picker.destroy()
             on_history_filter_change()
 
-        ctk.CTkButton(picker, text="Aplicar", command=_confirm, fg_color=COLOR_PRIMARY, hover_color=COLOR_PRIMARY_HOVER).pack(pady=8)
+        ctk.CTkButton(buttons_frame, text="Hoje", command=_today, fg_color=COLOR_CARD, hover_color=COLOR_PRIMARY_HOVER, text_color=COLOR_TEXT).grid(row=0, column=0, padx=6, sticky="ew")
+        ctk.CTkButton(buttons_frame, text="Limpar", command=_clear, fg_color=COLOR_CARD, hover_color=COLOR_PRIMARY_HOVER, text_color=COLOR_TEXT).grid(row=0, column=1, padx=6, sticky="ew")
+        ctk.CTkButton(buttons_frame, text="Aplicar", command=_apply, fg_color=COLOR_PRIMARY, hover_color=COLOR_PRIMARY_HOVER, text_color=COLOR_TEXT).grid(row=0, column=2, padx=6, sticky="ew")
 
     def apply_today_filter():
         if today_checkbox_var.get():
@@ -1990,6 +2103,7 @@ def create_ui():
     global history_end_day_var, history_end_month_var, history_end_year_var
     global today_checkbox_var
     global delete_selected_btn, delete_all_btn
+    global clear_selection_var
 
     app = ctk.CTk(fg_color=COLOR_BG)
     app.title("Executor de Testes")
@@ -2031,6 +2145,7 @@ def create_ui():
     history_end_day_var = tk.StringVar(value="DD")
     history_end_month_var = tk.StringVar(value="MM")
     history_end_year_var = tk.StringVar(value="AAAA")
+    clear_selection_var = tk.BooleanVar(value=True)
 
     custom_device_var.trace_add("write", on_custom_device_change)
     custom_resolution_var.trace_add("write", on_custom_resolution_change)
@@ -2091,6 +2206,7 @@ def create_ui():
         text_color=COLOR_TEXT
     )
     filter_entry.grid(row=0, column=0, sticky="ew", padx=(0, 8))
+    filter_entry.bind("<KeyRelease>", lambda _e: apply_filter_debounced())
 
     filter_button = ctk.CTkButton(
         filter_frame,
@@ -2147,6 +2263,17 @@ def create_ui():
         text_color=COLOR_TEXT
     )
     unmark_all_button.grid(row=1, column=1, padx=(5, 0), sticky="ew")
+
+    clear_selection_checkbox = ctk.CTkCheckBox(
+        top_actions_frame,
+        text="Limpar seleção ao executar",
+        variable=clear_selection_var,
+        fg_color=COLOR_PRIMARY,
+        hover_color=COLOR_PRIMARY_HOVER,
+        border_color=COLOR_BORDER,
+        text_color=COLOR_TEXT
+    )
+    clear_selection_checkbox.grid(row=2, column=0, columnspan=2, pady=(8, 0), sticky="w")
 
     left_tests_frame = ctk.CTkScrollableFrame(
         left_panel,
@@ -2460,4 +2587,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
