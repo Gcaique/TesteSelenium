@@ -8,6 +8,15 @@ from helpers.actions import click_when_clickable
 from locators.common import (REGION_OPEN, BTN_SUL_REGION, BTN_DEFAULT_REGION, REGION_MODAL, MOBILE_REGION_OPEN)
 from locators.header import (SEARCH_INPUT)
 
+DEFAULT_CNPJ = "13.446.703/0001-90"
+SUL_CNPJ = "36.454.420/0001-95"
+
+
+def cnpj_por_regiao(region: str) -> str:
+    region_lower = region.lower()
+    if region_lower not in ["sul", "default"]:
+        raise ValueError("region deve ser 'default' ou 'sul'")
+    return SUL_CNPJ if region_lower == "sul" else DEFAULT_CNPJ
 
 
 def open_region_modal(driver):
