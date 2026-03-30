@@ -88,3 +88,9 @@ def validate_user_dropdown_mobile(driver, wait):
     open_dropdown_item_mobile(driver, MOBILE_DD_MINHAS_MISSOES, timeout=15)
     wait.until(lambda d: "/rewardquests/customer/missions/" in d.current_url)
     time.sleep(2)
+
+    # Privacidade e dados
+    open_dropdown_item_mobile(driver, MOBILE_DD_PRIVACIDADE_DADOS, timeout=15)
+    wait.until(lambda d: "/consent/customer/" in d.current_url)
+    time.sleep(2)
+

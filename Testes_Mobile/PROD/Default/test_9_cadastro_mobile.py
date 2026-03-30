@@ -20,7 +20,7 @@ USER_EMAIL = "automatizacao@smoketesting.com"
 def test_9_cadastro_mobile(driver, setup_site, wait):
     # 1 - Iniciar cadastro
     click_if_present(driver, COOKIE_ACCEPT, seconds=20)
-    iniciar_fluxo_cadastro_mobile(driver, wait)
+    iniciar_fluxo_cadastro_mobile(driver, wait, regiao="default")
 
     # 2 - Preencher dados empresa
     preencher_dados_empresa(driver, wait, email_cliente=USER_EMAIL)
