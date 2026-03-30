@@ -6,13 +6,15 @@ from selenium.webdriver.common.keys import Keys
 
 from helpers.dropdown import mobile_open_quero_ser_cliente_from_dropdown
 from helpers.actions import click_when_clickable
+from helpers.region import cnpj_por_regiao
 
 from locators.cadastro import *
 from locators.header import BTN_QUERO_SER_CLIENTE
 
 
-def iniciar_fluxo_cadastro(driver, wait, cnpj="13.446.703/0001-90"):
+def iniciar_fluxo_cadastro(driver, wait, regiao):
     "Iniciar cadastro"
+    cnpj = cnpj_por_regiao(regiao)
     btn_home = wait.until(EC.element_to_be_clickable(BTN_QUERO_SER_CLIENTE))
     driver.execute_script("arguments[0].click();", btn_home)
 
@@ -44,6 +46,15 @@ def preencher_dados_empresa(driver, wait, email_cliente):
     wait.until(EC.visibility_of_element_located(INPUT_CELULAR)).send_keys("11999999999")
     wait.until(EC.visibility_of_element_located(INPUT_TELEFONE)).send_keys("1133333333")
 
+    driver.execute_script(
+        "arguments[0].click();",
+        wait.until(EC.presence_of_element_located(SWITCH_TELEFONE_PRINCIPAL))
+    )
+
+    driver.execute_script(
+        "arguments[0].click();",
+        wait.until(EC.presence_of_element_located(CHECKBOX_TELEFONE_WHATSAPP))
+    )
 
     driver.execute_script(
         "arguments[0].click();",
@@ -52,13 +63,18 @@ def preencher_dados_empresa(driver, wait, email_cliente):
 
     driver.execute_script(
         "arguments[0].click();",
-        wait.until(EC.presence_of_element_located(SWITCH_CELULAR_WHATSAPP))
+        wait.until(EC.presence_of_element_located(CHECKBOX_CELULAR_WHATSAPP))
     )
 
     wait.until(EC.visibility_of_element_located(INPUT_PASSWORD)).send_keys("Min@1234")
     wait.until(EC.visibility_of_element_located(INPUT_PASSWORD_CONFIRM)).send_keys("Min@1234")
 
     Select(wait.until(EC.visibility_of_element_located(SELECT_TIPOLOGIA))).select_by_index(1)
+
+    driver.execute_script(
+        "arguments[0].click();",
+        wait.until(EC.presence_of_element_located(CHECKBOX_TERMOS))
+    )
 
     continuar(driver, wait)
 
@@ -88,32 +104,38 @@ def validar_token_valido(driver, wait):
     # Fotos → Criar Conta
     continuar(driver, wait)
 
-    # Criar Conta → aceitar termos
-    aceitar_termos(driver, wait)
-
-    continuar(driver, wait)
-
-    # Agora estamos na Revisão
+    # Revisão
     wait.until(EC.presence_of_element_located(BTN_CRIAR_CONTA))
-
-
-def aceitar_termos(driver, wait):
-    "Aceitar termos"
-    wait.until(EC.presence_of_element_located(CHECKBOX_TERMOS))
-
-    driver.execute_script("""
-        var checkbox = document.getElementById('terms_accepted');
-        if (checkbox) {
-            checkbox.checked = true;
-            checkbox.dispatchEvent(new Event('change', { bubbles: true }));
-        }
-    """)
 
 
 def finalizar_cadastro(driver, wait):
     "Finalizar cadastro step Revisão"
     # Scroll até o final da página
     driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+
+    # Checkbox Marcar todas
+    driver.execute_script(
+        "arguments[0].click();",
+        wait.until(EC.presence_of_element_located(CHECK_MARCAR_TODAS))
+    )
+
+    # Checkbox WhatsApp
+    driver.execute_script(
+        "arguments[0].click();",
+        wait.until(EC.presence_of_element_located(CHECK_WHATSAPP))
+    )
+
+    # Checkbox SMS
+    driver.execute_script(
+        "arguments[0].click();",
+        wait.until(EC.presence_of_element_located(CHECK_SMS))
+    )
+
+    # Checkbox E-mail
+    driver.execute_script(
+        "arguments[0].click();",
+        wait.until(EC.presence_of_element_located(CHECK_EMAIL))
+    )
 
     # Espera botão Criar Conta ficar clicável
     botao_criar = wait.until(
@@ -137,8 +159,9 @@ def finalizar_cadastro(driver, wait):
 #---------------------------------------------------------------
 # 📱 MOBILE
 #---------------------------------------------------------------
-def iniciar_fluxo_cadastro_mobile(driver, wait, cnpj="13.446.703/0001-90"):
+def iniciar_fluxo_cadastro_mobile(driver, wait, regiao):
     "Iniciar cadastro"
+    cnpj = cnpj_por_regiao(regiao)
     mobile_open_quero_ser_cliente_from_dropdown(driver)
 
     campo = wait.until(EC.visibility_of_element_located(INPUT_CNPJ))

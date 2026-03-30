@@ -20,7 +20,7 @@ USER_EMAIL = "automatizacao@smoketesting.com"
 @pytest.mark.cadastro
 def test_9_cadastro(driver, setup_site, wait):
     # 1 - Iniciar cadastro
-    iniciar_fluxo_cadastro(driver, wait)
+    iniciar_fluxo_cadastro(driver, wait, regiao="default")
 
     # 2 - Preencher dados empresa
     preencher_dados_empresa(driver, wait, email_cliente=USER_EMAIL)

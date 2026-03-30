@@ -8,6 +8,7 @@ DD_FAVORITOS = (By.XPATH, "//*[@id='login-dropdown']//a[normalize-space(text())=
 DD_MEUS_PONTOS = (By.XPATH, "//*[@id='login-dropdown']//a[normalize-space(text())='Meus pontos']")
 DD_MEUS_CUPONS = (By.XPATH, "//*[@id='login-dropdown']//a[normalize-space(text())='Meus cupons']")
 DD_MINHAS_MISSOES = (By.XPATH, "//*[@id='login-dropdown']//a[contains(normalize-space(text()), 'Minhas miss')]")
+DD_PRIVACIDADE_DADOS = (By.XPATH, "//*[@id='login-dropdown']//a[contains(normalize-space(text()), 'Privacidade e dados')]")
 
 # Login (modal no header)
 LOGIN_NAME_CONTAINER = (By.ID, "login-name")  # área do usuário (logado)
@@ -64,4 +65,5 @@ MOBILE_DD_FAVORITOS = (By.XPATH, "//div[@id='login-dropdown']//a[normalize-space
 MOBILE_DD_MEUS_PONTOS = (By.CSS_SELECTOR, "#login-dropdown a[href*='reward']")
 MOBILE_DD_MEUS_CUPONS = (By.XPATH, "//div[@id='login-dropdown']//a[normalize-space(.)='Meus cupons']")
 MOBILE_DD_MINHAS_MISSOES = (By.CSS_SELECTOR, "#login-dropdown a[href*='mission']")
+MOBILE_DD_PRIVACIDADE_DADOS = (By.CSS_SELECTOR, "#login-dropdown a[href*='consent']")
 MOBILE_DD_SAIR = (By.CSS_SELECTOR, "#login-dropdown a[href*='logout']")

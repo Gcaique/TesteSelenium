@@ -25,7 +25,7 @@ from locators.pdp import (
 from locators.cart import VIEWCART, EMPTY_CART_BTN, EMPTY_CART_CONFIRM, VER_CATALOGO, MINICART_ICON, MINICART_ACTIVE, MINICART_CLOSE
 from locators.header import (
     DD_MINHA_CONTA, DD_COMPARAR, DD_MEUS_PEDIDOS,
-    DD_FAVORITOS, DD_MEUS_PONTOS, DD_MEUS_CUPONS, DD_MINHAS_MISSOES
+    DD_FAVORITOS, DD_MEUS_PONTOS, DD_MEUS_CUPONS, DD_MINHAS_MISSOES, DD_PRIVACIDADE_DADOS
 )
 
 
@@ -53,6 +53,8 @@ def test_3_user_logado(driver, setup_site):
     open_dropdown_item(driver, DD_MEUS_PONTOS, timeout=15)
     open_dropdown_item(driver, DD_MEUS_CUPONS, timeout=15)
     open_dropdown_item(driver, DD_MINHAS_MISSOES, timeout=15)
+    time.sleep(2)
+    open_dropdown_item(driver, DD_PRIVACIDADE_DADOS, timeout=15)
     time.sleep(2)
 
     # 3) Troca de região: default -> sul -> default
