@@ -95,7 +95,13 @@ def test_18_dashboard_mobile_sul(driver, setup_site, wait):
     mobile_click_strict(driver, MOBILE_NAV_MINHAS_MISSOES, timeout=12, retries=4, sleep_between=0.25)
     visible(driver, MISSIONS_READY, timeout=25)
 
-    # 13) Info da conta: whatsapp + editar email
+    # 13) Privacidade e dados + volta para home + acessar minha conta
+    open_minha_conta_mobile(driver, timeout=20)
+    mobile_click_strict(driver, MOBILE_NAV_PRIVACIDADE_DADOS, timeout=12, retries=4, sleep_between=0.25)
+    privacidade_dados_mobile(driver, wait)
+    open_my_account(driver, wait)
+
+    # 14) Info da conta: whatsapp + editar email
 
     # WhatsApp
     open_minha_conta_mobile(driver, timeout=20)
@@ -105,10 +111,10 @@ def test_18_dashboard_mobile_sul(driver, setup_site, wait):
     # Alterar email
     account_change_email_flow_mobile(driver, wait, new_email=NEW_EMAIL, current_password=VALID_PASS)
 
-    # 14) Troca senha (aplica)
+    # 15) Troca senha (aplica)
     change_password_flow_mobile(driver, wait, current_password=VALID_PASS, new_password=NEW_PASS)
 
-    # 15) Logout e validações de login
+    # 16) Logout e validações de login
     logout_mobile(driver)
 
     # email antigo não encontrado

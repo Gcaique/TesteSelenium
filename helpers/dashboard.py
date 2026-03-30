@@ -18,6 +18,7 @@ from locators.checkout import *
 from locators.header import *
 from locators.dashboard import *
 from locators.common import *
+from locators.cadastro import CHECK_MARCAR_TODAS, CHECK_WHATSAPP, CHECK_SMS, CHECK_EMAIL
 
 
 # ---------------------------
@@ -203,6 +204,22 @@ def misssoes_flow(driver, wait):
     scroll_and_safe_click_loc(driver, wait, NAV_MINHAS_MISSOES, timeout=12)
     visible(driver, MISSIONS_READY, timeout=25)
 
+
+def privacidade_dados(driver, wait):
+    scroll_and_safe_click_loc(driver, wait, NAV_PRIVACIDADE_DADOS, timeout=12)
+    visible(driver, CHECK_MARCAR_TODAS, timeout=12)
+
+    safe_click_loc(driver, wait, CHECK_SMS, timeout=12)
+    time.sleep(1)
+
+    safe_click_loc(driver, wait, BTN_SALVAR_PREVERENCIAS, timeout=12)
+    time.sleep(1)
+
+    visible(driver, BTN_IR_PARA_HOME_LGPD, timeout=12)
+    safe_click_loc(driver, wait, BTN_IR_PARA_HOME_LGPD, timeout=12)
+
+    # Aguardando home page carregar
+    time.sleep(5)
 
 # ---------------------------
 # INFO DA CONTA: WHATSAPP + EMAIL + SENHA
@@ -519,6 +536,21 @@ def apply_meus_cupons_filter_mobile(driver, wait, value: str, retries: int = 3) 
 
     return False
 
+
+def privacidade_dados_mobile(driver, wait):
+    mobile_click_strict(driver, CHECK_SMS, 12, 4, 0.25)
+    time.sleep(1)
+
+    mobile_click_strict(driver, BTN_SALVAR_PREVERENCIAS, 12, 4, 0.25)
+    time.sleep(1)
+
+    visible(driver, BTN_IR_PARA_HOME_LGPD, timeout=12)
+    mobile_click_strict(driver, BTN_IR_PARA_HOME_LGPD, 12, 4, 0.25)
+
+    # Aguardando home page carregar
+    time.sleep(5)
+
+
 def account_whatsapp_toggle_flow_mobile(driver, wait):
     """
     - Clica em 'Definir como principal'
@@ -561,7 +593,7 @@ def account_change_email_flow_mobile(driver, wait, new_email, current_password):
     fill_input(driver, wait, CURRENT_PASSWORD, current_password, timeout=12)
 
     mobile_click_strict(driver, BTN_SAVE_ACCOUNT_INFO, timeout=12, retries=4, sleep_between=0.25)
-    time.sleep(5)
+    visible(driver, ALERT_SUCCESS, timeout=20)
 
     # cancelar (volta estado)
     mobile_click_strict(driver, BTN_CANCEL_ACCOUNT, timeout=12, retries=4, sleep_between=0.25)

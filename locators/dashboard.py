@@ -10,6 +10,7 @@ NAV_MEUS_PONTOS = (By.XPATH, "//*[@id='block-collapsible-nav']//*[normalize-spac
 NAV_CADASTRO_REDES = (By.XPATH, "//*[@id='block-collapsible-nav']//*[normalize-space()='Cadastro de redes']")
 NAV_MEUS_CUPONS = (By.XPATH, "//*[@id='block-collapsible-nav']//*[normalize-space()='Meus cupons']")
 NAV_MINHAS_MISSOES = (By.XPATH, "//*[@id='block-collapsible-nav']//*[normalize-space()= 'Minhas missões']")
+NAV_PRIVACIDADE_DADOS = (By.XPATH, "//*[@id='block-collapsible-nav']//a[contains(normalize-space(text()),'Privacidade')]")
 NAV_INFO_CONTA = (By.XPATH, "//*[@id='block-collapsible-nav']//a[contains(normalize-space(),'Informa')]")
 
 # MINHA CONTA endereços
@@ -78,6 +79,10 @@ COUPON_COPY_1 = (By.XPATH, "(//*[@class='coupon-content']//span[@class='code-cop
 TAB_UNAVAILABLE = (By.XPATH, "//li[contains(@class,'unavailable')]/a")
 COUPON_FILTER_SELECT = (By.XPATH, "//*[@class='filter-select']")
 
+# PRIVACIDADE E DADOS
+BTN_SALVAR_PREVERENCIAS = (By.XPATH, "//button[@id='ecom:customer_consent:preferences_actions:button_save_preferences']")
+BTN_IR_PARA_HOME_LGPD = (By.XPATH, "//button[@id='ecom:customer_consent:modal_actions:button_accept']")
+
 # INFORMAÇÕES DA CONTA (editar email/senha)
 BTN_EDIT_EMAIL = (By.XPATH, "//label[@for='change-email']//span[normalize-space()='Editar']")
 BTN_EDIT_PASSWORD = (By.XPATH, "//label[@for='change-password']//span[normalize-space()='Editar']")
@@ -117,6 +122,7 @@ MOBILE_NAV_MEUS_PONTOS = (By.CSS_SELECTOR, "#block-collapsible-nav ul.nav.items 
 MOBILE_NAV_CADASTRO_REDES = (By.CSS_SELECTOR, "#block-collapsible-nav ul.nav.items li.nav.item a[href$='/customergrouping/customer/index/']")
 MOBILE_NAV_MEUS_CUPONS = (By.CSS_SELECTOR, "#block-collapsible-nav ul.nav.items li.nav.item a[href$='/mycoupons/customer/coupons/']")
 MOBILE_NAV_MINHAS_MISSOES = (By.CSS_SELECTOR, "#block-collapsible-nav ul.nav.items li.nav.item a[href$='/rewardquests/customer/missions/']")
+MOBILE_NAV_PRIVACIDADE_DADOS = (By.CSS_SELECTOR, "#block-collapsible-nav ul.nav.items li.nav.item a[href$='/consent/customer/']")
 
 # MEUS PEDIDOS (Pedidos)
 MOBILE_FIRST_ORDER_DETAILS = (By.XPATH, "(//tr[contains(@class,'mobile-only')]//a[contains(@class,'view')])[1]")
