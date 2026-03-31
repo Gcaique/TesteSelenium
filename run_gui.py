@@ -31,7 +31,19 @@ except Exception:
 # =============================================================================
 PROJECT_ROOT = Path(__file__).resolve().parent
 TEST_DIRS = [PROJECT_ROOT / "Testes", PROJECT_ROOT / "Testes_Mobile"]
-VENV_PYTHON = PROJECT_ROOT / ".venv" / "Scripts" / "python.exe"
+TEST_PLANS_FILE = PROJECT_ROOT / "test_plans.json"
+PLAN_PLACEHOLDER = "Selecione o plano"
+
+# Armazena planos carregados do JSON (fallback para default embutido).
+TEST_PLANS = {}
+PLAN_LABEL_TO_KEY = {}
+
+# Detecta o caminho correto do Python do venv baseado no sistema operacional
+if sys.platform == "win32":
+    VENV_PYTHON = PROJECT_ROOT / ".venv" / "Scripts" / "python.exe"
+else:
+    # Linux/macOS
+    VENV_PYTHON = PROJECT_ROOT / ".venv" / "bin" / "python"
 
 
 def _require_project_venv():
@@ -41,10 +53,15 @@ def _require_project_venv():
 
     # Alert also when the venv python does not exist (setup issue).
     if not expected.exists() or current != expected:
+        if sys.platform == "win32":
+            setup_cmd = "python -m venv .venv && .venv\\Scripts\\activate && pip install -r requirements.txt"
+        else:
+            setup_cmd = "python3 -m venv .venv && source .venv/bin/activate && pip install -r requirements.txt"
         msg = (
             "Use o Python do venv para executar o GUI.\n"
             f"Esperado: {expected}\n"
-            f"Atual:    {current}"
+            f"Atual:    {current}\n\n"
+            f"Para criar o venv, execute:\n{setup_cmd}"
         )
         try:
             # Avoid full Tk init; show a simple error dialog if possible.
@@ -224,6 +241,8 @@ record_checkbox = None
 custom_url_var = None
 build_name_var = None
 target_env_var = None
+plan_var = None
+plan_option_menu = None
 custom_url_label_widget = None
 custom_url_entry_widget = None
 ambiente_option_menu = None
@@ -276,6 +295,53 @@ def extract_test_number(path_str):
     return 999999
 
 
+def _default_test_plans():
+    """Fallback caso o JSON de planos não exista ou falhe."""
+    try:
+        with open(TEST_PLANS_FILE, "r", encoding="utf-8") as f:
+            data = json.load(f)
+            return data
+    except Exception:
+        return {
+            "smoke": {
+                "label": "Smoke",
+                "markers": "",
+                "paths": []
+            },
+            "regression": {
+                "label": "Regressão",
+                "markers": "",
+                "paths": []
+            }
+        }
+
+
+def load_test_plans():
+    global TEST_PLANS, PLAN_LABEL_TO_KEY
+    TEST_PLANS = _default_test_plans()
+    PLAN_LABEL_TO_KEY = {PLAN_PLACEHOLDER: None}
+    for key, cfg in TEST_PLANS.items():
+        label = cfg.get("label") or key
+        PLAN_LABEL_TO_KEY[label] = key
+
+
+def get_plan_option_values():
+    return [PLAN_PLACEHOLDER] + [cfg.get("label") or key for key, cfg in TEST_PLANS.items()]
+
+
+def refresh_test_plans():
+    current_label = plan_var.get() if 'plan_var' in globals() and plan_var else PLAN_PLACEHOLDER
+    load_test_plans()
+    new_values = get_plan_option_values()
+    if plan_option_menu:
+        plan_option_menu.configure(values=new_values)
+    if current_label not in PLAN_LABEL_TO_KEY:
+        plan_var.set(PLAN_PLACEHOLDER)
+    apply_menu_style(plan_option_menu, plan_var.get() == PLAN_PLACEHOLDER)
+    rebuild_left_tests(test_filter_var.get())
+    update_left_selected_counter()
+
+
 def build_test_sort_key(path_str):
     path_obj = Path(path_str)
     file_name = path_obj.name.lower()
@@ -315,6 +381,23 @@ def command_to_string(cmd):
         else:
             parts.append(item)
     return " ".join(parts)
+
+
+def normalize_test_path(path_str):
+    return path_str.replace("\\", "/")
+
+
+def get_current_plan_key():
+    label = plan_var.get() if 'plan_var' in globals() else PLAN_PLACEHOLDER
+    return PLAN_LABEL_TO_KEY.get(label)
+
+
+def get_plan_paths_set(plan_key):
+    if not plan_key:
+        return set()
+    plan_cfg = TEST_PLANS.get(plan_key, {})
+    paths = plan_cfg.get("paths") or []
+    return {normalize_test_path(p).lower() for p in paths}
 
 
 def append_log(text):
@@ -375,7 +458,9 @@ def parse_junit_xml_results(xml_path):
         "total": [],
         "passed": [],
         "failed": [],
-        "skipped": []
+        "skipped": [],
+        "failed_logs": {},
+        "failed_log_blocks": {},
     }
 
     if not xml_path or not Path(xml_path).exists():
@@ -396,8 +481,79 @@ def parse_junit_xml_results(xml_path):
 
             results["total"].append(test_name)
 
-            if testcase.find("failure") is not None or testcase.find("error") is not None:
+            failure_node = testcase.find("failure")
+            error_node = testcase.find("error")
+
+            def _first_meaningful_line(node):
+                if node is None:
+                    return ""
+                message_attr = node.attrib.get("message", "") or ""
+                if message_attr.strip():
+                    return message_attr.strip()
+
+                text = (node.text or "")
+                candidates = []
+                for line in text.splitlines():
+                    clean = line.strip()
+                    if not clean:
+                        continue
+                    if set(clean) <= {"-"} and len(clean) >= 5:
+                        continue
+                    if clean.startswith(">"):
+                        clean = clean.lstrip(">").strip()
+                    candidates.append(clean)
+
+                for ln in candidates:
+                    if ".py:" in ln:
+                        return ln
+                for ln in candidates:
+                    if ln.startswith("E "):
+                        return ln[2:].strip()
+                return candidates[0] if candidates else ""
+
+            def _extract_log_block(node, limit=40):
+                if node is None:
+                    return []
+                text = node.text or ""
+                raw_lines = [ln.rstrip() for ln in text.splitlines()]
+
+                start_idx = None
+                for idx, ln in enumerate(raw_lines):
+                    if ln.lstrip().startswith(">"):
+                        start_idx = idx
+                        break
+                if start_idx is None:
+                    for idx, ln in enumerate(raw_lines):
+                        if ln.strip():
+                            start_idx = idx
+                            break
+                if start_idx is None:
+                    return []
+
+                end_idx = len(raw_lines)
+                for idx in range(start_idx + 1, len(raw_lines)):
+                    stripped = raw_lines[idx].lstrip()
+                    if stripped.startswith("self") or stripped.startswith("self ="):
+                        end_idx = idx
+                        break
+
+                block = []
+                for ln in raw_lines[start_idx:end_idx]:
+                    if ln.strip():
+                        block.append(ln)
+                    if len(block) >= limit:
+                        break
+                return block
+
+            if failure_node is not None or error_node is not None:
                 results["failed"].append(test_name)
+                chosen_node = failure_node if failure_node is not None else error_node
+                line = _first_meaningful_line(chosen_node)
+                if line:
+                    results["failed_logs"][test_name] = line
+                block = _extract_log_block(chosen_node)
+                if block:
+                    results["failed_log_blocks"][test_name] = block
             elif testcase.find("skipped") is not None:
                 results["skipped"].append(test_name)
             else:
@@ -843,6 +999,12 @@ def on_ambiente_change(*_args):
             custom_resolution_entry.grid_remove()
 
 
+def on_plan_change(*_args):
+    apply_menu_style(plan_option_menu, plan_var.get() == PLAN_PLACEHOLDER)
+    rebuild_left_tests(test_filter_var.get())
+    update_left_selected_counter()
+
+
 # =============================================================================
 # Testes da coluna esquerda
 # =============================================================================
@@ -897,6 +1059,9 @@ def rebuild_left_tests(filter_text=""):
 
     filter_text = (filter_text or "").strip().lower()
 
+    plan_key = get_current_plan_key()
+    plan_paths_set = get_plan_paths_set(plan_key)
+
     ambiente = (ambiente_var.get() or "").lower()
     ambiente_filter = None
     if ambiente == "desktop":
@@ -915,7 +1080,10 @@ def rebuild_left_tests(filter_text=""):
         if filter_text and filter_text not in display_name.lower():
             continue
 
-        normalized_path = test_path.replace("\\", "/").lower()
+        normalized_path = normalize_test_path(test_path).lower()
+
+        if plan_paths_set and normalized_path not in plan_paths_set:
+            continue
 
         if normalized_path.startswith("testes_mobile/"):
             platform = "Mobile"
@@ -1069,6 +1237,9 @@ def build_pytest_command(selected_tests=None):
     if selected_tests:
         cmd.extend(selected_tests)
 
+    plan_key = get_current_plan_key()
+    plan_cfg = TEST_PLANS.get(plan_key, {}) if plan_key else {}
+
     # Paralelismo automático baseado na quantidade de testes
     num_tests = len(selected_tests)
 
@@ -1118,6 +1289,10 @@ def build_pytest_command(selected_tests=None):
 
     if device and device_choice_var.get() != DEVICE_PLACEHOLDER:
         cmd.extend(["--device", device])
+
+    plan_marker = plan_cfg.get("markers", "").strip() if plan_cfg else ""
+    if plan_marker:
+        cmd.extend(["-m", plan_marker])
 
     if headless:
         cmd.append("--headless")
@@ -1262,6 +1437,12 @@ def read_process_output():
     passed_list = [format_result_test_name(t) for t in test_results_by_status.get("passed", [])]
     failed_list = [format_result_test_name(t) for t in test_results_by_status.get("failed", [])]
     skipped_list = [format_result_test_name(t) for t in test_results_by_status.get("skipped", [])]
+    failed_logs_map = {}
+    for raw_name, log_line in test_results_by_status.get("failed_logs", {}).items():
+        failed_logs_map[format_result_test_name(raw_name)] = log_line
+    failed_blocks_map = {}
+    for raw_name, block in test_results_by_status.get("failed_log_blocks", {}).items():
+        failed_blocks_map[format_result_test_name(raw_name)] = block
     entry = {
         "id": timestamp,
         "timestamp": timestamp,
@@ -1285,6 +1466,8 @@ def read_process_output():
         "tests_passed": passed_list,
         "tests_failed": failed_list,
         "tests_skipped": skipped_list,
+        "tests_failed_logs": failed_logs_map,
+        "tests_failed_log_blocks": failed_blocks_map,
     }
     add_history_entry(entry)
     log_queue.put(("history_updated", None))
@@ -1475,6 +1658,57 @@ def create_labeled_option(parent, label_text, variable, values, row, column):
     )
     option.grid(row=row + 1, column=column, padx=10, pady=(0, 10), sticky="ew")
     return option
+
+
+def attach_tooltip(widget, text):
+    """Exibe um tooltip simples, abrindo e fechando com clique no widget."""
+
+    tooltip_state = {"win": None}
+
+    def show_tooltip():
+        if tooltip_state["win"]:
+            return False
+
+        win = ctk.CTkToplevel(widget)
+        tooltip_state["win"] = win
+        win.wm_overrideredirect(True)
+        win.configure(fg_color=COLOR_BG)
+
+        label = ctk.CTkLabel(
+            win,
+            text=text,
+            text_color=COLOR_TEXT,
+            fg_color=COLOR_BG,
+            justify="left",
+            font=ctk.CTkFont(size=12),
+            wraplength=280
+        )
+        label.pack(padx=10, pady=8)
+
+        x = widget.winfo_rootx() + 12
+        y = widget.winfo_rooty() + widget.winfo_height() + 8
+        win.wm_geometry(f"+{x}+{y}")
+        win.after(10, win.lift)
+
+        win.bind("<Button-1>", lambda _e: hide_tooltip(), add="+")
+        return True
+
+    def hide_tooltip(_event=None):
+        win = tooltip_state["win"]
+        if win:
+            win.destroy()
+            tooltip_state["win"] = None
+
+    def toggle_tooltip(_event=None):
+        if tooltip_state["win"]:
+            hide_tooltip()
+        else:
+            show_tooltip()
+
+    widget.bind("<Button-1>", toggle_tooltip, add="+")
+    widget.bind("<FocusOut>", hide_tooltip, add="+")
+
+    return tooltip_state
 
 
 def create_labeled_entry(parent, label_text, variable, row, column, placeholder=""):
@@ -2076,11 +2310,14 @@ def rebuild_history_table():
         so_label = it.get("so", "")
         device_label = it.get("device", "") if ambiente_exec == "mobile" else ""
         res_label = it.get("resolution", "") if ambiente_exec == "desktop" else ""
+        headless_val = bool(it.get("headless"))
+        headless_label = "Sim" if headless_val else ""
 
         summary_text = (
             f"T:{it.get('total',0)}  P:{it.get('passed',0)}  F:{it.get('failed',0)}"
             f"   Plat.:{platform_label}  Vis.:{vis_label}  Nav:{nav_label}  SO:{so_label}"
             f"  Amb.:{target_env_label}"
+            f"{f'  Headless:{headless_label}' if headless_val else ''}"
             f"{f'  Mob.:{device_label}' if device_label else ''}"
             f"{f'  Res.:{res_label}' if res_label else ''}"
         )
@@ -2088,10 +2325,80 @@ def rebuild_history_table():
         summary.pack(anchor="w", padx=10, pady=(0, 4))
         tests_passed = it.get("tests_passed", [])
         tests_failed = it.get("tests_failed", [])
-        lines = [f"{name} -> Passed" for name in tests_passed] + [f"{name} -> Failed" for name in tests_failed]
-        tests_text = "\n".join(lines) if lines else "(nenhum teste registrado)"
-        tests_label = ctk.CTkLabel(row, text=tests_text, text_color=COLOR_TEXT_MUTED, font=ctk.CTkFont(size=12), justify="left")
-        tests_label.pack(anchor="w", padx=10, pady=(0, 6))
+        failed_logs = it.get("tests_failed_logs", {}) or {}
+        failed_blocks = it.get("tests_failed_log_blocks", {}) or {}
+
+        tests_container = ctk.CTkFrame(row, fg_color="transparent")
+        tests_container.pack(anchor="w", padx=10, pady=(0, 6), fill="x")
+
+        if tests_passed:
+            passed_text = "\n".join(f"{name} -> Passed" for name in tests_passed)
+            ctk.CTkLabel(
+                tests_container,
+                text=passed_text,
+                text_color=COLOR_TEXT_MUTED,
+                font=ctk.CTkFont(size=12),
+                justify="left"
+            ).pack(anchor="w", pady=(0, 4))
+
+        if tests_failed:
+            for name in tests_failed:
+                test_block = ctk.CTkFrame(tests_container, fg_color="transparent")
+                test_block.pack(anchor="w", fill="x", pady=(0, 6))
+
+                line_frame = ctk.CTkFrame(test_block, fg_color="transparent")
+                line_frame.pack(anchor="w", fill="x", pady=(0, 2))
+
+                base_label = ctk.CTkLabel(
+                    line_frame,
+                    text=f"{name} -> Failed",
+                    text_color=COLOR_TEXT_MUTED,
+                    font=ctk.CTkFont(size=12),
+                    justify="left"
+                )
+                base_label.pack(side="left", padx=(0, 6))
+
+                block_lines = failed_blocks.get(name)
+                if block_lines:
+                    toggle_var = tk.BooleanVar(value=False)
+
+                    details_box = ctk.CTkTextbox(
+                        test_block,
+                        height=min(160, 18 * len(block_lines)),
+                        fg_color="#0f0f0f",
+                        border_width=1,
+                        border_color=COLOR_BORDER,
+                        text_color=COLOR_TEXT,
+                        wrap="none"
+                    )
+                    details_box.insert("1.0", "\n".join(block_lines))
+                    details_box.configure(state="disabled")
+                    details_box.pack_forget()
+
+                    def _make_toggle(box=details_box, var=toggle_var):
+                        def _toggle():
+                            if var.get():
+                                box.pack_forget()
+                                var.set(False)
+                                toggle_btn.configure(text="ver log", fg_color=COLOR_PRIMARY)
+                            else:
+                                box.pack(anchor="w", fill="x", pady=(4, 0))
+                                var.set(True)
+                                toggle_btn.configure(text="ocultar log", fg_color=COLOR_PRIMARY)
+                        return _toggle
+
+                    toggle_btn = ctk.CTkButton(
+                        line_frame,
+                        text="ver log",
+                        command=_make_toggle(),
+                        fg_color=COLOR_PRIMARY,
+                        hover_color=COLOR_PRIMARY_HOVER,
+                        text_color=COLOR_TEXT,
+                        height=26,
+                        width=90,
+                        font=ctk.CTkFont(size=11),
+                    )
+                    toggle_btn.pack(side="left")
 
     update_delete_buttons_state()
 
@@ -2111,6 +2418,7 @@ def create_ui():
     global resolution_var, resolution_choice_var, custom_resolution_var, custom_resolution_entry, resolution_option_menu
     global headless_var, record_screen_var, record_checkbox
     global custom_url_label_widget, custom_url_entry_widget
+    global plan_var, plan_option_menu
     global history_rows_frame, history_status_filter_var, history_empty_label
     global history_start_day_var, history_start_month_var, history_start_year_var
     global history_end_day_var, history_end_month_var, history_end_year_var
@@ -2132,6 +2440,7 @@ def create_ui():
     grid_var = tk.StringVar(value=GRID_PLACEHOLDER)
     navegador_var = tk.StringVar(value=NAVEGADOR_PLACEHOLDER)
     so_var = tk.StringVar(value=SO_PLACEHOLDER)
+    plan_var = tk.StringVar(value=PLAN_PLACEHOLDER)
     target_env_var = tk.StringVar(value="prod")
     custom_url_var = tk.StringVar(value="")
     default_build_name = (
@@ -2167,6 +2476,7 @@ def create_ui():
     grid_var.trace_add("write", lambda *_: on_option_placeholder_change(grid_var, GRID_PLACEHOLDER, grid_option_menu))
     navegador_var.trace_add("write", lambda *_: on_option_placeholder_change(navegador_var, NAVEGADOR_PLACEHOLDER, navegador_option_menu))
     so_var.trace_add("write", lambda *_: on_option_placeholder_change(so_var, SO_PLACEHOLDER, so_option_menu))
+    plan_var.trace_add("write", on_plan_change)
     timeout_choice_var.trace_add("write", lambda *_: on_option_placeholder_change(timeout_choice_var, TIMEOUT_PLACEHOLDER, timeout_option_menu))
     target_env_var.trace_add("write", on_target_env_change)
     history_status_filter_var.trace_add("write", on_history_filter_change)
@@ -2189,7 +2499,7 @@ def create_ui():
     left_panel.grid(row=0, column=0, sticky="nsew")
     left_panel.grid_propagate(False)
     left_panel.grid_columnconfigure(0, weight=1)
-    left_panel.grid_rowconfigure(4, weight=1)
+    left_panel.grid_rowconfigure(5, weight=1)
 
     title_label = ctk.CTkLabel(
         left_panel,
@@ -2199,16 +2509,43 @@ def create_ui():
     )
     title_label.grid(row=0, column=0, padx=20, pady=(20, 12), sticky="w")
 
+    plan_frame = ctk.CTkFrame(left_panel, fg_color="transparent")
+    plan_frame.grid(row=1, column=0, padx=20, pady=(0, 8), sticky="ew")
+    plan_frame.grid_columnconfigure(0, weight=1)
+
+    plan_label = ctk.CTkLabel(
+        plan_frame,
+        text="Plano de teste",
+        text_color=COLOR_TEXT_MUTED,
+        font=ctk.CTkFont(size=14)
+    )
+    plan_label.grid(row=0, column=0, sticky="w", pady=(0, 4))
+
+    plan_option_menu = ctk.CTkOptionMenu(
+        plan_frame,
+        variable=plan_var,
+        values=get_plan_option_values(),
+        fg_color=COLOR_PRIMARY,
+        button_color=COLOR_PRIMARY,
+        button_hover_color=COLOR_PRIMARY_HOVER,
+        dropdown_fg_color=COLOR_PANEL,
+        dropdown_hover_color=COLOR_PRIMARY_HOVER,
+        dropdown_text_color=COLOR_TEXT,
+        text_color=COLOR_TEXT
+    )
+    plan_option_menu.grid(row=1, column=0, sticky="ew", pady=(0, 6))
+    apply_menu_style(plan_option_menu, plan_var.get() == PLAN_PLACEHOLDER)
+
     filter_label = ctk.CTkLabel(
         left_panel,
         text="Filtrar testes",
         text_color=COLOR_TEXT_MUTED,
         font=ctk.CTkFont(size=14)
     )
-    filter_label.grid(row=1, column=0, padx=20, pady=(0, 4), sticky="w")
+    filter_label.grid(row=2, column=0, padx=20, pady=(0, 4), sticky="w")
 
     filter_frame = ctk.CTkFrame(left_panel, fg_color="transparent")
-    filter_frame.grid(row=2, column=0, padx=20, pady=(0, 10), sticky="ew")
+    filter_frame.grid(row=3, column=0, padx=20, pady=(0, 10), sticky="ew")
     filter_frame.grid_columnconfigure(0, weight=1)
 
     filter_entry = ctk.CTkEntry(
@@ -2247,7 +2584,7 @@ def create_ui():
     clear_filter_button.grid_remove()
 
     top_actions_frame = ctk.CTkFrame(left_panel, fg_color="transparent")
-    top_actions_frame.grid(row=3, column=0, padx=20, pady=(0, 10), sticky="ew")
+    top_actions_frame.grid(row=4, column=0, padx=20, pady=(0, 10), sticky="ew")
     top_actions_frame.grid_columnconfigure((0, 1), weight=1)
 
     left_selected_count_label = ctk.CTkLabel(
@@ -2298,7 +2635,7 @@ def create_ui():
         scrollbar_button_color=COLOR_SCROLL,
         scrollbar_button_hover_color=COLOR_SCROLL_HOVER
     )
-    left_tests_frame.grid(row=4, column=0, padx=20, pady=(0, 12), sticky="nsew")
+    left_tests_frame.grid(row=5, column=0, padx=20, pady=(0, 12), sticky="nsew")
     left_tests_frame.grid_columnconfigure(0, weight=1)
 
     # =========================================================================
@@ -2416,8 +2753,15 @@ def create_ui():
     )
     headless_checkbox.grid(row=6, column=3, padx=10, pady=(6, 10), sticky="w")
 
-    record_checkbox = ctk.CTkCheckBox(
+    record_frame = ctk.CTkFrame(
         config_frame,
+        fg_color="transparent"
+    )
+    record_frame.grid(row=7, column=3, padx=10, pady=(0, 10), sticky="w")
+    record_frame.grid_columnconfigure(0, weight=0)
+
+    record_checkbox = ctk.CTkCheckBox(
+        record_frame,
         text="Salvar evidência",
         variable=record_screen_var,
         fg_color=COLOR_PRIMARY,
@@ -2425,7 +2769,29 @@ def create_ui():
         border_color=COLOR_BORDER,
         text_color=COLOR_TEXT
     )
-    record_checkbox.grid(row=7, column=3, padx=10, pady=(0, 10), sticky="w")
+    record_checkbox.grid(row=0, column=0, padx=(0, 8), pady=0, sticky="w")
+
+    record_info_icon = ctk.CTkButton(
+        record_frame,
+        text="?",
+        width=18,
+        height=18,
+        corner_radius=9,
+        border_width=1,
+        border_color=COLOR_BORDER,
+        fg_color=COLOR_BG,
+        hover=False,
+        text_color=COLOR_TEXT_MUTED,
+        font=ctk.CTkFont(size=11, weight="bold"),
+        cursor="question_arrow",
+        command=None
+    )
+    record_info_icon.grid(row=0, column=1, sticky="w")
+
+    attach_tooltip(
+        record_info_icon,
+        'Nas plataformas "local" e "headless" será gravado somente a evidência da falha do teste.'
+    )
 
     last_forced = {"forced": False}
 
@@ -2625,6 +2991,7 @@ def load_tests():
 
 def main():
     load_history()
+    load_test_plans()
     create_ui()
     load_tests()
     rebuild_history_table()
