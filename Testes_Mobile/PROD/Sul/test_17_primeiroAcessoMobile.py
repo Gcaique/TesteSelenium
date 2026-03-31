@@ -23,7 +23,7 @@ VALID_USER = "caique.oliveira5@infobase.com.br"
 @pytest.mark.sul
 @pytest.mark.primeiroAcesso
 @pytest.mark.mobile
-def test_7_primeiro_acesso_mobile_sul(driver, setup_site, wait):
+def test_17_primeiro_acesso_mobile_sul(driver, setup_site, wait):
     # 1) Abre login
     click_if_present(driver, COOKIE_ACCEPT, seconds=20)
     wait.until(EC.element_to_be_clickable(LOGIN_MENU)).click()
