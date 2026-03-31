@@ -19,7 +19,7 @@ VALID_PASS = "Min@1234"
 @pytest.mark.smoke
 @pytest.mark.sul
 @pytest.mark.favoritos
-def test_6_lista_de_favoritos_sul(driver, setup_site, wait):
+def test_19_lista_de_favoritos_sul(driver, setup_site, wait):
     # 1) Login
     ensure_logged_in(driver, VALID_USER, VALID_PASS)
     assert minicart_visible(driver), "Era para estar logado, mas o minicart não apareceu."
