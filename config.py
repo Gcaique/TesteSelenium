@@ -4,6 +4,7 @@ from selenium.webdriver.firefox.options import Options as FirefoxOptions
 from dotenv import load_dotenv
 import os
 import re
+from pathlib import Path
 
 from selenium.webdriver.chrome.service import Service as ChromeService
 from webdriver_manager.chrome import ChromeDriverManager
@@ -24,6 +25,17 @@ def _sanitize_test_name(s: str, max_len: int = 180) -> str:
     s = s.encode("utf-8", "ignore").decode("utf-8", "ignore")
     s = re.sub(r"[^\w\-.]+", "_", s, flags=re.UNICODE)
     return s[:max_len]
+
+
+def parse_resolucao(resolucao: str, default: str = "1920x1080"):
+    """
+    Converte string LARGURAxALTURA para tupla de inteiros.
+    """
+    res = (resolucao or default).lower().replace(" ", "")
+    match = re.match(r"(?P<w>\d+)x(?P<h>\d+)", res)
+    if not match:
+        return 1920, 1080
+    return int(match.group("w")), int(match.group("h"))
 
 
 # ============================
@@ -99,41 +111,50 @@ def _get_sauce_hub():
 # ======================
 # 🖥️ Local
 # ======================
-def driver_local(navegador="chrome", headless=False):
+def driver_local(navegador="chrome", headless=False, resolucao="1920x1080"):
     """
     Cria driver local (Chrome/Firefox).
     """
     nav = (navegador or "").strip().lower()
+    width, height = parse_resolucao(resolucao)
+
+    def _service_with_env(env_var, service_cls, manager_cls):
+        custom = os.getenv(env_var)
+        if custom and Path(custom).exists():
+            return service_cls(executable_path=custom)
+        return service_cls(manager_cls().install())
 
     if nav == "chrome":
         options = ChromeOptions()
         options.add_argument("--disable-gpu")
         options.add_argument("--no-sandbox")
         options.add_argument("--disable-dev-shm-usage")
+        options.page_load_strategy = "eager"
 
         if headless:
             options.add_argument("--headless=new")
-            options.add_argument("--window-size=1920,1080")
+            options.add_argument(f"--window-size={width},{height}")
         else:
             options.add_argument("--start-maximized")
 
         driver = webdriver.Chrome(
-            service=ChromeService(ChromeDriverManager().install()),
+            service=_service_with_env("CHROMEDRIVER", ChromeService, ChromeDriverManager),
             options=options
         )
-        driver.set_window_size(1920, 1080)
+        driver.set_window_size(width, height)
         return driver
 
     if nav == "firefox":
         options = FirefoxOptions()
+        options.page_load_strategy = "eager"
         if headless:
             options.add_argument("-headless")
 
         driver = webdriver.Firefox(
-            service=FirefoxService(GeckoDriverManager().install()),
+            service=_service_with_env("GECKODRIVER", FirefoxService, GeckoDriverManager),
             options=options
         )
-        driver.set_window_size(1920, 1080)
+        driver.set_window_size(width, height)
         return driver
 
     raise Exception("Navegador local não suportado (use chrome|firefox).")
@@ -151,7 +172,8 @@ def criar_driver(
     grid="lt",
     headless=False,
     resolucao="1920x1080",
-    build_name=None
+    build_name=None,
+    record_video=False
 ):
     """
     Decide qual provedor usar.
@@ -169,39 +191,39 @@ def criar_driver(
     ambiente = (ambiente or "desktop").strip().lower()
 
     if grid == "local":
-        return driver_local(navegador=navegador, headless=headless)
+        return driver_local(navegador=navegador, headless=headless, resolucao=resolucao)
 
     if grid in ("browserstack", "bs"):
         if ambiente == "desktop":
-            return driver_desktop_browserstack(nome_teste, navegador, sistema_operacional, resolucao, build_name)
+            return driver_desktop_browserstack(nome_teste, navegador, sistema_operacional, resolucao, build_name, record_video)
         else:
             so = (sistema_operacional or "").strip().lower()
             if so == "ios":
-                return driver_mobile_browserstack_ios_safari(nome_teste, device_name, build_name)
+                return driver_mobile_browserstack_ios_safari(nome_teste, device_name, build_name, record_video)
             else:
-                return driver_mobile_browserstack_android_chrome(nome_teste, device_name, build_name)
+                return driver_mobile_browserstack_android_chrome(nome_teste, device_name, build_name, record_video)
 
     if grid in ("sauce", "saucelabs", "sl"):
         if ambiente == "desktop":
-            return driver_desktop_saucelabs(nome_teste, navegador, sistema_operacional, resolucao, build_name)
+            return driver_desktop_saucelabs(nome_teste, navegador, sistema_operacional, resolucao, build_name, record_video)
         else:
             so = (sistema_operacional or "").strip().lower()
             if so == "ios":
-                return driver_mobile_saucelabs_ios_safari(nome_teste, device_name, build_name)
+                return driver_mobile_saucelabs_ios_safari(nome_teste, device_name, build_name, record_video)
             else:
-                return driver_mobile_saucelabs_android_chrome(nome_teste, device_name, build_name)
+                return driver_mobile_saucelabs_android_chrome(nome_teste, device_name, build_name, record_video)
 
     # default: LambdaTest
     if ambiente == "desktop":
-        return driver_desktop_lambdatest(nome_teste, navegador, sistema_operacional, resolucao, build_name)
+        return driver_desktop_lambdatest(nome_teste, navegador, sistema_operacional, resolucao, build_name, record_video)
     else:
-        return driver_mobile_lambdatest(nome_teste, navegador, sistema_operacional, device_name, build_name)
+        return driver_mobile_lambdatest(nome_teste, navegador, sistema_operacional, device_name, build_name, record_video)
 
 
 # ============================
 # 💻 Desktop (LambdaTest)
 # ============================
-def driver_desktop_lambdatest(nome_teste, navegador, sistema_operacional, resolucao="1920x1080", build_name=None):
+def driver_desktop_lambdatest(nome_teste, navegador, sistema_operacional, resolucao="1920x1080", build_name=None, record_video=False):
     """
     Desktop remoto no LambdaTest.
     """
@@ -228,6 +250,7 @@ def driver_desktop_lambdatest(nome_teste, navegador, sistema_operacional, resolu
         "build": build_name or os.getenv("LT_BUILD_NAME", "Smoke - Desktop"),
         "name": nome_teste,
         "selenium_version": "4.21.0",
+        "video": bool(record_video),
     })
 
     return webdriver.Remote(
@@ -239,7 +262,7 @@ def driver_desktop_lambdatest(nome_teste, navegador, sistema_operacional, resolu
 # ============================
 # 📱 Mobile web (LambdaTest)
 # ============================
-def driver_mobile_lambdatest(nome_teste, navegador, sistema_operacional, device_name, build_name=None):
+def driver_mobile_lambdatest(nome_teste, navegador, sistema_operacional, device_name, build_name=None, record_video=False):
     """
     Mobile web remoto no LambdaTest (geralmente emulado / device cloud conforme conta).
     """
@@ -277,6 +300,7 @@ def driver_mobile_lambdatest(nome_teste, navegador, sistema_operacional, device_
         "build": build_name or os.getenv("LT_BUILD_NAME", "Smoke - Mobile"),
         "name": nome_teste,
         "selenium_version": "4.21.0",
+        "video": bool(record_video),
     })
 
     return webdriver.Remote(
@@ -288,7 +312,7 @@ def driver_mobile_lambdatest(nome_teste, navegador, sistema_operacional, device_
 # ============================
 # 💻 Desktop (BrowserStack)
 # ============================
-def driver_desktop_browserstack(nome_teste, navegador, sistema_operacional, resolucao="1920x1080", build_name=None):
+def driver_desktop_browserstack(nome_teste, navegador, sistema_operacional, resolucao="1920x1080", build_name=None, record_video=False):
     """
     Desktop web no BrowserStack (Windows/macOS + Chrome/Firefox/Edge/Safari).
     """
@@ -326,6 +350,7 @@ def driver_desktop_browserstack(nome_teste, navegador, sistema_operacional, reso
         "debug": True,
         "networkLogs": False,
         "consoleLogs": "errors",
+        "video": bool(record_video),
     })
 
     return webdriver.Remote(
@@ -337,7 +362,7 @@ def driver_desktop_browserstack(nome_teste, navegador, sistema_operacional, reso
 # ============================
 # 📱 iOS REAL + Safari (BrowserStack)
 # ============================
-def driver_mobile_browserstack_ios_safari(nome_teste, device_name, build_name=None):
+def driver_mobile_browserstack_ios_safari(nome_teste, device_name, build_name=None, record_video=False):
     """
     iOS REAL DEVICE + Safari (BrowserStack Automate Mobile Web).
     device_name: ex "iPhone 14", "iPhone 15", etc.
@@ -365,6 +390,7 @@ def driver_mobile_browserstack_ios_safari(nome_teste, device_name, build_name=No
         "debug": True,
         "networkLogs": False,
         "consoleLogs": "errors",
+        "video": bool(record_video),
     })
 
     return webdriver.Remote(
@@ -376,7 +402,7 @@ def driver_mobile_browserstack_ios_safari(nome_teste, device_name, build_name=No
 # ============================
 # 📱 Android REAL + Chrome (BrowserStack)
 # ============================
-def driver_mobile_browserstack_android_chrome(nome_teste, device_name, build_name=None):
+def driver_mobile_browserstack_android_chrome(nome_teste, device_name, build_name=None, record_video=False):
     """
     Android REAL DEVICE + Chrome (BrowserStack Automate Mobile Web).
     device_name: ex "Samsung Galaxy S23", "Google Pixel 7", etc.
@@ -404,6 +430,7 @@ def driver_mobile_browserstack_android_chrome(nome_teste, device_name, build_nam
         "debug": True,
         "networkLogs": False,
         "consoleLogs": "errors",
+        "video": bool(record_video),
     })
 
     return webdriver.Remote(
@@ -415,7 +442,7 @@ def driver_mobile_browserstack_android_chrome(nome_teste, device_name, build_nam
 # ============================
 # 💻 Desktop (Sauce Labs)
 # ============================
-def driver_desktop_saucelabs(nome_teste, navegador, sistema_operacional, resolucao="1920x1080", build_name=None):
+def driver_desktop_saucelabs(nome_teste, navegador, sistema_operacional, resolucao="1920x1080", build_name=None, record_video=False):
     """
     Desktop web no Sauce Labs.
     """
@@ -457,6 +484,7 @@ def driver_desktop_saucelabs(nome_teste, navegador, sistema_operacional, resoluc
         "project": project_name,
         "screenResolution": resolucao,
         "seleniumVersion": "4.21.0",
+        "recordVideo": bool(record_video),
     })
 
     return webdriver.Remote(
@@ -468,7 +496,7 @@ def driver_desktop_saucelabs(nome_teste, navegador, sistema_operacional, resoluc
 # ============================
 # 📱 Android REAL + Chrome (Sauce Labs)
 # ============================
-def driver_mobile_saucelabs_android_chrome(nome_teste, device_name, build_name=None):
+def driver_mobile_saucelabs_android_chrome(nome_teste, device_name, build_name=None, record_video=False):
     """
     Android mobile web no Sauce Labs.
     """
@@ -495,6 +523,7 @@ def driver_mobile_saucelabs_android_chrome(nome_teste, device_name, build_name=N
         "build": build_name,
         "project": project_name,
         "appiumVersion": appium_version,
+        "recordVideo": bool(record_video),
     })
 
     return webdriver.Remote(
@@ -506,7 +535,7 @@ def driver_mobile_saucelabs_android_chrome(nome_teste, device_name, build_name=N
 # ============================
 # 📱 iOS REAL + Safari (Sauce Labs)
 # ============================
-def driver_mobile_saucelabs_ios_safari(nome_teste, device_name, build_name=None):
+def driver_mobile_saucelabs_ios_safari(nome_teste, device_name, build_name=None, record_video=False):
     sauce_user, sauce_key = _get_sauce_credentials()
     hub = _get_sauce_hub()
 
@@ -532,6 +561,7 @@ def driver_mobile_saucelabs_ios_safari(nome_teste, device_name, build_name=None)
         "build": build_name,
         "project": project_name,
         "appiumVersion": appium_version,
+        "recordVideo": bool(record_video),
     })
 
     return webdriver.Remote(

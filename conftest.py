@@ -2,6 +2,10 @@ import os
 import re
 import pytest
 import json
+import time
+import io
+from pathlib import Path
+from datetime import datetime
 
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
@@ -67,6 +71,30 @@ def pytest_addoption(parser):
     parser.addoption("--headless", action="store_true", help="Executa browser local em modo headless")
     parser.addoption("--resolution", action="store", default="1920x1080", help='Resolução desktop no formato LARGURAxALTURA. Ex: 1920x1080')
     parser.addoption("--build-name", action="store", default="", help="Nome da build/suite no provider (agrupa execuções)")
+    parser.addoption("--record-screen", action="store_true", help="Captura evidências adicionais (gif curto/local e vídeo em grids)")
+
+
+# =============================================================================
+# Evidência Local
+# =============================================================================
+@pytest.fixture(scope="session", autouse=True)
+def artifacts_root():
+    """
+    O que faz:
+    - Define a pasta raiz para evidências.
+    - Não cria diretórios até ocorrer uma falha.
+    """
+    env_dir = os.getenv("PYTEST_ARTIFACTS_ROOT")
+    base = Path(env_dir) if env_dir else Path(__file__).parent / "evidencias_local"
+    return base
+
+
+@pytest.fixture(autouse=True)
+def artifact_name(request):
+    """
+    Nome base do arquivo de evidência para o teste atual.
+    """
+    return sanitize_test_name(request.node.nodeid)
 
 
 # =============================================================================
@@ -117,7 +145,7 @@ def driver(request):
     - Cria o driver (local/LambdaTest/BrowserStack) baseado nos parâmetros CLI.
     - Aplica lógica "mobile inteligente":
         - se ambiente == mobile e navegador não informado -> define chrome ou safari (iOS).
-        - NÃO força plataforma Android automaticamente (isso era do pCloudy).
+        - NÃO força plataforma Android automaticamente.
     - Gera nome de sessão seguro.
     - Faz cleanup (quit) no final.
     """
@@ -129,6 +157,10 @@ def driver(request):
     headless = request.config.getoption("--headless")
     resolucao = request.config.getoption("--resolution")
     build_name = (request.config.getoption("--build-name") or "").strip()
+    record_screen_cli = bool(request.config.getoption("--record-screen"))
+    force_record = grid in ("lt", "lambdatest", "bs", "browserstack", "sauce", "saucelabs", "sl") and not headless
+    record_screen_effective = record_screen_cli or force_record
+    width, height = config.parse_resolucao(resolucao)
 
     # -------------------------
     # MOBILE "inteligente"
@@ -175,12 +207,20 @@ def driver(request):
         grid=grid,
         headless=headless,
         resolucao=resolucao,
-        build_name=build_name or None
+        build_name=build_name or None,
+        record_video=record_screen_effective
     )
+    setattr(driver, "_grid", grid)
+    setattr(driver, "_record_screen", record_screen_effective)
+
     if ambiente != "mobile":
-        driver.maximize_window()
+        if headless:
+            driver.set_window_size(width, height)
+        else:
+            driver.maximize_window()
 
     yield driver
+
     driver.quit()
 
 
@@ -325,6 +365,8 @@ def pytest_runtest_makereport(item, call):
     rep = outcome.get_result()
 
     driver = item.funcargs.get("driver")
+    artifacts = item.funcargs.get("artifacts_root")
+    artifact_base = item.funcargs.get("artifact_name")
     if not driver:
         return
 
@@ -348,9 +390,7 @@ def pytest_runtest_makereport(item, call):
         or ("ondemand." in hub_url.lower() and "saucelabs.com" in hub_url.lower())
     )
 
-    if rep.when != "call":
-        return
-
+    record_screen = bool(getattr(driver, "_record_screen", False))
     status = "passed" if rep.passed else "failed"
     reason = "OK" if rep.passed else (
         rep.longreprtext[:250] if hasattr(rep, "longreprtext") else "Falha"
@@ -377,3 +417,86 @@ def pytest_runtest_makereport(item, call):
             print(f"[WARN] Não consegui marcar status no Sauce Labs: {e}")
             print(f"[WARN] hub_url={hub_url}")
             print(f"[WARN] caps_keys={list(caps.keys())}")
+
+    if rep.passed or not getattr(rep, "failed", False) or not artifacts or not artifact_base:
+        return
+
+    if not record_screen:
+        return
+
+    grid = getattr(driver, "_grid", "").lower()
+
+    # Providers já gravam vídeo; não gerar evidencia local para eles.
+    if grid in ("bs", "browserstack", "sauce", "saucelabs", "lt", "lambdatest") or is_bs or is_sauce:
+        return
+
+    if rep.when != "call":
+        return
+
+    # Cria diretório apenas no primeiro erro do dia (formato dd-mm-aaaa)
+    target_dir = Path(artifacts) / datetime.now().strftime("%d-%m-%Y")
+    target_dir.mkdir(parents=True, exist_ok=True)
+
+    prefix = target_dir / f"{artifact_base}__{rep.when}"
+
+    if rep.when == "call":
+        gif_path = _unique_path(prefix.with_suffix(".gif"))
+        _capture_gif_quick(driver, gif_path)
+
+
+def _capture_gif_quick(driver, dest_path, frames=5, delay=0.15):
+    """
+    Captura um GIF curto a partir de múltiplos screenshots sequenciais.
+    Só usado em grid local para evitar overhead em providers.
+    """
+    try:
+        from PIL import Image  # type: ignore
+    except Exception:
+        print("[WARN] PIL não disponível; pulando GIF.")
+        return
+
+    images = []
+    for _ in range(frames):
+        try:
+            png_bytes = driver.get_screenshot_as_png()
+            img = Image.open(io.BytesIO(png_bytes)).convert("RGB")
+            images.append(img)
+        except Exception as e:
+            print(f"[WARN] Falha ao capturar frame do GIF: {e}")
+            break
+        time.sleep(delay)
+
+    if not images:
+        return
+
+    try:
+        images[0].save(
+            dest_path,
+            save_all=True,
+            append_images=images[1:],
+            duration=int(delay * 1000),
+            loop=0
+        )
+        print(f"[artifacts] GIF salvo em {dest_path}")
+    except Exception as e:
+        print(f"[WARN] Falha ao salvar GIF: {e}")
+
+
+def _unique_path(path: Path) -> Path:
+    """
+    Retorna um path único adicionando sufixo numérico se já existir.
+    Ex.: file.gif -> file1.gif -> file2.gif ...
+    """
+    if not path.exists():
+        return path
+
+    stem = path.stem
+    suffix = path.suffix
+    parent = path.parent
+
+    counter = 1
+    while True:
+        candidate = parent / f"{stem}{counter}{suffix}"
+        if not candidate.exists():
+            return candidate
+        counter += 1
