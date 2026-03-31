@@ -219,6 +219,8 @@ custom_resolution_entry = None
 custom_resolution_label_widget = None
 resolution_option_menu = None
 headless_var = None
+record_screen_var = None
+record_checkbox = None
 custom_url_var = None
 build_name_var = None
 target_env_var = None
@@ -1086,6 +1088,7 @@ def build_pytest_command(selected_tests=None):
     timeout = timeout_var.get().strip()
     resolution = resolution_var.get().strip()
     headless = headless_var.get()
+    record_screen = record_screen_var.get()
     build_name = build_name_var.get().strip() if 'build_name_var' in globals() else ""
     target_env = target_env_var.get().strip() if 'target_env_var' in globals() else ""
     custom_url = custom_url_var.get().strip() if 'custom_url_var' in globals() else ""
@@ -1096,6 +1099,10 @@ def build_pytest_command(selected_tests=None):
 
     if ambiente and ambiente != AMBIENTE_PLACEHOLDER:
         cmd.extend(["--ambiente", ambiente])
+    # Se headless marcado sem grid definido, força local para evitar erro em clouds
+    if headless and (not grid or grid == GRID_PLACEHOLDER):
+        grid = "local"
+
     if grid and grid != GRID_PLACEHOLDER:
         cmd.extend(["--grid", grid])
     if navegador and navegador != NAVEGADOR_PLACEHOLDER:
@@ -1114,7 +1121,8 @@ def build_pytest_command(selected_tests=None):
 
     if headless:
         cmd.append("--headless")
-
+    if record_screen:
+        cmd.append("--record-screen")
     if build_name:
         cmd.extend(["--build-name", build_name])
 
@@ -1202,6 +1210,9 @@ def run_tests():
         if os.name == "nt":
             creationflags = subprocess.CREATE_NEW_PROCESS_GROUP
 
+        env = os.environ.copy()
+        env["PYTEST_ARTIFACTS_ROOT"] = str(PROJECT_ROOT / "evidencias_local")
+
         process = subprocess.Popen(
             cmd,
             cwd=PROJECT_ROOT,
@@ -1211,7 +1222,8 @@ def run_tests():
             encoding="utf-8",
             errors="replace",
             bufsize=1,
-            creationflags=creationflags
+            creationflags=creationflags,
+            env=env
         )
 
         thread = threading.Thread(target=read_process_output, daemon=True)
@@ -1265,6 +1277,7 @@ def read_process_output():
         "device": device_var.get().strip(),
         "resolution": resolution_var.get().strip(),
         "headless": bool(headless_var.get()),
+        "record_screen": bool(record_screen_var.get()),
         "target_env": target_env_var.get().strip(),
         "build_name": build_name_var.get().strip(),
         "command": last_run_command,
@@ -2096,7 +2109,7 @@ def create_ui():
     global device_var, device_choice_var, custom_device_var, custom_device_entry, device_option_menu
     global timeout_var, timeout_choice_var, timeout_option_menu
     global resolution_var, resolution_choice_var, custom_resolution_var, custom_resolution_entry, resolution_option_menu
-    global headless_var
+    global headless_var, record_screen_var, record_checkbox
     global custom_url_label_widget, custom_url_entry_widget
     global history_rows_frame, history_status_filter_var, history_empty_label
     global history_start_day_var, history_start_month_var, history_start_year_var
@@ -2137,6 +2150,7 @@ def create_ui():
     custom_resolution_var = tk.StringVar(value="")
     resolution_var = tk.StringVar(value="")
     headless_var = tk.BooleanVar(value=False)
+    record_screen_var = tk.BooleanVar(value=False)
     history_status_filter_var = tk.StringVar(value="all")
     today_checkbox_var = tk.BooleanVar(value=False)
     history_start_day_var = tk.StringVar(value="DD")
@@ -2401,6 +2415,39 @@ def create_ui():
         text_color=COLOR_TEXT
     )
     headless_checkbox.grid(row=6, column=3, padx=10, pady=(6, 10), sticky="w")
+
+    record_checkbox = ctk.CTkCheckBox(
+        config_frame,
+        text="Salvar evidência",
+        variable=record_screen_var,
+        fg_color=COLOR_PRIMARY,
+        hover_color=COLOR_PRIMARY_HOVER,
+        border_color=COLOR_BORDER,
+        text_color=COLOR_TEXT
+    )
+    record_checkbox.grid(row=7, column=3, padx=10, pady=(0, 10), sticky="w")
+
+    last_forced = {"forced": False}
+
+    def sync_record_checkbox_state(*_args):
+        grid_val = (grid_var.get() or "").strip().lower()
+        headless_val = bool(headless_var.get())
+        is_remote = grid_val in ("bs", "lt", "sauce")
+
+        if is_remote and not headless_val:
+            record_screen_var.set(True)
+            record_checkbox.configure(state="disabled")
+            last_forced["forced"] = True
+        else:
+            record_checkbox.configure(state="normal")
+            if last_forced["forced"]:
+                record_screen_var.set(False)
+            last_forced["forced"] = False
+
+    grid_var.trace_add("write", sync_record_checkbox_state)
+    headless_var.trace_add("write", sync_record_checkbox_state)
+    sync_record_checkbox_state()
+
 
     # Botões
     buttons_frame = ctk.CTkFrame(right_panel, fg_color="transparent")
