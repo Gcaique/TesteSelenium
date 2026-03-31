@@ -23,7 +23,7 @@ VALID_PASS = "Min@1234"
 @pytest.mark.smoke
 @pytest.mark.sul
 @pytest.mark.cart
-def test_7_minicart_carrinho_sul(driver, setup_site, wait):
+def test_20_minicart_carrinho_sul(driver, setup_site, wait):
     # 1) Login
     ensure_logged_in(driver, VALID_USER, VALID_PASS)
     wait.until(EC.visibility_of_element_located(MINICART_ICON))
