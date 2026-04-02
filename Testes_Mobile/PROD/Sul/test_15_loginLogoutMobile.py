@@ -1,3 +1,5 @@
+import time
+
 import pytest
 
 from conftest import click_if_present
@@ -74,6 +76,7 @@ def test_15_loginLogout_mobile_sul(driver, setup_site, wait):
     # 9) Fluxos públicos LOGADO
     try_close_popups(driver)
     validate_navigation_by_auth_state_mobile(driver, logged=True)
+    time.sleep(3)
 
     # 10) Logout
     logout_mobile(driver)
@@ -94,6 +97,7 @@ def test_15_loginLogout_mobile_sul(driver, setup_site, wait):
     visible(driver, EMPTY_GRID_ORDERS, timeout=20)
     try_close_hotjar(driver)
     click(driver, EMPTY_GRID_ORDERS, timeout=10)
+    time.sleep(3)
 
     # 13) Logout final
     logout_mobile(driver)
