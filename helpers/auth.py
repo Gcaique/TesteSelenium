@@ -276,9 +276,9 @@ def expect_login_popup_mobile(driver, wait, timeout=8):
 
 def logout_mobile(driver):
     """Faz logout e espera mini-cart sumir."""
-    safe_click_loc_retry(driver, LOGIN_NAME_CONTAINER, 10, 4, 0.25)
+    mobile_click_strict(driver, LOGIN_NAME_CONTAINER, 10, 4, 0.25)
     time.sleep(2)
-    safe_click_loc_retry(driver, BTN_LOGOUT, 10, 4, 0.25)
+    mobile_click_strict(driver, BTN_LOGOUT, 10, 4, 0.25)
     time.sleep(2)
 
     end = time.time() + 15
@@ -316,7 +316,7 @@ def ensure_logged_in_mobile(driver, user: str, passwd: str):
             return
         time.sleep(0.5)
 
-    # fallback LT
+    # fallback
     driver.refresh()
     time.sleep(3)
     try_close_popups(driver)
