@@ -115,7 +115,7 @@ def test_16_user_logado_mobile_sul(driver, setup_site, wait):
     mobile_click_strict(driver, MOBILE_MENU_SEE_ALL, timeout=10, retries=4, sleep_between=0.25)
     visible(driver, SORTER_SELECT, timeout=20)
 
-    mobile_click_strict(driver,PLP_ADD_TO_CART_BY_INDEX(1), timeout=20, retries=4, sleep_between=0.25)
+    mobile_click_strict(driver, PLP_ADD_TO_CART_BY_INDEX(1), timeout=20, retries=4, sleep_between=0.25)
     time.sleep(5)
 
     # 11) Marcas -> PDP -> add -> previsão entrega
