@@ -39,7 +39,7 @@ def test_17_primeiro_acesso_mobile_sul(driver, setup_site, wait):
     open_first_access_modal(driver, wait)
 
     # 3) Modal de seleção de e-mail
-    send_code_by_email(driver, wait)
+    send_code_by_email_sul(driver, wait)
 
     # 4) Modal de inserção do token / token iválido
     validate_token(driver, wait, "456789")

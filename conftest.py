@@ -67,7 +67,7 @@ def pytest_addoption(parser):
     parser.addoption("--username", action="store", default=os.getenv("USERNAME", ""), help="Login")
     parser.addoption("--password", action="store", default=os.getenv("PASSWORD", ""), help="Senha")
     parser.addoption("--timeout", action="store", default=10, type=int, help="Timeout padrão do WebDriverWait")
-    parser.addoption("--grid", action="store", default="lt", help="lt|bs|sauce|local")
+    parser.addoption("--grid", action="store", default="bs", help="lt|bs|sauce|local")
     parser.addoption("--headless", action="store_true", help="Executa browser local em modo headless")
     parser.addoption("--resolution", action="store", default="1920x1080", help='Resolução desktop no formato LARGURAxALTURA. Ex: 1920x1080')
     parser.addoption("--build-name", action="store", default="", help="Nome da build/suite no provider (agrupa execuções)")
