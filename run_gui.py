@@ -690,7 +690,7 @@ def add_history_entry(entry):
     save_history()
 
 
-def filter_history_items(start_date=None, end_date=None, status_filter="all"):
+def filter_history_items(start_date=None, end_date=None, status_filter="all", build_filter="all"):
     items = history_data
 
     def to_date(s):
@@ -702,18 +702,48 @@ def filter_history_items(start_date=None, end_date=None, status_filter="all"):
     start_dt = start_date
     end_dt = end_date
 
+    def normalize_build(value):
+        return (value or "").strip().lower()
+
     filtered = []
     for it in items:
         ts_date = to_date(it.get("timestamp", ""))
         status_ok = status_filter in ("all", "", None) or it.get("status") == status_filter
+        build_filter_val = normalize_build(build_filter)
+        build_ok = (
+            build_filter_val in ("all", "todos", "", None)
+            or normalize_build(it.get("build_name")) == build_filter_val
+        )
         date_ok = True
         if start_dt and ts_date:
             date_ok = ts_date >= start_dt
         if end_dt and ts_date and date_ok:
             date_ok = ts_date <= end_dt
-        if status_ok and date_ok:
+        if status_ok and date_ok and build_ok:
             filtered.append(it)
     return filtered
+
+
+def get_build_filter_values():
+    counts = {}
+    for it in history_data:
+        name = (it.get("build_name") or "").strip()
+        if not name:
+            continue
+        counts[name] = counts.get(name, 0) + 1
+    sorted_names = sorted(counts.items(), key=lambda kv: (-kv[1], kv[0].lower()))
+    return ["Todos"] + [name for name, _ in sorted_names]
+
+
+def refresh_build_filter_options():
+    if history_build_option_menu is None or not history_build_option_menu.winfo_exists():
+        return
+    values = get_build_filter_values()
+    history_build_option_menu.configure(values=values)
+    current = history_build_filter_var.get()
+    if current not in values:
+        history_build_filter_var.set("Todos")
+    apply_menu_style(history_build_option_menu, history_build_filter_var.get() == "Todos")
 
 
 def delete_selected_history():
@@ -1855,9 +1885,11 @@ def create_timeout_selector(parent, row, column):
 # =============================================================================
 history_rows_frame = None
 history_status_filter_var = None
+history_build_filter_var = None
 history_start_filter_var = None
 history_end_filter_var = None
 history_empty_label = None
+history_build_option_menu = None
 
 
 def on_history_filter_change(*_args):
@@ -1881,7 +1913,7 @@ def export_history_csv():
             writer = csv.writer(f, delimiter=";")
             writer.writerow([
                 "datetime", "status", "total", "passed", "failed",
-                "grid", "ambiente", "navegador", "so", "amb_exec",
+                "grid", "ambiente", "navegador", "so", "amb_exec", "build",
                 "mobile_device", "desktop_resolution", "headless", "tests", "command"
             ])
             for it in items:
@@ -1899,6 +1931,7 @@ def export_history_csv():
                     it.get("navegador", ""),
                     it.get("so", ""),
                     it.get("target_env", ""),
+                    it.get("build_name", ""),
                     mobile_device,
                     desktop_resolution,
                     str(it.get("headless", False)),
@@ -1949,6 +1982,9 @@ def export_history_pdf():
             status_line = f"Status: {it.get('status','').upper()}"
             totals_line = f"Totais -> T:{it.get('total',0)}  P:{it.get('passed',0)}  F:{it.get('failed',0)}"
             grid_line = f"Plat.: {it.get('grid','')}  Vis.: {it.get('ambiente','')}  Amb.: {it.get('target_env','')}"
+            build_line = ""
+            if it.get("build_name"):
+                build_line = f"Build: {it.get('build_name')}"
             nav_line = f"Nav: {it.get('navegador','')}  SO: {it.get('so','')}"
             is_mobile = it.get('ambiente', '') == 'mobile'
             device_line = (
@@ -1964,7 +2000,10 @@ def export_history_pdf():
             if not tests_lines and it.get("tests"):
                 tests_lines.extend(it.get("tests"))
 
-            for ln in (header, status_line, totals_line, grid_line, nav_line, device_line):
+            lines_to_write = (header, status_line, totals_line, grid_line, build_line, nav_line, device_line)
+            for ln in lines_to_write:
+                if not ln:
+                    continue
                 pdf.multi_cell(usable_width, 6, ln, new_x=XPos.LMARGIN, new_y=YPos.NEXT)
             if tests_lines:
                 for tl in tests_lines:
@@ -1988,12 +2027,20 @@ def get_filtered_history():
         history_end_year_var.get()
     )
     status_val = history_status_filter_var.get().strip().lower()
-    return filter_history_items(start_dt, end_dt, status_val if status_val else "all")
+    build_val = history_build_filter_var.get().strip()
+    build_filter = build_val if build_val else "Todos"
+    return filter_history_items(
+        start_dt,
+        end_dt,
+        status_val if status_val else "all",
+        build_filter
+    )
 
 
 def open_history_window():
     global history_window, history_rows_frame, history_empty_label
     global delete_selected_btn, delete_all_btn
+    global history_build_option_menu
 
     if history_window and tk.Toplevel.winfo_exists(history_window):
         history_window.deiconify()
@@ -2039,7 +2086,7 @@ def open_history_window():
     # Filtros + export
     history_filter_frame = ctk.CTkFrame(history_window, fg_color=COLOR_PANEL, corner_radius=8)
     history_filter_frame.grid(row=1, column=0, sticky="new", padx=14, pady=(0, 8))
-    history_filter_frame.grid_columnconfigure((0, 1, 2, 3), weight=1)
+    history_filter_frame.grid_columnconfigure((0, 1, 2, 3, 4), weight=1)
 
     def _date_label(day_var, month_var, year_var, default_text):
         if day_var.get() in ("DD", "") or month_var.get() in ("MM", "") or year_var.get() in ("AAAA", ""):
@@ -2101,8 +2148,8 @@ def open_history_window():
             d_var.set(f"{date_obj.day:02d}")
             m_var.set(f"{date_obj.month:02d}")
             y_var.set(str(date_obj.year))
-            start_label_btn.configure(text=_date_label(history_start_day_var, history_start_month_var, history_start_year_var, "Início"))
-            end_label_btn.configure(text=_date_label(history_end_day_var, history_end_month_var, history_end_year_var, "Fim"))
+            start_label_btn.configure(text=_date_label(history_start_day_var, history_start_month_var, history_start_year_var, "Data Início"))
+            end_label_btn.configure(text=_date_label(history_end_day_var, history_end_month_var, history_end_year_var, "Data Fim"))
             on_history_filter_change()
 
         def _apply():
@@ -2123,8 +2170,8 @@ def open_history_window():
             d_var.set("DD")
             m_var.set("MM")
             y_var.set("AAAA")
-            start_label_btn.configure(text=_date_label(history_start_day_var, history_start_month_var, history_start_year_var, "Início"))
-            end_label_btn.configure(text=_date_label(history_end_day_var, history_end_month_var, history_end_year_var, "Fim"))
+            start_label_btn.configure(text=_date_label(history_start_day_var, history_start_month_var, history_start_year_var, "Data Início"))
+            end_label_btn.configure(text=_date_label(history_end_day_var, history_end_month_var, history_end_year_var, "Data Fim"))
             picker.destroy()
             on_history_filter_change()
 
@@ -2149,9 +2196,41 @@ def open_history_window():
             history_end_month_var.set("MM")
             history_end_year_var.set("AAAA")
 
-        start_label_btn.configure(text=_date_label(history_start_day_var, history_start_month_var, history_start_year_var, "Início"))
-        end_label_btn.configure(text=_date_label(history_end_day_var, history_end_month_var, history_end_year_var, "Fim"))
+        start_label_btn.configure(text=_date_label(history_start_day_var, history_start_month_var, history_start_year_var, "Data Início"))
+        end_label_btn.configure(text=_date_label(history_end_day_var, history_end_month_var, history_end_year_var, "Data Fim"))
         on_history_filter_change()
+
+    status_filter_label = ctk.CTkLabel(
+        history_filter_frame,
+        text="Status",
+        text_color=COLOR_TEXT_MUTED,
+        font=ctk.CTkFont(size=12)
+    )
+    status_filter_label.grid(row=0, column=0, padx=6, pady=(8, 2), sticky="w")
+
+    build_label = ctk.CTkLabel(
+        history_filter_frame,
+        text="Build",
+        text_color=COLOR_TEXT_MUTED,
+        font=ctk.CTkFont(size=12)
+    )
+    build_label.grid(row=0, column=1, padx=6, pady=(8, 2), sticky="w")
+
+    start_label = ctk.CTkLabel(
+        history_filter_frame,
+        text="Data Início",
+        text_color=COLOR_TEXT_MUTED,
+        font=ctk.CTkFont(size=12)
+    )
+    start_label.grid(row=0, column=2, padx=6, pady=(8, 2), sticky="w")
+
+    end_label = ctk.CTkLabel(
+        history_filter_frame,
+        text="Data Fim",
+        text_color=COLOR_TEXT_MUTED,
+        font=ctk.CTkFont(size=12)
+    )
+    end_label.grid(row=0, column=3, padx=6, pady=(8, 2), sticky="w")
 
     status_combo = ctk.CTkOptionMenu(
         history_filter_frame,
@@ -2162,27 +2241,39 @@ def open_history_window():
         button_hover_color=COLOR_PRIMARY_HOVER,
         text_color=COLOR_TEXT
     )
-    status_combo.grid(row=0, column=0, padx=6, pady=8, sticky="ew")
+    status_combo.grid(row=1, column=0, padx=6, pady=(0, 8), sticky="ew")
+
+    history_build_option_menu = ctk.CTkOptionMenu(
+        history_filter_frame,
+        variable=history_build_filter_var,
+        values=get_build_filter_values(),
+        fg_color=COLOR_PRIMARY,
+        button_color=COLOR_PRIMARY,
+        button_hover_color=COLOR_PRIMARY_HOVER,
+        text_color=COLOR_TEXT
+    )
+    history_build_option_menu.grid(row=1, column=1, padx=6, pady=(0, 8), sticky="ew")
+    apply_menu_style(history_build_option_menu, history_build_filter_var.get() == "Todos")
 
     start_label_btn = ctk.CTkButton(
         history_filter_frame,
-        text=_date_label(history_start_day_var, history_start_month_var, history_start_year_var, "Início"),
+        text=_date_label(history_start_day_var, history_start_month_var, history_start_year_var, "Data Início"),
         command=lambda: open_date_picker("start"),
         fg_color=COLOR_CARD,
         hover_color=COLOR_PRIMARY_HOVER,
         text_color=COLOR_TEXT
     )
-    start_label_btn.grid(row=0, column=1, padx=6, pady=8, sticky="ew")
+    start_label_btn.grid(row=1, column=2, padx=6, pady=(0, 8), sticky="ew")
 
     end_label_btn = ctk.CTkButton(
         history_filter_frame,
-        text=_date_label(history_end_day_var, history_end_month_var, history_end_year_var, "Fim"),
+        text=_date_label(history_end_day_var, history_end_month_var, history_end_year_var, "Data Fim"),
         command=lambda: open_date_picker("end"),
         fg_color=COLOR_CARD,
         hover_color=COLOR_PRIMARY_HOVER,
         text_color=COLOR_TEXT
     )
-    end_label_btn.grid(row=0, column=2, padx=6, pady=8, sticky="ew")
+    end_label_btn.grid(row=1, column=3, padx=6, pady=(0, 8), sticky="ew")
 
     today_checkbox = ctk.CTkCheckBox(
         history_filter_frame,
@@ -2194,7 +2285,7 @@ def open_history_window():
         border_color=COLOR_BORDER,
         text_color=COLOR_TEXT
     )
-    today_checkbox.grid(row=0, column=3, padx=6, pady=8, sticky="e")
+    today_checkbox.grid(row=1, column=4, padx=6, pady=(0, 8), sticky="e")
 
     delete_selected_btn = ctk.CTkButton(
         history_filter_frame,
@@ -2205,7 +2296,7 @@ def open_history_window():
         hover_color=COLOR_DANGER_HOVER,
         text_color=COLOR_TEXT
     )
-    delete_selected_btn.grid(row=1, column=0, padx=6, pady=8, sticky="ew")
+    delete_selected_btn.grid(row=2, column=0, padx=6, pady=8, sticky="ew")
 
     delete_all_btn = ctk.CTkButton(
         history_filter_frame,
@@ -2215,7 +2306,7 @@ def open_history_window():
         hover_color=COLOR_DANGER_HOVER,
         text_color=COLOR_TEXT
     )
-    delete_all_btn.grid(row=1, column=1, padx=6, pady=8, sticky="ew")
+    delete_all_btn.grid(row=2, column=1, padx=6, pady=8, sticky="ew")
 
     export_csv_btn = ctk.CTkButton(
         history_filter_frame,
@@ -2225,7 +2316,7 @@ def open_history_window():
         hover_color=COLOR_PRIMARY_HOVER,
         text_color=COLOR_TEXT
     )
-    export_csv_btn.grid(row=1, column=2, padx=6, pady=8, sticky="ew")
+    export_csv_btn.grid(row=2, column=2, padx=6, pady=8, sticky="ew")
 
     export_pdf_btn = ctk.CTkButton(
         history_filter_frame,
@@ -2235,7 +2326,7 @@ def open_history_window():
         hover_color=COLOR_PRIMARY_HOVER,
         text_color=COLOR_TEXT
     )
-    export_pdf_btn.grid(row=1, column=3, padx=6, pady=8, sticky="ew")
+    export_pdf_btn.grid(row=2, column=3, padx=6, pady=8, sticky="ew")
 
     history_rows_container = ctk.CTkScrollableFrame(history_window, fg_color=COLOR_PANEL, corner_radius=10)
     history_rows_container.grid(row=2, column=0, sticky="nsew", padx=14, pady=(0, 14))
@@ -2267,6 +2358,7 @@ def rebuild_history_table():
         widget.destroy()
 
     history_selection_vars.clear()
+    refresh_build_filter_options()
     items = get_filtered_history()
 
     if not items:
@@ -2312,6 +2404,7 @@ def rebuild_history_table():
         res_label = it.get("resolution", "") if ambiente_exec == "desktop" else ""
         headless_val = bool(it.get("headless"))
         headless_label = "Sim" if headless_val else ""
+        build_label_value = (it.get("build_name") or "").strip()
 
         summary_text = (
             f"T:{it.get('total',0)}  P:{it.get('passed',0)}  F:{it.get('failed',0)}"
@@ -2323,6 +2416,13 @@ def rebuild_history_table():
         )
         summary = ctk.CTkLabel(row, text=summary_text, text_color=COLOR_TEXT, font=ctk.CTkFont(size=12))
         summary.pack(anchor="w", padx=10, pady=(0, 4))
+        if build_label_value:
+            ctk.CTkLabel(
+                row,
+                text=f"Build: {build_label_value}",
+                text_color=COLOR_TEXT_MUTED,
+                font=ctk.CTkFont(size=11)
+            ).pack(anchor="w", padx=10, pady=(0, 4))
         tests_passed = it.get("tests_passed", [])
         tests_failed = it.get("tests_failed", [])
         failed_logs = it.get("tests_failed_logs", {}) or {}
@@ -2419,7 +2519,7 @@ def create_ui():
     global headless_var, record_screen_var, record_checkbox
     global custom_url_label_widget, custom_url_entry_widget
     global plan_var, plan_option_menu
-    global history_rows_frame, history_status_filter_var, history_empty_label
+    global history_rows_frame, history_status_filter_var, history_build_filter_var, history_empty_label
     global history_start_day_var, history_start_month_var, history_start_year_var
     global history_end_day_var, history_end_month_var, history_end_year_var
     global today_checkbox_var
@@ -2461,6 +2561,7 @@ def create_ui():
     headless_var = tk.BooleanVar(value=False)
     record_screen_var = tk.BooleanVar(value=False)
     history_status_filter_var = tk.StringVar(value="all")
+    history_build_filter_var = tk.StringVar(value="Todos")
     today_checkbox_var = tk.BooleanVar(value=False)
     history_start_day_var = tk.StringVar(value="DD")
     history_start_month_var = tk.StringVar(value="MM")
@@ -2480,6 +2581,7 @@ def create_ui():
     timeout_choice_var.trace_add("write", lambda *_: on_option_placeholder_change(timeout_choice_var, TIMEOUT_PLACEHOLDER, timeout_option_menu))
     target_env_var.trace_add("write", on_target_env_change)
     history_status_filter_var.trace_add("write", on_history_filter_change)
+    history_build_filter_var.trace_add("write", on_history_filter_change)
     history_start_day_var.trace_add("write", on_history_filter_change)
     history_start_month_var.trace_add("write", on_history_filter_change)
     history_start_year_var.trace_add("write", on_history_filter_change)
@@ -2676,7 +2778,34 @@ def create_ui():
         text_color=COLOR_TEXT_MUTED,
         font=ctk.CTkFont(size=14)
     )
-    build_label.grid(row=1, column=0, columnspan=4, padx=10, pady=(6, 4), sticky="w")
+    build_label.grid(row=1, column=0, columnspan=3, padx=10, pady=(6, 4), sticky="w")
+
+    build_info_icon = ctk.CTkButton(
+        config_frame,
+        text="?",
+        width=20,
+        height=20,
+        corner_radius=10,
+        border_width=1,
+        border_color=COLOR_BORDER,
+        fg_color=COLOR_BG,
+        hover=False,
+        text_color=COLOR_TEXT_MUTED,
+        font=ctk.CTkFont(size=11, weight="bold"),
+        cursor="question_arrow",
+        command=None
+    )
+    build_info_icon.grid(row=1, column=3, padx=(0, 10), pady=(6, 4), sticky="e")
+
+    attach_tooltip(
+        build_info_icon,
+        "Nome da build agrupa testes no histórico e em grids remotos.\n"
+        "Sugestões:\n"
+        "- sprint-DD.MM-reg\n"
+        "- smoke-DD-MM-AAAA\n"
+        "- mobile-regressao\n"
+        "- DIG-1234"
+    )
 
     build_entry = ctk.CTkEntry(
         config_frame,
@@ -2790,7 +2919,8 @@ def create_ui():
 
     attach_tooltip(
         record_info_icon,
-        'Nas plataformas "local" e "headless" será gravado somente a evidência da falha do teste.'
+        'Nas plataformas "local" e "headless" será gravado somente a evidência da falha do teste. \n'
+        '- Nome da pasta responsavel por armazenar as imagens de falha, "/evidencias_local".'
     )
 
     last_forced = {"forced": False}

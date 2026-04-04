@@ -53,7 +53,7 @@ def test_21_finalizacao_pedidos_sul(driver, setup_site, wait):
 
     # 5) Acesando step de payment
     click_when_clickable(wait, BTN_CONTINUAR_SHIPPING)
-    time.sleep(5)
+    time.sleep(7)
 
     # 6) Aplicando cupom pelo input + removendo cupom + aplicando cupom pelo radio button
     fill_input(driver, wait, INPUT_CUPOM, "automacao10", timeout=20)

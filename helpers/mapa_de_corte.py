@@ -86,9 +86,6 @@ def interagir_ver_produtos_modal_bovinos_home(driver, wait):
     click_when_clickable(wait, MODAL_VER_PRODUTOS)
     time.sleep(5)
 
-    # scroll ate item 5 e item 9
-    scroll_to_middle(driver, wait, PRODUCT_ITEM_5)
-    scroll_to_middle(driver, wait, PRODUCT_ITEM_9)
 
 def interagir_mapa_cordeiro_cliques_home(driver, wait):
     """Volta pra home, aba Cordeiro, abre/fecha areas e itens."""
@@ -192,8 +189,6 @@ def interagir_ver_produtos_modal_bovinos_pagina(driver, wait):
     click_when_clickable(wait, MODAL_VER_PRODUTOS)
     time.sleep(3)
 
-    scroll_to_middle(driver, wait, PRODUCT_ITEM_5)
-    scroll_to_middle(driver, wait, PRODUCT_ITEM_9)
 
 def interagir_mapa_cordeiro_cliques_pagina(driver, wait):
     """Navega /mapa-de-corte, aba Cordeiro, abre/fecha areas e itens."""
