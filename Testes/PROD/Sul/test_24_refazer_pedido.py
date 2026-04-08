@@ -67,7 +67,7 @@ def test_24_refazer_pedido_sul(driver, setup_site, wait):
     selecionar_boleto_e_finalizar(driver, wait, BOLETO_OPTION_28)
 
     # 10) Meus Pedidos
-    open_dropdown_item(driver, DD_MEUS_PEDIDOS, 10)
+    open_dropdown_item(driver, DD_MEUS_PEDIDOS, wait=wait)
     ordenar_por_forma_pagamento(driver, wait)
     abrir_detalhe_primeiro_pedido(driver, wait)
     refazer_pedido(driver, wait)

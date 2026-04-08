@@ -100,8 +100,8 @@ def test_5_dashboard(driver, setup_site, wait):
 
     # volta email
     open_my_account(driver, wait)
-    scroll_and_safe_click_loc(driver, wait, NAV_INFO_CONTA, timeout=12)
-    visible(driver, BTN_EDIT_EMAIL, timeout=12)
+    scroll_and_safe_click_loc(driver, wait, NAV_INFO_CONTA)
+    visible(driver, BTN_EDIT_EMAIL, wait=wait)
     account_change_email_flow(driver, wait, new_email=VALID_USER, current_password=NEW_PASS)
 
     # volta senha

@@ -2,8 +2,9 @@ import time
 
 from selenium.common.exceptions import StaleElementReferenceException
 from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.support.ui import WebDriverWait
 
-from helpers.waiters import visible, wait, wait_any_visible, wait_visible_any
+from helpers.waiters import visible, wait, wait_any_visible, wait_visible_any, _effective_timeout
 from helpers.actions import safe_click_loc, mobile_click_strict
 
 from locators.plp import (
@@ -13,12 +14,14 @@ from locators.plp import (
 )
 
 
-def open_pdp_from_first_avise_in_plp(driver):
-    visible(driver, SORTER_SELECT, timeout=25)
+def open_pdp_from_first_avise_in_plp(driver, wait=None, timeout=None):
+    t = _effective_timeout(wait, timeout)
+    w = wait if wait is not None else None
+    visible(driver, SORTER_SELECT, timeout=t, wait=w)
 
-    avise = wait_any_visible(driver, AVISE_DISABLED_ANY, timeout=5)
+    avise = wait_any_visible(driver, AVISE_DISABLED_ANY, timeout=t)
     if not avise:
-        avise = wait_any_visible(driver, AVISE_ENABLED_ANY, timeout=2)
+        avise = wait_any_visible(driver, AVISE_ENABLED_ANY, timeout=t)
 
     if not avise:
         return False
@@ -60,7 +63,7 @@ def _has_classes(el, *tokens):
     return all(t in cls for t in tokens)
 
 def _wait_class_contains(driver, locator, timeout, *tokens):
-    w = wait(driver, timeout)
+    w = WebDriverWait(driver, timeout)
     def _pred(d):
         try:
             el = d.find_element(*locator)
@@ -70,7 +73,7 @@ def _wait_class_contains(driver, locator, timeout, *tokens):
     return w.until(_pred)
 
 def _wait_class_not_contains(driver, locator, timeout, *tokens):
-    w = wait(driver, timeout)
+    w = WebDriverWait(driver, timeout)
     def _pred(d):
         try:
             el = d.find_element(*locator)
@@ -80,40 +83,41 @@ def _wait_class_not_contains(driver, locator, timeout, *tokens):
             return False
     return w.until(_pred)
 
-def toggle_avise_me_requires_refresh(driver, page_ready_locator=None, timeout=25, wait_click_class=False,):
+def toggle_avise_me_requires_refresh(driver, page_ready_locator=None, timeout=None, wait_click_class=False, wait_obj=None):
     # garante página pronta
+    t = _effective_timeout(wait_obj, timeout)
+    w = wait_obj if wait_obj is not None else wait(driver, t)
     if page_ready_locator:
-        visible(driver, page_ready_locator, timeout=timeout)
+        visible(driver, page_ready_locator, timeout=t, wait=wait_obj)
     else:
-        wait_visible_any(driver, [AVISE_DISABLED_ANY, AVISE_ENABLED_ANY], timeout=timeout)
+        wait_visible_any(driver, [AVISE_DISABLED_ANY, AVISE_ENABLED_ANY], timeout=t)
 
     # encontra o botão DESATIVADO
-    w = wait(driver, timeout)
     w.until(EC.presence_of_element_located(AVISE_DISABLED_ANY))
 
     # clica no botão do avise-me
-    safe_click_loc(driver, w, AVISE_DISABLED_ANY, timeout=timeout)
+    safe_click_loc(driver, w, AVISE_DISABLED_ANY, timeout=t)
 
     # 3) espera AJAX: virar "alert-active clicked" no botão disabled
-    _wait_class_contains(driver, AVISE_DISABLED_ANY, timeout, "alert-active", "clicked")
+    _wait_class_contains(driver, AVISE_DISABLED_ANY, t, "alert-active", "clicked")
 
     # 4) refresh
     driver.refresh()
 
     # 5) aguarda página pronta de novo
     if page_ready_locator:
-        visible(driver, page_ready_locator, timeout=timeout)
+        visible(driver, page_ready_locator, timeout=t, wait=wait_obj)
     else:
         w.until(EC.presence_of_element_located(AVISE_ENABLED_ANY))
 
     # 6) valida que o ENABLED está ativo após refresh
-    _wait_class_contains(driver, AVISE_ENABLED_ANY, timeout, "alert-active", "clicked")
+    _wait_class_contains(driver, AVISE_ENABLED_ANY, t, "alert-active", "clicked")
 
     # 7) clica para desativar
-    safe_click_loc(driver, w, AVISE_ENABLED_ANY, timeout=timeout)
+    safe_click_loc(driver, w, AVISE_ENABLED_ANY, timeout=t)
 
     # 8) espera AJAX: remover "alert-active clicked"
-    _wait_class_not_contains(driver, AVISE_ENABLED_ANY, timeout, "alert-active", "clicked")
+    _wait_class_not_contains(driver, AVISE_ENABLED_ANY, t, "alert-active", "clicked")
 
     return True
 
@@ -121,13 +125,15 @@ def toggle_avise_me_requires_refresh(driver, page_ready_locator=None, timeout=25
 #---------------------------------------------------------------
 # 📱 MOBILE
 #---------------------------------------------------------------
-def find_avise_me_plp_mobile(driver, page_ready_locator, max_pages=5, timeout=20):
+def find_avise_me_plp_mobile(driver, page_ready_locator, max_pages=5, timeout=None, wait_obj=None):
     """Diferente de desktop, esse helper só garante achar o botão do avise-me na plp"""
+    t = _effective_timeout(wait_obj, timeout)
+    w = wait_obj if wait_obj is not None else None
 
     for page in range(1, max_pages + 1):
 
         # garante que a página carregou
-        visible(driver, page_ready_locator, timeout=timeout)
+        visible(driver, page_ready_locator, timeout=t, wait=w)
 
         # procura botões avise-me na página
         buttons = driver.find_elements(*AVISE_DISABLED_ANY)
@@ -145,7 +151,7 @@ def find_avise_me_plp_mobile(driver, page_ready_locator, max_pages=5, timeout=20
             mobile_click_strict(
                 driver,
                 next_page,
-                timeout=10,
+                timeout=_effective_timeout(wait, 10, default=10),
                 retries=3,
                 sleep_between=0.25
             )

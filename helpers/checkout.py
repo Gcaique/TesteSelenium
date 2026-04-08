@@ -6,6 +6,7 @@ from selenium.webdriver.support import expected_conditions as EC
 
 from locators.checkout import *
 from helpers.actions import click_when_clickable, scroll_to_middle, mobile_click_strict
+from helpers.waiters import _effective_timeout
 
 
 def avancar_shipping(driver, wait):
@@ -64,15 +65,16 @@ def ir_para_home(driver, wait):
 #---------------------------------------------------------------
 # 📱 MOBILE
 #---------------------------------------------------------------
-def select_pix_payment(driver, timeout=20):
+def select_pix_payment(driver, timeout=20, wait=None):
     """
     O que faz:
-    - Garante que o método de pagamento PIX fique selecionado.
+    - Garante que o metodo de pagamento PIX fique selecionado.
     - Clica preferencialmente no LABEL (área maior e mais estável no iOS Safari).
     - Faz scroll para o elemento antes de clicar.
     - Confirma que o radio ficou checked.
     """
-    wait = WebDriverWait(driver, timeout)
+    eff = _effective_timeout(wait, timeout, default=20)
+    wait = wait if wait is not None else WebDriverWait(driver, eff)
 
     # 1) Espera a seção de pagamento existir
     wait.until(EC.presence_of_element_located((By.ID, "checkout-payment-method-load")))
@@ -93,22 +95,24 @@ def select_pix_payment(driver, timeout=20):
     # 3) Confirma que o input ficou checked
     wait.until(lambda d: d.find_element(By.ID, "dux_pay_pix").is_selected())
 
-def avancar_shipping_mobile(driver, wait):
+def avancar_shipping_mobile(driver, wait, timeout=None):
     """Aguarda shipping, abre e fecha o Resumo do pedido."""
+    t = _effective_timeout(wait, timeout, default=10)
     wait.until(EC.element_to_be_clickable(MOBILE_BTN_CONTINUAR_SHIPPING))
 
-    mobile_click_strict(driver, MOBILE_OPEN_SUMARY, 10, 4, 0.25)
+    mobile_click_strict(driver, MOBILE_OPEN_SUMARY, timeout=t, retries=4, sleep_between=0.25, wait=wait)
     wait.until(EC.presence_of_element_located(MOBILE_CLOSE_SUMARY))
     time.sleep(3)
-    mobile_click_strict(driver, MOBILE_CLOSE_SUMARY, 10, 4, 0.25)
+    mobile_click_strict(driver, MOBILE_CLOSE_SUMARY, timeout=t, retries=4, sleep_between=0.25, wait=wait)
 
-    mobile_click_strict(driver, MOBILE_BTN_CONTINUAR_SHIPPING, 10, 4, 0.25)
+    mobile_click_strict(driver, MOBILE_BTN_CONTINUAR_SHIPPING, timeout=t, retries=4, sleep_between=0.25, wait=wait)
 
-def selecionar_boleto_e_finalizar_mobile(driver, wait, condicao_locator):
+def selecionar_boleto_e_finalizar_mobile(driver, wait, condicao_locator, timeout=None):
     """Seleciona Boleto, condicao, aceita termos e finaliza."""
+    t = _effective_timeout(wait, timeout, default=10)
 
     # Seleciona Boleto
-    mobile_click_strict(driver, BOLETO, 10, 4, 0.25)
+    mobile_click_strict(driver, BOLETO, timeout=t, retries=4, sleep_between=0.25, wait=wait)
     time.sleep(3)
 
     # Define qual botão de finalizar usar
@@ -119,15 +123,15 @@ def selecionar_boleto_e_finalizar_mobile(driver, wait, condicao_locator):
         btn_finalizar = BTN_FINALIZAR_COMPRA_BOLETO_SUL
 
     # Seleciona condicao
-    mobile_click_strict(driver, BOLETO_SELECT, 10, 4, 0.25)
+    mobile_click_strict(driver, BOLETO_SELECT, timeout=t, retries=4, sleep_between=0.25, wait=wait)
 
     wait.until(EC.element_to_be_clickable(condicao_locator))
-    mobile_click_strict(driver, condicao_locator, 10, 4, 0.25)
+    mobile_click_strict(driver, condicao_locator, timeout=t, retries=4, sleep_between=0.25, wait=wait)
 
     time.sleep(3)
 
     # Finaliza compra
-    mobile_click_strict(driver, btn_finalizar, 10, 4, 0.25)
+    mobile_click_strict(driver, btn_finalizar, timeout=t, retries=4, sleep_between=0.25, wait=wait)
 
     # Aguarda pagina de sucesso; se nao aparecer em 8s, segue o fluxo
     try:
