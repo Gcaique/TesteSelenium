@@ -3,7 +3,7 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.common.exceptions import TimeoutException, StaleElementReferenceException
 
-from helpers.waiters import wait, visible
+from helpers.waiters import wait, visible, _effective_timeout, DEFAULT_TIMEOUT
 from helpers.actions import click, safe_click_loc_retry, mobile_click_strict
 
 from locators.common import (MINICART_WRAPPER)
@@ -54,25 +54,28 @@ def wait_minicart_loading(driver):
     except Exception:
         pass
 
-def wait_minicart_ready(driver, timeout=20):
+def wait_minicart_ready(driver, timeout=None, wait=None):
     """
     Garante:
     - loading sumiu
     - minicart está aberto
     - botão 'Ver carrinho' está visível
     """
+    t = _effective_timeout(wait, timeout)
+    t_open = _effective_timeout(wait, None)
     wait_minicart_loading(driver)
 
     if not driver.find_elements(*MINICART_ACTIVE):
-        click(driver, MINICART_ICON, timeout=10)
-        visible(driver, MINICART_ACTIVE, timeout=10)
+        click(driver, MINICART_ICON, timeout=t_open, wait=wait)
+        visible(driver, MINICART_ACTIVE, timeout=t_open, wait=wait)
 
-    visible(driver, VIEWCART, timeout=timeout)
+    visible(driver, VIEWCART, timeout=t, wait=wait)
 
-def minicart_click_wishlist(driver, index=1, timeout=25):
+def minicart_click_wishlist(driver, index=1, timeout=None):
     """Clica no ícone de wishlist (coração) do item N dentro do minicart."""
-    w = WebDriverWait(driver, timeout)
-    end = time.time() + timeout
+    eff = _effective_timeout(None, timeout, default=DEFAULT_TIMEOUT)
+    w = WebDriverWait(driver, eff)
+    end = time.time() + eff
     last_err = None
 
     # garante que o minicart já está renderizado
@@ -120,25 +123,26 @@ def minicart_click_wishlist(driver, index=1, timeout=25):
 
 def wishlist_toggle_remove_onwishlist(driver, wait, index=1):
     """Remoção item nos favoritos pelo minicart (coração do item index)."""
-    minicart_click_wishlist(driver, index=index, timeout=25)
+    minicart_click_wishlist(driver, index=index, timeout=None)
     time.sleep(1.2) # só uma folguinha pro ajax/KO
 
 
 def wishlist_toggle_add_towishlist(driver, wait, index=1):
     """Adicionar item nos favoritos pelo minicart (coração do item index)."""
-    minicart_click_wishlist(driver, index=index, timeout=25)
+    minicart_click_wishlist(driver, index=index, timeout=None)
     time.sleep(1.2)  # só uma folguinha pro ajax/KO
 
 
 
 def remove_simple_delete(driver, wait, idx: int = 1):
     """Remove produto do minicart e confirma modal."""
-    safe_click_loc_retry(driver, REMOVE_SIMPLE_DELETE_BY_INDEX(idx), timeout=15, retries=6)
-    visible(driver, CONFIRM_MODAL_ACCEPT, timeout=15)
-    safe_click_loc_retry(driver, CONFIRM_MODAL_ACCEPT, timeout=15, retries=6)
+    t = _effective_timeout(wait, 15, default=15)
+    safe_click_loc_retry(driver, REMOVE_SIMPLE_DELETE_BY_INDEX(idx), timeout=t, retries=6)
+    visible(driver, CONFIRM_MODAL_ACCEPT, timeout=t, wait=wait)
+    safe_click_loc_retry(driver, CONFIRM_MODAL_ACCEPT, timeout=t, retries=6)
 
 
-def wait_remove_alert_cycle(driver, timeout=25):
+def wait_remove_alert_cycle(driver, timeout=None):
     """
     Regras:
       - se o alerta aparecer, NÃO faça mais nada até ele sumir
@@ -158,7 +162,8 @@ def wait_remove_alert_cycle(driver, timeout=25):
         return
 
     # 2) espera o alerta SUMIR (remoção terminou)
-    WebDriverWait(driver, timeout, poll_frequency=0.1).until(
+    eff = _effective_timeout(None, timeout, default=DEFAULT_TIMEOUT)
+    WebDriverWait(driver, eff, poll_frequency=0.1).until(
         EC.invisibility_of_element_located(MINICART_REMOVE_ALERT)
     )
 
@@ -194,7 +199,7 @@ def minicart_empty(driver, wait, max_removals: int = 30):
             return True
 
         remove_simple_delete(driver, wait, idx=1)
-        wait_remove_alert_cycle(driver, timeout=25)
+        wait_remove_alert_cycle(driver, timeout=None)
 
     # se estourou limite
     raise AssertionError("Minicart não ficou vazio após tentativas de remoção.")
@@ -215,12 +220,13 @@ def minicart_decrement_qty(driver, wait):
 #---------------------------------------------------------------
 def remove_simple_delete_mobile(driver, wait, idx: int = 1):
     """Remove produto do minicart e confirma modal."""
-    mobile_click_strict(driver, MOBILE_REMOVE_SIMPLE_DELETE_BY_INDEX(idx), timeout=15, retries=6, sleep_between=0.25)
-    visible(driver, CONFIRM_MODAL_ACCEPT, timeout=15)
-    mobile_click_strict(driver, CONFIRM_MODAL_ACCEPT, timeout=15, retries=6, sleep_between=0.25)
+    t = _effective_timeout(wait, 15, default=15)
+    mobile_click_strict(driver, MOBILE_REMOVE_SIMPLE_DELETE_BY_INDEX(idx), timeout=t, retries=6, sleep_between=0.25)
+    visible(driver, CONFIRM_MODAL_ACCEPT, timeout=t, wait=wait)
+    mobile_click_strict(driver, CONFIRM_MODAL_ACCEPT, timeout=t, retries=6, sleep_between=0.25)
 
 
-def wait_remove_alert_cycle_mobile(driver, timeout=25):
+def wait_remove_alert_cycle_mobile(driver, timeout=None):
     """
     Regras:
       - se o alerta aparecer, NÃO faça mais nada até ele sumir
@@ -240,7 +246,8 @@ def wait_remove_alert_cycle_mobile(driver, timeout=25):
         return
 
     # 2) espera o alerta SUMIR (remoção terminou)
-    WebDriverWait(driver, timeout, poll_frequency=0.1).until(
+    eff = _effective_timeout(None, timeout, default=DEFAULT_TIMEOUT)
+    WebDriverWait(driver, eff, poll_frequency=0.1).until(
         EC.invisibility_of_element_located(MINICART_REMOVE_ALERT)
     )
 
@@ -276,7 +283,7 @@ def minicart_empty_mobile(driver, wait, max_removals: int = 30):
             return True
 
         remove_simple_delete_mobile(driver, wait, idx=1)
-        wait_remove_alert_cycle_mobile(driver, timeout=25)
+        wait_remove_alert_cycle_mobile(driver, timeout=None)
 
     # se estourou limite
     raise AssertionError("Minicart não ficou vazio após tentativas de remoção.")

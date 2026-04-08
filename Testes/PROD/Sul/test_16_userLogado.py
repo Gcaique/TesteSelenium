@@ -39,22 +39,22 @@ VALID_PASS = "Min@1234"
 @pytest.mark.smoke
 @pytest.mark.sul
 @pytest.mark.logado
-def test_16_user_logado_sul(driver, setup_site):
+def test_16_user_logado_sul(driver, setup_site, wait):
     # 1) Login (fonte da verdade = mini-cart)
     ensure_logged_in(driver, VALID_USER, VALID_PASS)
 
     # 2) Dropdown do usuário (seus itens)
-    open_dropdown_item(driver, DD_MINHA_CONTA, timeout=15)
+    open_dropdown_item(driver, DD_MINHA_CONTA, wait=wait)
     time.sleep(3)
-    open_dropdown_item(driver, DD_COMPARAR, timeout=15)
-    open_dropdown_item(driver, DD_MEUS_PEDIDOS, timeout=15)
-    open_dropdown_item(driver, DD_FAVORITOS, timeout=15)
+    open_dropdown_item(driver, DD_COMPARAR, wait=wait)
+    open_dropdown_item(driver, DD_MEUS_PEDIDOS, wait=wait)
+    open_dropdown_item(driver, DD_FAVORITOS, wait=wait)
     time.sleep(3)
-    open_dropdown_item(driver, DD_MEUS_PONTOS, timeout=15)
-    open_dropdown_item(driver, DD_MEUS_CUPONS, timeout=15)
-    open_dropdown_item(driver, DD_MINHAS_MISSOES, timeout=15)
+    open_dropdown_item(driver, DD_MEUS_PONTOS, wait=wait)
+    open_dropdown_item(driver, DD_MEUS_CUPONS, wait=wait)
+    open_dropdown_item(driver, DD_MINHAS_MISSOES, wait=wait)
     time.sleep(2)
-    open_dropdown_item(driver, DD_PRIVACIDADE_DADOS, timeout=15)
+    open_dropdown_item(driver, DD_PRIVACIDADE_DADOS, wait=wait)
     time.sleep(2)
 
     # 3) Troca de região: sul -> default -> sul
@@ -62,91 +62,91 @@ def test_16_user_logado_sul(driver, setup_site):
     switch_region(driver, "sul")
 
     # 4) Mini-cart abre/fecha
-    click(driver, MINICART_ICON, timeout=10)
-    visible(driver, MINICART_ACTIVE, timeout=10)
-    click(driver, MINICART_CLOSE, timeout=10)
-    visible(driver, MINICART_ICON, timeout=10)
+    click(driver, MINICART_ICON, wait=wait)
+    visible(driver, MINICART_ACTIVE, wait=wait)
+    click(driver, MINICART_CLOSE, wait=wait)
+    visible(driver, MINICART_ICON, wait=wait)
 
     # 5) Carrossel 1: tenta alterar qtd e adicionar
-    scroll_into_view(driver, CAROUSEL_1, timeout=15)
-    click(driver, QTY_INPUT_FIRST, timeout=10)
+    scroll_into_view(driver, CAROUSEL_1, wait=wait)
+    click(driver, QTY_INPUT_FIRST, wait=wait)
     fill(driver, QTY_INPUT_FIRST, "0")
-    scroll_into_view(driver, ADD_BTN_FIRST_CAROUSEL, timeout=10)
-    click(driver, ADD_BTN_FIRST_CAROUSEL, timeout=10)
+    scroll_into_view(driver, ADD_BTN_FIRST_CAROUSEL, wait=wait)
+    click(driver, ADD_BTN_FIRST_CAROUSEL, wait=wait)
     wait_minicart_loading(driver)
 
     # 6) Busca: "alcatra" e add pela sugestão da busca
-    click(driver, SEARCH_INPUT, timeout=10)
+    click(driver, SEARCH_INPUT, wait=wait)
     fill(driver, SEARCH_INPUT, "alcatra")
-    visible(driver, SEARCH_SUGGEST_ADD_2, timeout=20)
-    click(driver, SEARCH_SUGGEST_ADD_2, timeout=10)
+    visible(driver, SEARCH_SUGGEST_ADD_2, wait=wait)
+    click(driver, SEARCH_SUGGEST_ADD_2, wait=wait)
     wait_minicart_loading(driver)
 
     # 7) Busca: pack -> carne -> ver todos
-    click(driver, SEARCH_INPUT, timeout=10)
+    click(driver, SEARCH_INPUT, wait=wait)
     fill(driver, SEARCH_INPUT, "pack")
-    visible(driver, SEE_ALL_LINK, timeout=20)
+    visible(driver, SEE_ALL_LINK, wait=wait)
 
-    click(driver, SEARCH_INPUT, timeout=10)
+    click(driver, SEARCH_INPUT, wait=wait)
     fill(driver, SEARCH_INPUT, "carne")
-    visible(driver, SEE_ALL_LINK, timeout=20)
-    click(driver, SEE_ALL_LINK, timeout=10)
+    visible(driver, SEE_ALL_LINK, wait=wait)
+    click(driver, SEE_ALL_LINK, wait=wait)
 
     # 8) Paginação e filtros / ordenação
-    click(driver, PAGINA_2, timeout=15)
-    visible(driver, SORTER_SELECT, timeout=20)
+    click(driver, PAGINA_2, wait=wait)
+    visible(driver, SORTER_SELECT, wait=wait)
 
-    click(driver, FILTER_CONSERVACAO_OPEN, timeout=10)
-    click(driver, FILTER_CONSERVACAO_RESFRIADO, timeout=10)
-    visible(driver, SORTER_SELECT, timeout=20)
+    click(driver, FILTER_CONSERVACAO_OPEN, wait=wait)
+    click(driver, FILTER_CONSERVACAO_RESFRIADO, wait=wait)
+    visible(driver, SORTER_SELECT, wait=wait)
 
     # filtro marca (se existir)
     if driver.find_elements(*FILTER_MARCA_OPEN):
-        click(driver, FILTER_MARCA_OPEN, timeout=8)
+        click(driver, FILTER_MARCA_OPEN, wait=wait)
         if driver.find_elements(*FILTER_MARCA_OPT1):
-            click(driver, FILTER_MARCA_OPT1, timeout=8)
+            click(driver, FILTER_MARCA_OPT1, wait=wait)
 
     # limpar filtros
-    click(driver, FILTER_CLEAR_ALL, timeout=15)
+    click(driver, FILTER_CLEAR_ALL, wait=wait)
 
     # ordenação (low -> high -> high -> low)
-    click(driver, SORTER_SELECT, timeout=10)
-    click(driver, SORT_LOW_TO_HIGH, timeout=10)
-    click(driver, SORTER_SELECT, timeout=10)
-    click(driver, SORT_HIGH_TO_LOW, timeout=10)
+    click(driver, SORTER_SELECT, wait=wait)
+    click(driver, SORT_LOW_TO_HIGH, wait=wait)
+    click(driver, SORTER_SELECT, wait=wait)
+    click(driver, SORT_HIGH_TO_LOW, wait=wait)
 
     # 9) Add primeiro da lista
-    click(driver, PLP_ADD_TO_CART_BY_INDEX(1), timeout=10)
+    click(driver, PLP_ADD_TO_CART_BY_INDEX(1), wait=wait)
     wait_minicart_loading(driver)
 
     # 10) Promoções: adicionar item
-    click(driver, CATEGORY_PROMOCOES, timeout=15)
-    visible(driver, SORTER_SELECT, timeout=20)
+    click(driver, CATEGORY_PROMOCOES, wait=wait)
+    visible(driver, SORTER_SELECT, wait=wait)
 
-    click(driver, QTY_INPUT_FIRST, timeout=10)
+    click(driver, QTY_INPUT_FIRST, wait=wait)
     fill(driver, QTY_INPUT_FIRST, "2")
-    click(driver, PLP_ADD_TO_CART_BY_INDEX(1), timeout=10)
+    click(driver, PLP_ADD_TO_CART_BY_INDEX(1), wait=wait)
     wait_minicart_loading(driver)
 
     # 11) Bovinos -> PDP -> add -> previsão entrega
-    click(driver, CATEGORY_BOVINOS, timeout=15)
-    visible(driver, FIRST_PRODUCT_PLP, timeout=20)
-    click(driver, FIRST_PRODUCT_PLP, timeout=15)
+    click(driver, CATEGORY_BOVINOS, wait=wait)
+    visible(driver, FIRST_PRODUCT_PLP, wait=wait)
+    click(driver, FIRST_PRODUCT_PLP, wait=wait)
 
-    visible(driver, PDP_ADD_TO_CART, timeout=20)
-    click(driver, PDP_INCREMENT, timeout=10)
-    click(driver, PDP_ADD_TO_CART, timeout=10)
+    visible(driver, PDP_ADD_TO_CART, wait=wait)
+    click(driver, PDP_INCREMENT, wait=wait)
+    click(driver, PDP_ADD_TO_CART, wait=wait)
     wait_minicart_loading(driver)
 
     # previsão entrega
-    click(driver, ADDRESSES_SELECT, timeout=10)
-    click(driver, ADDRESSES_OPT2, timeout=10)
-    click(driver, BTN_VERIFY_FORECAST, timeout=10)
-    visible(driver, FORECAST_RESULT, timeout=20)
+    click(driver, ADDRESSES_SELECT, wait=wait)
+    click(driver, ADDRESSES_OPT2, wait=wait)
+    click(driver, BTN_VERIFY_FORECAST, wait=wait)
+    visible(driver, FORECAST_RESULT, wait=wait)
 
     # 12) Mais vendidos -> Avise-me (PLP / PDP)
-    click(driver, CATEGORY_MAIS_VENDIDOS, timeout=15)
-    visible(driver, SORTER_SELECT, timeout=20)
+    click(driver, CATEGORY_MAIS_VENDIDOS, wait=wait)
+    visible(driver, SORTER_SELECT, wait=wait)
 
     # PLP: toggle avise-me
     ok_plp = toggle_avise_me_requires_refresh(driver, page_ready_locator=SORTER_SELECT)
@@ -162,14 +162,14 @@ def test_16_user_logado_sul(driver, setup_site):
         print("[WARN] Não consegui abrir PDP a partir de um produto com Avise-me.")
 
     # 13) Limpar carrinho (view cart -> empty -> confirm -> ver catálogo)
-    wait_minicart_ready(driver, timeout=25)
-    click(driver, VIEWCART, timeout=15)
-    visible(driver, EMPTY_CART_BTN, timeout=25)
-    click(driver, EMPTY_CART_BTN, timeout=20)
-    visible(driver, EMPTY_CART_CONFIRM, timeout=20)
-    click(driver, EMPTY_CART_CONFIRM, timeout=20)
-    visible(driver, VER_CATALOGO, timeout=25)
-    click(driver, VER_CATALOGO, timeout=20)
+    wait_minicart_ready(driver)
+    click(driver, VIEWCART, wait=wait)
+    visible(driver, EMPTY_CART_BTN, wait=wait)
+    click(driver, EMPTY_CART_BTN, wait=wait)
+    visible(driver, EMPTY_CART_CONFIRM, wait=wait)
+    click(driver, EMPTY_CART_CONFIRM, wait=wait)
+    visible(driver, VER_CATALOGO, wait=wait)
+    click(driver, VER_CATALOGO, wait=wait)
 
     # assert final: ainda logado
     assert minicart_visible(driver), "Era para terminar o teste logado, mas mini-cart não está visível."

@@ -38,7 +38,7 @@ def test_11_lp_marcas_mobile(driver, setup_site, wait):
 
     # 5) Efetuar login
     click_when_clickable(wait, MOBILE_LOGIN_ACESSO)
-    visible(driver, USERNAME_INPUT, timeout=10)
+    visible(driver, USERNAME_INPUT, wait=wait, timeout=10)
 
     submit_username_valid(driver, VALID_USER, "usuário válido")
     login_password(driver, VALID_PASS, "senha válida", expect_success=True)
@@ -59,7 +59,7 @@ def test_11_lp_marcas_mobile(driver, setup_site, wait):
         buscar_e_add_produto_marca(driver, wait, "sal", marca)
 
     # 7) Removendo item do mini-cart
-    mobile_click_strict(driver, MOBILE_MINICART_ICON, 10, 4, 0.25)
-    visible(driver, MOBILE_MINICART_OPENED, 10)
+    mobile_click_strict(driver, MOBILE_MINICART_ICON, wait=wait, timeout=10, retries=4, sleep_between=0.25)
+    visible(driver, MOBILE_MINICART_OPENED, wait=wait, timeout=10)
     remove_simple_delete_mobile(driver, wait, 1)
     time.sleep(5)

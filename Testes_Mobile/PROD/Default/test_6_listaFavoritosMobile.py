@@ -57,14 +57,14 @@ def test_6_lista_de_favoritos_mobile(driver, setup_site, wait):
     wishlist_add_all_to_cart_mobile(driver, wait)
 
     # abre
-    mobile_click_strict(driver, MOBILE_MINICART_ICON, timeout=20, retries=4, sleep_between=0.25)
-    visible(driver, MOBILE_MINICART_OPENED, timeout=20)
+    mobile_click_strict(driver, MOBILE_MINICART_ICON, wait=wait, retries=4, sleep_between=0.25)
+    visible(driver, MOBILE_MINICART_OPENED, wait=wait)
 
     time.sleep(4) # Tempo para conferencia de produtos adicionados
 
     # fecha
-    mobile_click_strict(driver, MOBILE_MINICART_CLOSE, timeout=20, retries=4, sleep_between=0.25)
-    visible(driver, MOBILE_MINICART_CLOSED, timeout=20)
+    mobile_click_strict(driver, MOBILE_MINICART_CLOSE, wait=wait, retries=4, sleep_between=0.25)
+    visible(driver, MOBILE_MINICART_CLOSED, wait=wait)
 
     # 10) Interações no primeiro item: ++, - e adiciona + abrir minicart e fechar
     wishlist_increment_by_index_mobile(driver, wait, 3)
@@ -73,28 +73,28 @@ def test_6_lista_de_favoritos_mobile(driver, setup_site, wait):
     wishlist_add_item_to_cart_by_index_mobile(driver, wait, 3)
 
     # abre
-    mobile_click_strict(driver, MOBILE_MINICART_ICON, timeout=20, retries=4, sleep_between=0.25)
-    visible(driver, MOBILE_MINICART_OPENED, timeout=20)
+    mobile_click_strict(driver, MOBILE_MINICART_ICON, wait=wait, retries=4, sleep_between=0.25)
+    visible(driver, MOBILE_MINICART_OPENED, wait=wait)
 
     time.sleep(4)  # Tempo para conferencia de produtos adicionados
 
     # fecha
-    mobile_click_strict(driver, MOBILE_MINICART_CLOSE, timeout=20, retries=4, sleep_between=0.25)
-    visible(driver, MOBILE_MINICART_CLOSED, timeout=20)
+    mobile_click_strict(driver, MOBILE_MINICART_CLOSE, wait=wait, retries=4, sleep_between=0.25)
+    visible(driver, MOBILE_MINICART_CLOSED, wait=wait)
 
     # 11) Avise-me
     wishlist_avise_me_flow_mobile(driver, wait)
 
     # 12) Botão favorito dentro do minicart (remove produto dos favoritos pelo minicart, favorita novamente pelo minicart)
-    mobile_click_strict(driver, MOBILE_MINICART_ICON, timeout=20, retries=4, sleep_between=0.25) # abre minicart
-    visible(driver, MOBILE_MINICART_OPENED, timeout=20)
+    mobile_click_strict(driver, MOBILE_MINICART_ICON, wait=wait, retries=4, sleep_between=0.25) # abre minicart
+    visible(driver, MOBILE_MINICART_OPENED, wait=wait)
     time.sleep(1)
     wishlist_toggle_remove_onwishlist(driver, wait, 1)
 
     time.sleep(3)  # Tempo para conferencia
 
-    mobile_click_strict(driver, MOBILE_MINICART_ICON, timeout=20, retries=4, sleep_between=0.25)  # abre minicart
-    visible(driver, MOBILE_MINICART_OPENED, timeout=20)
+    mobile_click_strict(driver, MOBILE_MINICART_ICON, wait=wait, retries=4, sleep_between=0.25)  # abre minicart
+    visible(driver, MOBILE_MINICART_OPENED, wait=wait)
     wishlist_toggle_add_towishlist(driver, wait, 1)
 
     time.sleep(3)  # Tempo para conferencia
@@ -103,8 +103,8 @@ def test_6_lista_de_favoritos_mobile(driver, setup_site, wait):
     assert remove_all_cards_wishlist(driver, wait), "Ainda existiam itens na wishlist."
 
     # 14) Esvaziar minicart
-    mobile_click_strict(driver, MOBILE_MINICART_ICON, timeout=20, retries=4, sleep_between=0.25)
-    visible(driver, MOBILE_MINICART_OPENED, timeout=20)
+    mobile_click_strict(driver, MOBILE_MINICART_ICON, wait=wait, retries=4, sleep_between=0.25)
+    visible(driver, MOBILE_MINICART_OPENED, wait=wait)
     time.sleep(1)
     minicart_empty(driver, wait)
 

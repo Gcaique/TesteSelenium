@@ -5,6 +5,7 @@ from selenium.webdriver.support import expected_conditions as EC
 from locators.redefinir_senha import *
 
 from helpers.actions import clear_and_type, mobile_click_strict
+from helpers.waiters import _effective_timeout, DEFAULT_TIMEOUT
 
 def clicar_sms_modal(driver, wait):
     """Clica no botao SMS da modal de recuperacao."""
@@ -135,8 +136,9 @@ def clicar_entrar_apos_redefinir(driver, wait):
 #---------------------------------------------------------------
 def navegar_email_logs_mobile(driver, wait):
     """Navega ate a pagina de Email Logs no admin."""
-    mobile_click_strict(driver, ADMIN_MENU_STORES, timeout=12, retries=4, sleep_between=0.25)
-    mobile_click_strict(driver, ADMIN_SUBMENU_EMAIL_LOGS, timeout=12, retries=4, sleep_between=0.25)
+    t = _effective_timeout(wait, None) if "wait" in locals() else DEFAULT_TIMEOUT
+    mobile_click_strict(driver, ADMIN_MENU_STORES, timeout=t, retries=4, sleep_between=0.25)
+    mobile_click_strict(driver, ADMIN_SUBMENU_EMAIL_LOGS, timeout=t, retries=4, sleep_between=0.25)
     time.sleep(5)
 
 def filtrar_email_logs_mobile(driver, wait, email_destinatario):
@@ -161,20 +163,20 @@ def obter_link_redefinicao_mobile(driver, wait):
 
 def preencher_nova_senha_mobile(driver, wait, senha):
     """Preenche o campo 'Nova senha'."""
-    mobile_click_strict(driver, INPUT_NOVA_SENHA, 12, 4, 0.25)
+    mobile_click_strict(driver, INPUT_NOVA_SENHA, wait=wait,retries=4, sleep_between=0.25)
     driver.find_element(*INPUT_NOVA_SENHA).send_keys(senha)
 
 def preencher_confirmar_senha_mobile(driver, wait, senha):
     """Preenche o campo 'Confirmar nova senha'."""
-    mobile_click_strict(driver, INPUT_CONFIRMAR_SENHA, 12, 4, 0.25)
+    mobile_click_strict(driver, INPUT_CONFIRMAR_SENHA, wait=wait,retries=4, sleep_between=0.25)
     driver.find_element(*INPUT_CONFIRMAR_SENHA).send_keys(senha)
 
-def limpar_e_preencher_nova_senha_mobile(driver, senha):
+def limpar_e_preencher_nova_senha_mobile(driver, wait, senha):
     """Limpa e preenche o campo 'Nova senha'."""
-    mobile_click_strict(driver, INPUT_NOVA_SENHA, 12, 4, 0.25)
+    mobile_click_strict(driver, INPUT_NOVA_SENHA, wait=wait,retries=4, sleep_between=0.25)
     clear_and_type(driver, INPUT_NOVA_SENHA, senha)
 
-def limpar_e_preencher_confirmar_senha_mobile(driver, senha):
+def limpar_e_preencher_confirmar_senha_mobile(driver, wait, senha):
     """Limpa e preenche o campo 'Confirmar nova senha'."""
-    mobile_click_strict(driver, INPUT_CONFIRMAR_SENHA, 12, 4, 0.25)
+    mobile_click_strict(driver, INPUT_CONFIRMAR_SENHA, wait=wait, retries=4, sleep_between=0.25)
     clear_and_type(driver, INPUT_CONFIRMAR_SENHA, senha)
