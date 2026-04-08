@@ -14,6 +14,7 @@ from helpers.popups import try_close_popups
 from helpers.checkout import avancar_shipping_mobile, selecionar_boleto_e_finalizar_mobile, ir_para_home
 from helpers.dropdown import open_dropdown_item
 from helpers.actions import mobile_click_strict, visible
+from helpers.waiters import _effective_timeout
 
 
 # =========================
@@ -31,7 +32,7 @@ def test_24_refazer_pedido_mobile_sul(driver, setup_site, wait):
     # 1) Login via Ultimos Pedidos
     click_if_present(driver, COOKIE_ACCEPT, seconds=20)
     clicar_ultimos_pedidos(driver, wait)
-    mobile_click_strict(driver, MOBILE_LOGIN_ACESSO, 10, 4, 0.25)
+    mobile_click_strict(driver, MOBILE_LOGIN_ACESSO, wait=wait, retries=4, sleep_between=0.25)
     submit_username_valid(driver, VALID_USER, "usuário válido")
     login_password(driver, VALID_PASS, "senha válida", expect_success=True)
     aguardar_redirect_ultimos_pedidos(driver, wait)
@@ -44,10 +45,10 @@ def test_24_refazer_pedido_mobile_sul(driver, setup_site, wait):
     ver_similar_refazer_e_adicionar_mobile(driver, wait)
 
     # 4) Finalizar compra
-    mobile_click_strict(driver, MOBILE_MINICART_ICON_SUL, timeout=20, retries=4, sleep_between=0.25)
-    visible(driver, MOBILE_MINICART_OPENED_SUL, timeout=20)
+    mobile_click_strict(driver, MOBILE_MINICART_ICON_SUL, wait=wait, retries=4, sleep_between=0.25)
+    visible(driver, MOBILE_MINICART_OPENED_SUL, wait=wait)
 
-    mobile_click_strict(driver, BTN_CHECKOUT_TOP, timeout=12, retries=4, sleep_between=0.25)
+    mobile_click_strict(driver, BTN_CHECKOUT_TOP, wait=wait, retries=4, sleep_between=0.25)
     time.sleep(5)
 
     avancar_shipping_mobile(driver, wait)
@@ -72,10 +73,10 @@ def test_24_refazer_pedido_mobile_sul(driver, setup_site, wait):
     adicionar_todos_ao_carrinho_mobile(driver, wait)
 
     # 9) Finalizar compra
-    mobile_click_strict(driver, MOBILE_MINICART_ICON_SUL, timeout=20, retries=4, sleep_between=0.25)
-    visible(driver, MOBILE_MINICART_OPENED_SUL, timeout=20)
+    mobile_click_strict(driver, MOBILE_MINICART_ICON_SUL, wait=wait, retries=4, sleep_between=0.25)
+    visible(driver, MOBILE_MINICART_OPENED_SUL, wait=wait)
 
-    mobile_click_strict(driver, BTN_CHECKOUT_TOP, timeout=12, retries=4, sleep_between=0.25)
+    mobile_click_strict(driver, BTN_CHECKOUT_TOP, wait=wait, retries=4, sleep_between=0.25)
     time.sleep(5)
 
     avancar_shipping_mobile(driver, wait)
@@ -83,6 +84,6 @@ def test_24_refazer_pedido_mobile_sul(driver, setup_site, wait):
     selecionar_boleto_e_finalizar_mobile(driver, wait, BOLETO_OPTION_28)
 
     # 10) Meus Pedidos
-    open_dropdown_item(driver, DD_MEUS_PEDIDOS, 10)
+    open_dropdown_item(driver, DD_MEUS_PEDIDOS, wait=wait)
     abrir_detalhe_primeiro_pedido_mobile(driver, wait)
     refazer_pedido(driver, wait)

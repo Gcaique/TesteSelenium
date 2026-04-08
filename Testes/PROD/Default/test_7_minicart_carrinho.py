@@ -97,9 +97,9 @@ def test_7_minicart_carrinho(driver, setup_site, wait):
     wait_minicart_ready(driver)
 
     # 10) Acessando PDP do item pelo mini-cart
-    safe_click_loc(driver, wait, MINICART_ITEMS_BY_INDEX(1), timeout=10)
+    safe_click_loc(driver, wait, MINICART_ITEMS_BY_INDEX(1))
     wait.until(EC.visibility_of_element_located(ADDRESSES_SELECT))
-    safe_click_loc(driver, wait, MINICART_ITEMS_BY_INDEX(2), timeout=10)
+    safe_click_loc(driver, wait, MINICART_ITEMS_BY_INDEX(2))
     time.sleep(2)
     wait.until(EC.visibility_of_element_located(ADDRESSES_SELECT))
 
@@ -125,10 +125,10 @@ def test_7_minicart_carrinho(driver, setup_site, wait):
 
     #14 Alterar qty pelo o botão "+" e "-"
     wait.until(EC.presence_of_all_elements_located(CART_DECREMENT_BTN(3)))
-    safe_click_loc(driver, wait, CART_INCREMENT_BTN(3), timeout=30)
+    safe_click_loc(driver, wait, CART_INCREMENT_BTN(3))
     time.sleep(3)
     wait.until(EC.presence_of_all_elements_located(CART_DECREMENT_BTN(3)))
-    safe_click_loc(driver, wait, CART_DECREMENT_BTN(3), timeout=30)
+    safe_click_loc(driver, wait, CART_DECREMENT_BTN(3))
     time.sleep(3)
 
     # 15) Remover segundo item manualmente

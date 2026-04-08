@@ -6,6 +6,7 @@ from helpers.minicart import minicart_visible
 from helpers.dashboard import *
 
 from helpers.auth import (login_expect_email_not_found, login_expect_wrong_password, login_password)
+from helpers.waiters import _effective_timeout
 
 
 # =========================
@@ -23,7 +24,7 @@ NEW_PASS = "Min@1234567"
 @pytest.mark.dashboard
 def test_18_dashboard_sul(driver, setup_site, wait):
     # 1) Login inicial
-    ensure_logged_in(driver, VALID_USER, VALID_PASS)
+    ensure_logged_in(driver, VALID_USER, VALID_PASS, wait=wait)
     assert minicart_visible(driver), "Era para estar logado, mas o minicart não apareceu."
     try_close_popups(driver)
 
@@ -77,7 +78,7 @@ def test_18_dashboard_sul(driver, setup_site, wait):
     change_password_flow(driver, wait, current_password=VALID_PASS, new_password=NEW_PASS)
 
     # 16) Logout e validações de login
-    logout(driver)
+    logout(driver, wait=wait)
 
     # email antigo não encontrado
     login_expect_email_not_found(driver, wait, VALID_USER)
@@ -94,7 +95,7 @@ def test_18_dashboard_sul(driver, setup_site, wait):
     # volta email
     open_my_account(driver, wait)
     scroll_and_safe_click_loc(driver, wait, NAV_INFO_CONTA, timeout=12)
-    visible(driver, BTN_EDIT_EMAIL, timeout=12)
+    visible(driver, BTN_EDIT_EMAIL, wait=wait)
     account_change_email_flow(driver, wait, new_email=VALID_USER, current_password=NEW_PASS)
 
     # volta senha

@@ -49,106 +49,106 @@ def test_16_user_logado_mobile_sul(driver, setup_site, wait):
 
     # 4) Mini-cart abre/fecha
     # abre
-    mobile_click_strict(driver, MOBILE_MINICART_ICON_SUL, timeout=20, retries=4, sleep_between=0.25)
-    visible(driver, MOBILE_MINICART_OPENED_SUL, timeout=20)
+    mobile_click_strict(driver, MOBILE_MINICART_ICON_SUL, wait=wait, retries=4, sleep_between=0.25)
+    visible(driver, MOBILE_MINICART_OPENED_SUL, wait=wait)
 
     # fecha
-    mobile_click_strict(driver, MOBILE_MINICART_CLOSE, timeout=20, retries=4, sleep_between=0.25)
+    mobile_click_strict(driver, MOBILE_MINICART_CLOSE, wait=wait, retries=4, sleep_between=0.25)
     time.sleep(2)
 
     # 5) Carrossel 1: adicionar produto ao carrinho
-    scroll_into_view(driver, CAROUSEL_1, timeout=15)
-    click(driver, ADD_BTN_FIRST_CAROUSEL, timeout=10)
+    scroll_into_view(driver, CAROUSEL_1, wait=wait)
+    click(driver, ADD_BTN_FIRST_CAROUSEL, wait=wait)
     time.sleep(5)
 
     # 6) Busca: "suino" e add pela sugestão da busca
-    click(driver, SEARCH_INPUT, timeout=10)
+    click(driver, SEARCH_INPUT, wait=wait)
     fill(driver, SEARCH_INPUT, "contra")
-    visible(driver, MOBILE_SEARCH_SUGGEST_ADD_1, timeout=20)
-    click(driver, MOBILE_SEARCH_SUGGEST_ADD_1, timeout=10)
+    visible(driver, MOBILE_SEARCH_SUGGEST_ADD_1, wait=wait)
+    click(driver, MOBILE_SEARCH_SUGGEST_ADD_1, wait=wait)
     time.sleep(5)
 
     # 7) Busca: pack -> carne -> ver todos
-    click(driver, SEARCH_INPUT, timeout=10)
+    click(driver, SEARCH_INPUT, wait=wait)
     fill(driver, SEARCH_INPUT, "pack")
-    visible(driver, SEE_ALL_LINK, timeout=20)
+    visible(driver, SEE_ALL_LINK, wait=wait)
 
-    click(driver, SEARCH_INPUT, timeout=10)
+    click(driver, SEARCH_INPUT, wait=wait)
     fill(driver, SEARCH_INPUT, "carne")
-    visible(driver, SEE_ALL_LINK, timeout=20)
-    click(driver, SEE_ALL_LINK, timeout=10)
+    visible(driver, SEE_ALL_LINK, wait=wait)
+    click(driver, SEE_ALL_LINK, wait=wait)
 
     # paginação e filtros / ordenação
-    mobile_click_strict(driver, PAGINA_2, timeout=20, retries=4, sleep_between=0.25)
+    mobile_click_strict(driver, PAGINA_2, wait=wait, retries=4, sleep_between=0.25)
     time.sleep(5)
-    visible(driver, MOBILE_FILTER_OPEN_PANEL, timeout=10)
+    visible(driver, MOBILE_FILTER_OPEN_PANEL, wait=wait)
 
-    ok = open_filter_panel_mobile(driver, timeout=20, tries=4)
+    ok = open_filter_panel_mobile(driver, tries=4)
     if not ok:
         raise AssertionError("Não consegui abrir o painel de filtros no mobile")
-    mobile_click_strict(driver, MOBILE_FILTER_CONSERVACAO_OPEN, timeout=20, retries=4)
-    visible(driver, MOBILE_FILTER_CONSERVACAO_RESFRIADO, timeout=20)
-    mobile_click_strict(driver, MOBILE_FILTER_CONSERVACAO_RESFRIADO, timeout=20, retries=4)
+    mobile_click_strict(driver, MOBILE_FILTER_CONSERVACAO_OPEN, wait=wait, retries=4)
+    visible(driver, MOBILE_FILTER_CONSERVACAO_RESFRIADO, wait=wait)
+    mobile_click_strict(driver, MOBILE_FILTER_CONSERVACAO_RESFRIADO, wait=wait, retries=4)
     WebDriverWait(driver, 20).until(EC.url_contains("conservacao=Resfriado"))
 
     # limpar filtros
-    assert clear_filters_strict(driver, wait, FILTER_CLEAR_ALL, timeout=15, retries=5), \
+    assert clear_filters_strict(driver, wait, FILTER_CLEAR_ALL, retries=5), \
         "Não consegui limpar os filtros."
 
     # ordenação (low -> high -> high -> low)
-    mobile_click_strict(driver, SORTER_SELECT, 10, 4, 0.25)
-    mobile_click_strict(driver, SORT_LOW_TO_HIGH, 10, 4, 0.25)
+    mobile_click_strict(driver, SORTER_SELECT, wait=wait, retries=4, sleep_between=0.25)
+    mobile_click_strict(driver, SORT_LOW_TO_HIGH, wait=wait, retries=4, sleep_between=0.25)
     WebDriverWait(driver, 20).until(EC.url_contains("product_list_order=low_to_high"))
-    mobile_click_strict(driver, SORTER_SELECT, 10, 4, 0.25)
-    mobile_click_strict(driver, SORT_HIGH_TO_LOW, 10, 4, 0.25)
+    mobile_click_strict(driver, SORTER_SELECT, wait=wait, retries=4, sleep_between=0.25)
+    mobile_click_strict(driver, SORT_HIGH_TO_LOW, wait=wait, retries=4, sleep_between=0.25)
     WebDriverWait(driver, 20).until(EC.url_contains("product_list_order=high_to_low"))
 
     # 9) Add primeiro da lista
-    mobile_click_strict(driver, PLP_ADD_TO_CART_BY_INDEX(1), 10, 4, 0.25)
+    mobile_click_strict(driver, PLP_ADD_TO_CART_BY_INDEX(1), wait=wait, retries=4, sleep_between=0.25)
     time.sleep(5)
 
     # 10) Promoções: adicionar item
-    mobile_click_strict(driver, MOBILE_MENU_HAMBURGER, timeout=10, retries=4, sleep_between=0.25)
+    mobile_click_strict(driver, MOBILE_MENU_HAMBURGER, wait=wait, retries=4, sleep_between=0.25)
     time.sleep(1)
-    mobile_click_strict(driver, MOBILE_MENU_PARENT_NEXT("promocoes"), timeout=10, retries=4, sleep_between=0.25)
+    mobile_click_strict(driver, MOBILE_MENU_PARENT_NEXT("promocoes"), wait=wait, retries=4, sleep_between=0.25)
     time.sleep(1)
-    mobile_click_strict(driver, MOBILE_MENU_SEE_ALL, timeout=10, retries=4, sleep_between=0.25)
-    visible(driver, SORTER_SELECT, timeout=20)
+    mobile_click_strict(driver, MOBILE_MENU_SEE_ALL, wait=wait, retries=4, sleep_between=0.25)
+    visible(driver, SORTER_SELECT, wait=wait)
 
-    mobile_click_strict(driver, PLP_ADD_TO_CART_BY_INDEX(1), timeout=20, retries=4, sleep_between=0.25)
+    mobile_click_strict(driver, PLP_ADD_TO_CART_BY_INDEX(1), wait=wait, retries=4, sleep_between=0.25)
     time.sleep(5)
 
     # 11) Marcas -> PDP -> add -> previsão entrega
-    mobile_click_strict(driver, MOBILE_MENU_HAMBURGER, timeout=10, retries=4, sleep_between=0.25)
+    mobile_click_strict(driver, MOBILE_MENU_HAMBURGER, wait=wait, retries=4, sleep_between=0.25)
     time.sleep(2)
-    mobile_click_strict(driver, MOBILE_MENU_PARENT_NEXT("marcas"), timeout=10, retries=4, sleep_between=0.25)
+    mobile_click_strict(driver, MOBILE_MENU_PARENT_NEXT("marcas"), wait=wait, retries=4, sleep_between=0.25)
     time.sleep(1)
-    mobile_click_strict(driver, MOBILE_MENU_SEE_ALL, timeout=10, retries=4, sleep_between=0.25)
-    clickable(driver, SORTER_SELECT, timeout=15)
-    visible(driver, FIRST_PRODUCT_PLP, timeout=20)
-    mobile_click_strict(driver, FIRST_PRODUCT_PLP, 15, 4, 0.25)
+    mobile_click_strict(driver, MOBILE_MENU_SEE_ALL, wait=wait, retries=4, sleep_between=0.25)
+    clickable(driver, SORTER_SELECT, wait=wait)
+    visible(driver, FIRST_PRODUCT_PLP, wait=wait)
+    mobile_click_strict(driver, FIRST_PRODUCT_PLP, wait=wait, retries=4, sleep_between=0.25)
 
-    visible(driver, PDP_ADD_TO_CART, timeout=20)
-    scroll_into_view(driver, PDP_ADD_TO_CART,timeout=10)
-    safe_click_loc_retry(driver, PDP_INCREMENT, 10, 4, 0.25)
-    click(driver, PDP_ADD_TO_CART, timeout=10)
+    visible(driver, PDP_ADD_TO_CART, wait=wait)
+    scroll_into_view(driver, PDP_ADD_TO_CART, wait=wait)
+    safe_click_loc_retry(driver, PDP_INCREMENT, wait=wait, retries=4, sleep_between=0.25)
+    click(driver, PDP_ADD_TO_CART, wait=wait)
     time.sleep(5)
 
     # previsão entrega
-    scroll_into_view(driver, ADDRESSES_SELECT, timeout=10)
-    click(driver, ADDRESSES_SELECT, timeout=10)
-    click(driver, ADDRESSES_OPT2, timeout=10)
-    click(driver, BTN_VERIFY_FORECAST, timeout=10)
-    visible(driver, FORECAST_RESULT, timeout=20)
-    scroll_into_view(driver, FORECAST_RESULT, timeout=10)
+    scroll_into_view(driver, ADDRESSES_SELECT, wait=wait)
+    click(driver, ADDRESSES_SELECT, wait=wait)
+    click(driver, ADDRESSES_OPT2, wait=wait)
+    click(driver, BTN_VERIFY_FORECAST, wait=wait)
+    visible(driver, FORECAST_RESULT, wait=wait)
+    scroll_into_view(driver, FORECAST_RESULT, wait=wait)
 
     # 12) Bovinos -> Interagir com o botão do avise-me PLP e PDP
-    mobile_click_strict(driver, MOBILE_MENU_HAMBURGER, timeout=20, retries=4, sleep_between=0.25)
+    mobile_click_strict(driver, MOBILE_MENU_HAMBURGER, wait=wait, retries=4, sleep_between=0.25)
     time.sleep(2)
-    mobile_click_strict(driver, MOBILE_MENU_PARENT_NEXT("bovinos"), timeout=10, retries=4, sleep_between=0.25)
+    mobile_click_strict(driver, MOBILE_MENU_PARENT_NEXT("bovinos"), wait=wait, retries=4, sleep_between=0.25)
     time.sleep(1)
-    mobile_click_strict(driver, MOBILE_MENU_SEE_ALL, timeout=10, retries=4, sleep_between=0.25)
-    visible(driver, SORTER_SELECT, timeout=15)
+    mobile_click_strict(driver, MOBILE_MENU_SEE_ALL, wait=wait, retries=4, sleep_between=0.25)
+    visible(driver, SORTER_SELECT, wait=wait)
 
     # PLP: toggle avise-me
     ok_plp = find_avise_me_plp_mobile(driver, page_ready_locator=SORTER_SELECT, max_pages=5)
@@ -156,7 +156,7 @@ def test_16_user_logado_mobile_sul(driver, setup_site, wait):
         print("[WARN] PLP: não achei Avise-me para testar.")
 
     # Clica no Avise-me disabled
-    mobile_click_strict(driver, MOBILE_AVISE_BTN_DISABLED(1), timeout=20, retries=4, sleep_between=0.25)
+    mobile_click_strict(driver, MOBILE_AVISE_BTN_DISABLED(1), wait=wait, retries=4, sleep_between=0.25)
 
     # Espera AJAX: virar alert-active clicked (sem refresh ainda)
     time.sleep(3)
@@ -165,14 +165,15 @@ def test_16_user_logado_mobile_sul(driver, setup_site, wait):
     driver.refresh()
 
     # Página pronta de novo
-    visible(driver, SORTER_SELECT, timeout=25)
+    visible(driver, SORTER_SELECT, wait=wait)
 
     # Scroll no botão ativado
+    time.sleep(3)
     el_active = scroll_to_avise(driver, MOBILE_AVISE_BTN_ACTIVE_AFTER_REFRESH)
     assert el_active is not None
 
     # Clica no botão ativado (para desativar)
-    mobile_click_strict(driver, MOBILE_AVISE_BTN_ACTIVE_AFTER_REFRESH, timeout=20, retries=4, sleep_between=0.25)
+    mobile_click_strict(driver, MOBILE_AVISE_BTN_ACTIVE_AFTER_REFRESH, wait=wait, retries=4, sleep_between=0.25)
 
     # Aguarda voltar para "disabled" (sem alert-active)
     time.sleep(4)
@@ -183,7 +184,7 @@ def test_16_user_logado_mobile_sul(driver, setup_site, wait):
         print("[WARN] Não consegui abrir PDP a partir de um produto com Avise-me.")
 
     # Clica no Avise-me disabled
-    mobile_click_strict(driver, MOBILE_AVISE_BTN_DISABLED(1), timeout=20, retries=4, sleep_between=0.25)
+    mobile_click_strict(driver, MOBILE_AVISE_BTN_DISABLED(1), wait=wait, retries=4, sleep_between=0.25)
 
     # Espera AJAX: virar alert-active clicked (sem refresh ainda)
     time.sleep(3)
@@ -196,22 +197,22 @@ def test_16_user_logado_mobile_sul(driver, setup_site, wait):
     assert el_active is not None
 
     # Clica no botão ativado (para desativar)
-    mobile_click_strict(driver, MOBILE_AVISE_BTN_ACTIVE_AFTER_REFRESH, timeout=20, retries=4, sleep_between=0.25)
+    mobile_click_strict(driver, MOBILE_AVISE_BTN_ACTIVE_AFTER_REFRESH, wait=wait, retries=4, sleep_between=0.25)
 
     # Aguarda voltar para "disabled" (sem alert-active)
     time.sleep(4)
 
     # 13) Limpar carrinho (view cart -> empty -> confirm -> ver catálogo)
-    mobile_click_strict(driver, MOBILE_MINICART_ICON_SUL, timeout=20, retries=4, sleep_between=0.25)
-    visible(driver, MINICART_ACTIVE, timeout=10)
-    mobile_click_strict(driver, VIEWCART, 15, 4, 0.25)
-    visible(driver, SUMARY_EXPAND, timeout=25)
-    mobile_click_strict(driver, SUMARY_EXPAND_ARROW, 20, 4, 0.25)
-    mobile_click_strict(driver, EMPTY_CART_BTN, 20, 4, 0.25)
-    visible(driver, EMPTY_CART_CONFIRM, timeout=20)
-    mobile_click_strict(driver, EMPTY_CART_CONFIRM, 20, 4, 0.25)
-    visible(driver, VER_CATALOGO, timeout=25)
-    mobile_click_strict(driver, VER_CATALOGO, 20, 4, 0.25)
+    mobile_click_strict(driver, MOBILE_MINICART_ICON_SUL, wait=wait, retries=4, sleep_between=0.25)
+    visible(driver, MINICART_ACTIVE, wait=wait)
+    mobile_click_strict(driver, VIEWCART, wait=wait, retries=4, sleep_between=0.25)
+    visible(driver, SUMARY_EXPAND, wait=wait)
+    mobile_click_strict(driver, SUMARY_EXPAND_ARROW, wait=wait, retries=4, sleep_between=0.25)
+    mobile_click_strict(driver, EMPTY_CART_BTN, wait=wait, retries=4, sleep_between=0.25)
+    visible(driver, EMPTY_CART_CONFIRM, wait=wait)
+    mobile_click_strict(driver, EMPTY_CART_CONFIRM, wait=wait, retries=4, sleep_between=0.25)
+    visible(driver, VER_CATALOGO, wait=wait)
+    mobile_click_strict(driver, VER_CATALOGO, wait=wait, retries=4, sleep_between=0.25)
 
     # Final: ainda logado
     time.sleep(5)

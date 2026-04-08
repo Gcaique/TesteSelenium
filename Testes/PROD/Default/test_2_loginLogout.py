@@ -16,7 +16,7 @@ VALID_PASS = "Min@1234"
 @pytest.mark.smoke
 @pytest.mark.default
 @pytest.mark.loginLogout
-def test_2_loginLogout(driver, setup_site):
+def test_2_loginLogout(driver, setup_site, wait):
     # 1) Abrir modal de login
     open_login(driver)
 
@@ -73,15 +73,15 @@ def test_2_loginLogout(driver, setup_site):
 
     # 12) Últimos pedidos deslogado -> loga -> ver produtos
     go_home(driver)
-    click(driver, LAST_ORDERS, timeout=10)
+    click(driver, LAST_ORDERS, wait=wait)
 
-    visible(driver, USERNAME_INPUT, timeout=10)
+    visible(driver, USERNAME_INPUT, wait=wait)
     submit_username_valid(driver, VALID_USER, "login via últimos pedidos (username)")
     login_password(driver, VALID_PASS, "login via últimos pedidos (senha)", expect_success=True)
 
-    visible(driver, EMPTY_GRID_ORDERS, timeout=20)
+    visible(driver, EMPTY_GRID_ORDERS, wait=wait)
     try_close_hotjar(driver)
-    click(driver, EMPTY_GRID_ORDERS, timeout=10)
+    click(driver, EMPTY_GRID_ORDERS, wait=wait)
 
     # 13) Logout final
     logout(driver)

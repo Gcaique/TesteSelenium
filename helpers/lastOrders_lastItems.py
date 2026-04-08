@@ -6,6 +6,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 
 
 from helpers.actions import scroll_to_middle, scroll_to_top, click_when_clickable, mobile_click_strict
+from helpers.waiters import _effective_timeout
 from helpers.minicart import wait_minicart_loading, wait_minicart_ready
 
 from locators.lastOrders_lastItems import *
@@ -224,13 +225,14 @@ def ver_similar_refazer_e_adicionar_mobile(driver, wait):
 def filtrar_ultimos_7_dias_mobile(driver, wait):
     """Seleciona filtro 'Ultimos 7 dias', filtra e limpa."""
 
-    mobile_click_strict(driver, PERIOD_SELECT, 10, 4, 0.25)
+    t = _effective_timeout(wait, 10, default=10)
+    mobile_click_strict(driver, PERIOD_SELECT, timeout=t, retries=4, sleep_between=0.25, wait=wait)
     time.sleep(1)
-    mobile_click_strict(driver, PERIOD_LAST_7_DAYS, 10, 4, 0.25)
-    mobile_click_strict(driver, FILTER_BTN, 10, 4, 0.25)
+    mobile_click_strict(driver, PERIOD_LAST_7_DAYS, timeout=t, retries=4, sleep_between=0.25, wait=wait)
+    mobile_click_strict(driver, FILTER_BTN, timeout=t, retries=4, sleep_between=0.25, wait=wait)
 
     time.sleep(3)
-    mobile_click_strict(driver, CLEAR_FILTER_LINK, 10, 4, 0.25)
+    mobile_click_strict(driver, CLEAR_FILTER_LINK, timeout=t, retries=4, sleep_between=0.25, wait=wait)
     wait.until(EC.invisibility_of_element_located(CLEAR_FILTER_LINK))
 
 def ver_similar_comprados_e_adicionar_mobile(driver, wait):
@@ -273,5 +275,5 @@ def adicionar_todos_ao_carrinho_mobile(driver, wait):
 
 def abrir_detalhe_primeiro_pedido_mobile(driver, wait):
     """Abre detalhe do primeiro pedido."""
-    mobile_click_strict(driver, MOBILE_ORDER_DETAIL_FIRST, 10, 4, 0.25)
+    mobile_click_strict(driver, MOBILE_ORDER_DETAIL_FIRST, timeout=_effective_timeout(wait, 10, default=10), retries=4, sleep_between=0.25, wait=wait)
     time.sleep(8)

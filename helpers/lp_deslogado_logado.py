@@ -205,9 +205,9 @@ def buscar_e_add_produto_marca(driver, wait, termo, marca):
         EC.visibility_of_element_located(SEE_ALL_LINK)
     )
 
-    safe_click_loc(driver, wait, LOGIN_NAME_CONTAINER, 10)
+    safe_click_loc(driver, wait, LOGIN_NAME_CONTAINER)
     time.sleep(0.5)
-    safe_click_loc(driver, wait, LOGIN_NAME_CONTAINER, 10)
+    safe_click_loc(driver, wait, LOGIN_NAME_CONTAINER)
 
 def scroll_lento(driver):
     """Scroll lento"""
@@ -248,7 +248,7 @@ def fluxo_alma_lusa_deslogado_mobile(driver, wait):
     mobile_open_quero_ser_cliente_from_dropdown(driver, 12)
     click_when_clickable(wait, BTN_CLOSE_QUERO_SER_CLIENTE)
 
-    mobile_click_strict(driver, MOBILE_BTN_CONHECA_MAIS, 10, 4, 0.25)
+    mobile_click_strict(driver, MOBILE_BTN_CONHECA_MAIS, retries=4, sleep_between=0.25, wait=wait)
     time.sleep(2)
 
     secao_sobre = scroll_ate_elemento_visivel(driver, MOBILE_SECAO_SOBRE)
@@ -270,7 +270,7 @@ def fluxo_alma_lusa_deslogado_mobile(driver, wait):
     click_when_clickable(wait, MOBILE_BTN_COMPRE_AGORA_2)
     time.sleep(2)
 
-    mobile_click_strict(driver, BTN_ENTRAR, 12, 4, 0.25)
+    mobile_click_strict(driver, BTN_ENTRAR, retries=4, sleep_between=0.25, wait=wait)
 
     wait.until(EC.visibility_of_element_located(MOBILE_LOGIN_ACESSO))
     time.sleep(2)
@@ -291,11 +291,11 @@ def fluxo_estancia_deslogado_mobile(driver, wait):
     visible(driver, SEE_ALL_LINK)
     time.sleep(2)
 
-    mobile_open_login_modal_from_dropdown(driver, 12)
+    mobile_open_login_modal_from_dropdown(driver, wait=wait)
     time.sleep(2)
 
     fechar_modal_login(wait)
-    mobile_open_quero_ser_cliente_from_dropdown(driver, 12)
+    mobile_open_quero_ser_cliente_from_dropdown(driver, wait=wait)
     click_when_clickable(wait, BTN_CLOSE_QUERO_SER_CLIENTE)
 
     nossa_historia = scroll_ate_elemento_visivel(driver, MOBILE_SECAO_NOSSA_HISTORIA)

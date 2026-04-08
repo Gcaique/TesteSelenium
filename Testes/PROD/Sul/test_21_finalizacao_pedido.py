@@ -56,7 +56,7 @@ def test_21_finalizacao_pedidos_sul(driver, setup_site, wait):
     time.sleep(7)
 
     # 6) Aplicando cupom pelo input + removendo cupom + aplicando cupom pelo radio button
-    fill_input(driver, wait, INPUT_CUPOM, "automacao10", timeout=20)
+    fill_input(driver, wait, INPUT_CUPOM, "automacao10")
     click_when_clickable(wait, BTN_APLICAR_CUPOM)
     wait.until(EC.visibility_of_element_located(MENSAGEM_SUCESSO_CUPOM))
     wait.until(EC.invisibility_of_element_located(MENSAGEM_SUCESSO_CUPOM))
@@ -83,9 +83,9 @@ def test_21_finalizacao_pedidos_sul(driver, setup_site, wait):
     wait_category_loaded(wait, driver)
 
     scroll_into_view(driver, TOOLBAR_AMOUNT)
-    safe_click_loc(driver, wait, QTY_INPUT_FIRST, timeout=10)
+    safe_click_loc(driver, wait, QTY_INPUT_FIRST)
     fill(driver, QTY_INPUT_FIRST, "9")
-    safe_click_loc(driver, wait, PLP_ADD_TO_CART_BY_INDEX(1), timeout=10)
+    safe_click_loc(driver, wait, PLP_ADD_TO_CART_BY_INDEX(1))
     wait_minicart_ready(driver)
 
     # 9) Acessando checkout

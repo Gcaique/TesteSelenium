@@ -10,53 +10,63 @@ from locators.wishlist import *
 from locators.header import SEARCH_INPUT, SEARCH_BUTTON, SEARCH_SUGGEST_ADD_2, MOBILE_SEARCH_SUGGEST_ADD_1, MOBILE_SEARCH_BUTTON
 
 
-from helpers.actions import try_click, safe_click_loc, scroll_to, click_when_clickable, scroll_into_view, mobile_click_strict, scroll_into_view_loc_mobile
-from helpers.waiters import try_visible, visible
+from helpers.actions import (
+    try_click,
+    safe_click_loc,
+    scroll_to,
+    click_when_clickable,
+    scroll_into_view,
+    mobile_click_strict,
+    _resolve_wait)
+from helpers.waiters import try_visible, visible, DEFAULT_TIMEOUT, _effective_timeout
 from helpers.wishlist import wait_favorite_status
 from helpers.avise_me import open_pdp_from_first_avise_in_plp
 
 
 
-def try_apply_filter(wait, open_locator, option_locator, timeout=3) -> bool:
-    opened = try_click(wait, open_locator, timeout=timeout)
+def try_apply_filter(driver, wait, open_locator, option_locator, timeout=None) -> bool:
+    w = _resolve_wait(driver, wait, timeout or DEFAULT_TIMEOUT)
+    opened = try_click(driver, open_locator, timeout=timeout, wait=w)
     if not opened:
         return False
 
-    chosen = try_click(wait, option_locator, timeout=timeout)
+    chosen = try_click(driver, option_locator, timeout=timeout, wait=w)
     return chosen
 
 
-def try_clear_filters(wait, timeout=3) -> bool:
-    return try_click(wait, FILTER_CLEAR_ALL, timeout=timeout)
+def try_clear_filters(driver, wait, timeout=None) -> bool:
+    w = _resolve_wait(driver, wait, timeout or DEFAULT_TIMEOUT)
+    return try_click(driver, FILTER_CLEAR_ALL, timeout=timeout, wait=w)
 
 
-def try_sort(wait, driver, value: str, timeout=3) -> bool:
+def try_sort(driver, wait, value: str, timeout=None) -> bool:
     # sorter existe?
-    if not try_visible(wait, SORTER_SELECT, timeout=timeout):
+    if not try_visible(wait, SORTER_SELECT, timeout=timeout or DEFAULT_TIMEOUT):
         return False
 
     option_locator = SORT_OPTION(value)
     if not driver.find_elements(*option_locator):
         return False
 
-    return try_click(wait, option_locator, timeout=timeout)
+    return try_click(driver, option_locator, timeout=timeout, wait=_resolve_wait(driver, wait, timeout or DEFAULT_TIMEOUT))
 
 
-def try_go_to_page(wait, driver, page_number: str, timeout=10) -> bool:
+def try_go_to_page(driver, wait, page_number: str, timeout=None) -> bool:
     """Tenta paginar (sem travar). Retorna True/False."""
+    effective = timeout or getattr(wait, "_timeout", DEFAULT_TIMEOUT)
     locator = PAGE_NUMBER(page_number)
     try:
         pages = driver.find_elements(*PAGES_UL)
         if pages:
             scroll_to(driver, pages[0])
 
-        WebDriverWait(driver, timeout).until(EC.element_to_be_clickable(locator)).click()
-        WebDriverWait(driver, timeout).until(EC.visibility_of_element_located(locator))
+        WebDriverWait(driver, effective).until(EC.element_to_be_clickable(locator)).click()
+        WebDriverWait(driver, effective).until(EC.visibility_of_element_located(locator))
         return True
     except (TimeoutException, StaleElementReferenceException):
         return False
 
-def apply_filter_strict(driver, wait, open_locator, option_locator, timeout=10, retries=4) -> bool:
+def apply_filter_strict(driver, wait, open_locator, option_locator, timeout=None, retries=4) -> bool:
     """
     Abre um filtro e clica na opção, garantindo que a opção ficou visível antes do clique.
     Não altera locators. Não depende do try_apply_filter().
@@ -66,15 +76,16 @@ def apply_filter_strict(driver, wait, open_locator, option_locator, timeout=10, 
     for _ in range(retries):
         try:
             # garante que o "open" está na tela
-            el_open = wait.until(EC.visibility_of_element_located(open_locator))
+            el_open = _resolve_wait(driver, wait, timeout or DEFAULT_TIMEOUT).until(EC.visibility_of_element_located(open_locator))
             scroll_to(driver, el_open)
 
             # abre o acordeão
             click_when_clickable(wait, open_locator)
 
             # garante que a opção apareceu
-            wait.until(EC.visibility_of_element_located(option_locator))
-            click_when_clickable(wait, option_locator)
+            local_wait = _resolve_wait(driver, wait, timeout or DEFAULT_TIMEOUT)
+            local_wait.until(EC.visibility_of_element_located(option_locator))
+            click_when_clickable(local_wait, option_locator)
 
             return True
         except Exception as e:
@@ -84,7 +95,7 @@ def apply_filter_strict(driver, wait, open_locator, option_locator, timeout=10, 
     return False
 
 
-def clear_filters_strict(driver, wait, clear_locator, timeout=12, retries=4) -> bool:
+def clear_filters_strict(driver, wait, clear_locator, timeout=None, retries=4) -> bool:
     """
     Clica em 'Limpar Tudo' e espera o clear realmente acontecer (botão sumir).
     Não depende do try_clear_filters().
@@ -92,14 +103,15 @@ def clear_filters_strict(driver, wait, clear_locator, timeout=12, retries=4) -> 
     for _ in range(retries):
         try:
             # garante visível + scroll
-            el = wait.until(EC.visibility_of_element_located(clear_locator))
+            local_wait = _resolve_wait(driver, wait, timeout or DEFAULT_TIMEOUT)
+            el = local_wait.until(EC.visibility_of_element_located(clear_locator))
             scroll_to(driver, el)
 
             # clique robusto (seu click_when_clickable já tem fallback JS)
-            click_when_clickable(wait, clear_locator)
+            click_when_clickable(local_wait, clear_locator)
 
             # confirmação: o botão some (ou fica invisível) após limpar
-            wait.until(EC.invisibility_of_element_located(clear_locator))
+            local_wait.until(EC.invisibility_of_element_located(clear_locator))
             return True
 
         except TimeoutException:
@@ -111,20 +123,21 @@ def clear_filters_strict(driver, wait, clear_locator, timeout=12, retries=4) -> 
     return False
 
 
-def sort_strict(driver, wait, select_locator, value: str, timeout=12, retries=4) -> bool:
+def sort_strict(driver, wait, select_locator, value: str, timeout=None, retries=4) -> bool:
     """
     Ordena usando Select().select_by_value() e confirma que o value foi aplicado.
     Ideal para quando try_sort (clicando option) falha.
     """
     for _ in range(retries):
         try:
-            sel_el = wait.until(EC.visibility_of_element_located(select_locator))
+            local_wait = _resolve_wait(driver, wait, timeout or DEFAULT_TIMEOUT)
+            sel_el = local_wait.until(EC.visibility_of_element_located(select_locator))
             scroll_to(driver, sel_el)
 
             Select(sel_el).select_by_value(value)
 
             # confirma que aplicou (value do <select> mudou)
-            end = time.time() + timeout
+            end = time.time() + (timeout or getattr(local_wait, "_timeout", DEFAULT_TIMEOUT))
             while time.time() < end:
                 try:
                     current = sel_el.get_attribute("value")
@@ -145,27 +158,27 @@ def sort_strict(driver, wait, select_locator, value: str, timeout=12, retries=4)
 # FAVORITAR ITENS (CATEGORIA/BUSCA)
 def add_favorite_from_category_first_item(driver, wait, category_locator):
     '''Favoritar primeiro item da lista (PLP)'''
-    safe_click_loc(driver, wait, category_locator, timeout=15)
+    safe_click_loc(driver, wait, category_locator)
     time.sleep(5)
-    safe_click_loc(driver, wait, PLP_WISHLIST_BTN_BY_INDEX(1), timeout=12)
+    safe_click_loc(driver, wait, PLP_WISHLIST_BTN_BY_INDEX(1))
     assert wait_favorite_status(driver), "Não confirmou status de favorito na PLP categoria."
 
 
 def search_and_add_favorite_by_index(driver, wait, term: str, index: int):
     '''Favoritar item da lista (BUSCA)'''
-    safe_click_loc(driver, wait, SEARCH_INPUT, timeout=12)
-    el = visible(driver, SEARCH_INPUT, timeout=12)
+    safe_click_loc(driver, wait, SEARCH_INPUT)
+    el = visible(driver, SEARCH_INPUT, wait=wait)
     el.clear()
     el.send_keys(term)
 
-    visible(driver, SEARCH_SUGGEST_ADD_2, timeout=20)
+    visible(driver, SEARCH_SUGGEST_ADD_2, wait=wait)
 
-    safe_click_loc(driver, wait, SEARCH_BUTTON, timeout=12)
+    safe_click_loc(driver, wait, SEARCH_BUTTON)
     time.sleep(2)
 
     # scroll até card do índice e favorita
-    scroll_into_view(driver, (By.XPATH, f"(//*[@class='product-item-info'])[{index}]"), timeout=20)
-    safe_click_loc(driver, wait, PLP_WISHLIST_BTN_BY_INDEX(index), timeout=12)
+    scroll_into_view(driver, (By.XPATH, f"(//*[@class='product-item-info'])[{index}]"), wait=wait)
+    safe_click_loc(driver, wait, PLP_WISHLIST_BTN_BY_INDEX(index))
     assert wait_favorite_status(driver), f"Não confirmou status de favorito na busca (idx={index})."
 
 
@@ -181,15 +194,15 @@ def open_product_with_avise_by_pagination(
     """
 
     # entra na categoria
-    safe_click_loc(driver, wait, category_locator, timeout=15)
+    safe_click_loc(driver, wait, category_locator)
     time.sleep(2)
 
-    visible(driver, SORTER_SELECT, timeout=25)
+    visible(driver, SORTER_SELECT, wait=wait)
 
     for page in pages:
         try:
-            safe_click_loc(driver, wait, PAGINATION_BY_PAGE(page), timeout=6)
-            visible(driver, SORTER_SELECT, timeout=20)
+            safe_click_loc(driver, wait, PAGINATION_BY_PAGE(page))
+            visible(driver, SORTER_SELECT, wait=wait)
         except Exception:
             pass
 
@@ -243,8 +256,9 @@ def try_go_to_page_mobile(driver, wait, page_number: str, retries=3):
 
     return False
 
-def open_filter_panel_mobile(driver, timeout=20, tries=4):
-    w = WebDriverWait(driver, timeout, poll_frequency=0.2)
+def open_filter_panel_mobile(driver, wait=None, tries=4):
+    eff = _effective_timeout(wait, None)
+    w = wait if wait is not None else WebDriverWait(driver, eff, poll_frequency=0.2)
 
     # garante que o toggle existe
     w.until(EC.presence_of_element_located(MOBILE_FILTER_TOGGLE))
@@ -256,13 +270,13 @@ def open_filter_panel_mobile(driver, timeout=20, tries=4):
 
         # tenta clicar no wrapper
         try:
-            mobile_click_strict(driver, MOBILE_FILTER_TOGGLE, timeout=timeout, retries=2, sleep_between=0.2)
+            mobile_click_strict(driver, MOBILE_FILTER_TOGGLE, timeout=eff, retries=4, sleep_between=0.25, wait=wait)
         except Exception:
             pass
 
         # espera abrir rapidinho
         try:
-            WebDriverWait(driver, 2, poll_frequency=0.2).until(
+            (wait if wait is not None else WebDriverWait(driver, eff, poll_frequency=0.2)).until(
                 EC.presence_of_element_located(MOBILE_FILTER_PANEL_OPENED)
             )
             return True
@@ -271,12 +285,12 @@ def open_filter_panel_mobile(driver, timeout=20, tries=4):
 
         # fallback: clica no strong/tab
         try:
-            mobile_click_strict(driver, MOBILE_FILTER_TOGGLE_TAB, timeout=timeout, retries=2, sleep_between=0.2)
+            mobile_click_strict(driver, MOBILE_FILTER_TOGGLE_TAB, timeout=eff, retries=4, sleep_between=0.25, wait=wait)
         except Exception:
             pass
 
         try:
-            WebDriverWait(driver, 2, poll_frequency=0.2).until(
+            (wait if wait is not None else WebDriverWait(driver, eff, poll_frequency=0.2)).until(
                 EC.presence_of_element_located(MOBILE_FILTER_PANEL_OPENED)
             )
             return True
@@ -292,7 +306,7 @@ def open_filter_panel_mobile(driver, timeout=20, tries=4):
             pass
 
         try:
-            WebDriverWait(driver, 2, poll_frequency=0.2).until(
+            (wait if wait is not None else WebDriverWait(driver, eff, poll_frequency=0.2)).until(
                 EC.presence_of_element_located(MOBILE_FILTER_PANEL_OPENED)
             )
             return True
@@ -324,29 +338,29 @@ def scroll_to_avise(driver, locator):
 
 def add_favorite_from_category_first_item_mobile(driver, wait):
     '''Favoritar primeiro item da lista (PLP)'''
-    mobile_click_strict(driver, MOBILE_MENU_HAMBURGER, timeout=12, retries=4, sleep_between=0.25)
+    mobile_click_strict(driver, MOBILE_MENU_HAMBURGER, wait=wait, retries=4, sleep_between=0.25)
     time.sleep(1)
-    mobile_click_strict(driver, MOBILE_MENU_PARENT_NEXT("bovinos"), timeout=12, retries=4, sleep_between=0.25)
+    mobile_click_strict(driver, MOBILE_MENU_PARENT_NEXT("bovinos"), wait=wait, retries=4, sleep_between=0.25)
     time.sleep(1)
-    mobile_click_strict(driver, MOBILE_MENU_SEE_ALL, timeout=12, retries=4, sleep_between=0.25)
+    mobile_click_strict(driver, MOBILE_MENU_SEE_ALL, wait=wait, retries=4, sleep_between=0.25)
     time.sleep(5)
-    safe_click_loc(driver, wait, PLP_WISHLIST_BTN_BY_INDEX(1), timeout=12)
+    safe_click_loc(driver, wait, PLP_WISHLIST_BTN_BY_INDEX(1))
     assert wait_favorite_status(driver), "Não confirmou status de favorito na PLP categoria."
 
 def search_and_add_favorite_by_index_mobile(driver, wait, term: str):
     """Favoritar item da lista (BUSCA) - MOBILE"""
 
-    safe_click_loc(driver, wait, SEARCH_INPUT, timeout=12)
-    el = visible(driver, SEARCH_INPUT, timeout=12)
+    safe_click_loc(driver, wait, SEARCH_INPUT)
+    el = visible(driver, SEARCH_INPUT, wait=wait)
     el.clear()
     el.send_keys(term)
 
-    visible(driver, MOBILE_SEARCH_SUGGEST_ADD_1, timeout=20)
+    visible(driver, MOBILE_SEARCH_SUGGEST_ADD_1, wait=wait)
 
-    safe_click_loc(driver, wait, MOBILE_SEARCH_BUTTON, timeout=12)
+    safe_click_loc(driver, wait, MOBILE_SEARCH_BUTTON)
     time.sleep(5)
 
-    mobile_click_strict(driver, PLP_WISHLIST_BTN_BY_INDEX(1), timeout=20, retries=4, sleep_between=0.25)
+    mobile_click_strict(driver, PLP_WISHLIST_BTN_BY_INDEX(1), wait=wait, retries=4, sleep_between=0.25)
     assert wait_favorite_status(driver), "Não confirmou status de favorito na PLP categoria."
 
 
@@ -357,19 +371,19 @@ def open_product_with_avise_by_pagination_mobile(driver, wait, pages=(1, 2, 3, 4
     """
 
     # entra na categoria
-    mobile_click_strict(driver, MOBILE_MENU_HAMBURGER, timeout=12, retries=4, sleep_between=0.25)
+    mobile_click_strict(driver, MOBILE_MENU_HAMBURGER, wait=wait, retries=4, sleep_between=0.25)
     time.sleep(1)
-    mobile_click_strict(driver, MOBILE_MENU_PARENT_NEXT("bovinos"), timeout=12, retries=4, sleep_between=0.25) # Para alterar a categoria é só alterar a string
+    mobile_click_strict(driver, MOBILE_MENU_PARENT_NEXT("bovinos"), wait=wait, retries=4, sleep_between=0.25) # Para alterar a categoria é só alterar a string
     time.sleep(1)
-    mobile_click_strict(driver, MOBILE_MENU_SEE_ALL, timeout=12, retries=4, sleep_between=0.25)
+    mobile_click_strict(driver, MOBILE_MENU_SEE_ALL, wait=wait, retries=4, sleep_between=0.25)
     time.sleep(2)
 
-    visible(driver, SORTER_SELECT, timeout=25)
+    visible(driver, SORTER_SELECT, wait=wait)
 
     for page in pages:
         try:
-            safe_click_loc(driver, wait, PAGINATION_BY_PAGE(page), timeout=6)
-            visible(driver, SORTER_SELECT, timeout=20)
+            safe_click_loc(driver, wait, PAGINATION_BY_PAGE(page))
+            visible(driver, SORTER_SELECT, wait=wait)
         except Exception:
             pass
 
