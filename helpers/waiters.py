@@ -6,17 +6,32 @@ from selenium.common.exceptions import TimeoutException, StaleElementReferenceEx
 from locators.plp import SORTER_SELECT
 from locators.common import MINICART_WRAPPER
 
-
-def wait(driver, timeout=10, poll=0.1):
-    """Cria WebDriverWait padrão com polling rápido"""
-    return WebDriverWait(driver, timeout, poll_frequency=poll)
+DEFAULT_TIMEOUT = 10
 
 
-def visible(driver, locator, timeout=10):
-    """Espera elemento ficar visível"""
-    return wait(driver, timeout).until(
-        EC.visibility_of_element_located(locator)
-    )
+def _effective_timeout(wait, timeout, default=DEFAULT_TIMEOUT):
+    """
+    Usa o timeout explícito se fornecido; senão, aproveita o _timeout do WebDriverWait existente;
+    como fallback, retorna default informado.
+    """
+    if timeout is not None:
+        return timeout
+    if wait is not None and hasattr(wait, "_timeout"):
+        return wait._timeout
+    return default
+
+
+def wait(driver, timeout=None, poll=0.1):
+    """Cria WebDriverWait padrão com polling rápido."""
+    effective = timeout if timeout is not None else DEFAULT_TIMEOUT
+    return WebDriverWait(driver, effective, poll_frequency=poll)
+
+
+def visible(driver, locator, timeout=None, wait: WebDriverWait = None):
+    """Espera elemento ficar visível."""
+    effective = _effective_timeout(wait, timeout)
+    w = wait if wait is not None else WebDriverWait(driver, effective)
+    return w.until(EC.visibility_of_element_located(locator))
 
 def ensure_web_context(driver):
     try:
@@ -27,16 +42,19 @@ def ensure_web_context(driver):
     except Exception:
         pass
 
-def clickable(driver, locator, timeout=10):
+def clickable(driver, locator, timeout=None, wait: WebDriverWait = None):
     ensure_web_context(driver)
-    return wait(driver, timeout).until(EC.element_to_be_clickable(locator))
+    effective = _effective_timeout(wait, timeout)
+    w = wait if wait is not None else WebDriverWait(driver, effective)
+    return w.until(EC.element_to_be_clickable(locator))
 
-def wait_any_visible(driver, locator, timeout=20):
+def wait_any_visible(driver, locator, timeout=None):
     """
     Espera qualquer elemento visível de um locator.
     Retorna o WebElement ou None.
     """
-    end = time.time() + timeout
+    effective = _effective_timeout(None, timeout, default=20)
+    end = time.time() + effective
     while time.time() < end:
         els = driver.find_elements(*locator)
         for e in els:
@@ -48,12 +66,13 @@ def wait_any_visible(driver, locator, timeout=20):
         time.sleep(0.2)
     return None
 
-def wait_visible_any(driver, locators, timeout=25, poll=0.2):
+def wait_visible_any(driver, locators, timeout=None, poll=0.2):
     """
     Espera até QUALQUER locator da lista ficar visível.
     Retorna o WebElement encontrado.
     """
-    end = time.time() + timeout
+    effective = _effective_timeout(None, timeout, default=25)
+    end = time.time() + effective
     while time.time() < end:
         for loc in locators:
             els = driver.find_elements(*loc)
@@ -72,8 +91,9 @@ def wait_visible_any(driver, locators, timeout=25, poll=0.2):
 
 def try_visible(wait, locator, timeout=3) -> bool:
     driver = wait._driver
+    effective = _effective_timeout(wait, timeout, default=3)
     try:
-        WebDriverWait(driver, timeout).until(
+        WebDriverWait(driver, effective).until(
             EC.visibility_of_element_located(locator)
         )
         return True
@@ -89,7 +109,7 @@ def wait_category_loaded(wait, driver):
 def minicart_visible(driver) -> bool:
     # Verificar se o mini-cart é apresentado, usamos isso para verificar se o usuário está logado
     try:
-        el = wait(driver, 1.5).until(EC.visibility_of_element_located(MINICART_WRAPPER))
+        el = wait(driver, timeout=1.5).until(EC.visibility_of_element_located(MINICART_WRAPPER))
         return el.is_displayed()
     except Exception:
         return False
@@ -106,9 +126,10 @@ def _is_stale(element) -> bool:
         return True
 
 
-def wait_removed_element_stale(driver, element, timeout=30):
+def wait_removed_element_stale(driver, element, timeout=None):
     """
     Espera o elemento (botão) ficar stale.
     Isso garante que o DOM realmente atualizou após a remoção.
     """
-    WebDriverWait(driver, timeout, poll_frequency=0.2).until(lambda d: _is_stale(element))
+    effective = _effective_timeout(None, timeout, default=30)
+    WebDriverWait(driver, effective, poll_frequency=0.2).until(lambda d: _is_stale(element))

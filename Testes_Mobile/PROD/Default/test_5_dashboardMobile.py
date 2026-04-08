@@ -30,7 +30,7 @@ NEW_PASS = "Min@1234567"
 def test_5_dashboard_mobile(driver, setup_site, wait):
     # 1) Login inicial
     click_if_present(driver, COOKIE_ACCEPT, seconds=20)
-    ensure_logged_in_mobile(driver, VALID_USER, VALID_PASS)
+    ensure_logged_in_mobile(driver, VALID_USER, VALID_PASS, wait=wait)
     assert minicart_visible(driver), "Era para estar logado, mas o minicart não apareceu."
     try_close_popups(driver)
 
@@ -49,73 +49,73 @@ def test_5_dashboard_mobile(driver, setup_site, wait):
 
     # 6) Volta Minha conta e abre pedidos recentes
     time.sleep(2)
-    open_minha_conta_mobile(driver, timeout=20)
-    mobile_click_strict(driver, MOBILE_NAV_MINHA_CONTA, timeout=12, retries=4, sleep_between=0.25)
+    open_minha_conta_mobile(driver, wait=wait)
+    mobile_click_strict(driver, MOBILE_NAV_MINHA_CONTA, retries=4, sleep_between=0.25, wait=wait)
     open_recent_orders_from_dashboard(driver, wait)
 
     # 7) Meus pedidos: abre detalhe e copia codigo pix
     orders_open_first_and_copy_pix_mobile(driver, wait)
 
     # 8) Meus pedidos: filtros e limpar filtros
-    mobile_click_strict(driver, MOBILE_BT_BACK, timeout=12, retries=4, sleep_between=0.25)
+    mobile_click_strict(driver, MOBILE_BT_BACK, retries=4, sleep_between=0.25, wait=wait)
     orders_filters_flow_mobile(driver, wait)
 
     # 9) Lista de favoritos
-    open_minha_conta_mobile(driver, timeout=20)
-    mobile_click_strict(driver, MOBILE_NAV_LISTA_FAVORITOS, timeout=12, retries=4, sleep_between=0.25)
+    open_minha_conta_mobile(driver, wait=wait)
+    mobile_click_strict(driver, MOBILE_NAV_LISTA_FAVORITOS, retries=4, sleep_between=0.25, wait=wait)
     time.sleep(3)
 
     # 10) Endereços: definir segundo como principal
-    open_minha_conta_mobile(driver, timeout=20)
-    mobile_click_strict(driver, MOBILE_NAV_ENDERECOS, timeout=12, retries=4, sleep_between=0.25)
+    open_minha_conta_mobile(driver, wait=wait)
+    mobile_click_strict(driver, MOBILE_NAV_ENDERECOS, retries=4, sleep_between=0.25, wait=wait)
     addresses_set_second_as_main_mobile(driver, wait)
 
     # 11) Meus pontos + relatório
-    open_minha_conta_mobile(driver, timeout=20)
-    mobile_click_strict(driver, MOBILE_NAV_MEUS_PONTOS, timeout= 12, retries=4, sleep_between=0.25)
+    open_minha_conta_mobile(driver, wait=wait)
+    mobile_click_strict(driver, MOBILE_NAV_MEUS_PONTOS, retries=4, sleep_between=0.25, wait=wait)
     apply_reward_filter_mobile(driver, wait, "earnings") # Ganhou
     apply_reward_filter_mobile(driver, wait, "used") # Usados
     apply_reward_filter_mobile(driver, wait, "expired") # Usados
     apply_reward_filter_mobile(driver, wait, "canceled") # Cancelados
     apply_reward_filter_mobile(driver, wait, "all") # Todos
 
-    mobile_click_strict(driver, BTN_POINTS_REPORT, timeout=12, retries=4, sleep_between=0.25)
-    visible(driver, POINTS_REPORT_FILTER, timeout=25)
+    mobile_click_strict(driver, BTN_POINTS_REPORT, retries=4, sleep_between=0.25, wait=wait)
+    visible(driver, POINTS_REPORT_FILTER, wait=wait)
 
     # 12) Cadastro de redes: navega tabs
-    open_minha_conta_mobile(driver, timeout=20)
-    mobile_click_strict(driver, MOBILE_NAV_CADASTRO_REDES, timeout=12, retries=4, sleep_between=0.25)
+    open_minha_conta_mobile(driver, wait=wait)
+    mobile_click_strict(driver, MOBILE_NAV_CADASTRO_REDES, retries=4, sleep_between=0.25, wait=wait)
     apply_cadastro_redes_filter_mobile(driver, wait, "new-assign") #Agrupar CNPJ
     apply_cadastro_redes_filter_mobile(driver, wait, "info") # Informações
     apply_cadastro_redes_filter_mobile(driver, wait, "rules") # Regras de agrupamento
     apply_cadastro_redes_filter_mobile(driver, wait, "assigned-grid")  # CNPJs agrupados
 
     # 13) Meus cupons: ver mais/copia/tab indisponíveis
-    open_minha_conta_mobile(driver, timeout=20)
-    mobile_click_strict(driver, MOBILE_NAV_MEUS_CUPONS, timeout=12, retries=4, sleep_between=0.25)
+    open_minha_conta_mobile(driver, wait=wait)
+    mobile_click_strict(driver, MOBILE_NAV_MEUS_CUPONS, retries=4, sleep_between=0.25, wait=wait)
     apply_meus_cupons_filter_mobile(driver, wait, "active")  # Ativos
-    mobile_click_strict(driver, COUPON_VER_MAIS_1, timeout=12, retries=4, sleep_between=0.25)
+    mobile_click_strict(driver, COUPON_VER_MAIS_1, retries=4, sleep_between=0.25, wait=wait)
     time.sleep(0.8)
-    mobile_click_strict(driver, COUPON_COPY_1, timeout=12, retries=4, sleep_between=0.25)
+    mobile_click_strict(driver, COUPON_COPY_1, retries=4, sleep_between=0.25, wait=wait)
     time.sleep(0.8)
     apply_meus_cupons_filter_mobile(driver, wait, "unavailable")  # Indisponíveis
 
     # 14) Minhas missões
-    open_minha_conta_mobile(driver, timeout=20)
-    mobile_click_strict(driver, MOBILE_NAV_MINHAS_MISSOES, timeout=12, retries=4, sleep_between=0.25)
-    visible(driver, MISSIONS_READY, timeout=25)
+    open_minha_conta_mobile(driver, wait=wait)
+    mobile_click_strict(driver, MOBILE_NAV_MINHAS_MISSOES, retries=4, sleep_between=0.25, wait=wait)
+    visible(driver, MISSIONS_READY, wait=wait)
 
     # 15) Privacidade e dados + volta para home + acessar minha conta
-    open_minha_conta_mobile(driver, timeout=20)
-    mobile_click_strict(driver, MOBILE_NAV_PRIVACIDADE_DADOS, timeout=12, retries=4, sleep_between=0.25)
+    open_minha_conta_mobile(driver, wait=wait)
+    mobile_click_strict(driver, MOBILE_NAV_PRIVACIDADE_DADOS, retries=4, sleep_between=0.25, wait=wait)
     privacidade_dados_mobile(driver,wait)
     open_my_account(driver, wait)
 
     # 16) Info da conta: whatsapp + editar email
 
     # WhatsApp
-    open_minha_conta_mobile(driver, timeout=20)
-    mobile_click_strict(driver, MOBILE_NAV_INFO_CONTA, timeout=12, retries=4, sleep_between=0.25)
+    open_minha_conta_mobile(driver, wait=wait)
+    mobile_click_strict(driver, MOBILE_NAV_INFO_CONTA, retries=4, sleep_between=0.25, wait=wait)
     account_whatsapp_toggle_flow_mobile(driver, wait)
 
     # Alterar email
@@ -141,9 +141,9 @@ def test_5_dashboard_mobile(driver, setup_site, wait):
 
     # volta email
     open_my_account(driver, wait)
-    open_minha_conta_mobile(driver, timeout=20)
-    mobile_click_strict(driver, MOBILE_NAV_INFO_CONTA, timeout=12, retries=4, sleep_between=0.25)
-    visible(driver, BTN_EDIT_EMAIL, timeout=12)
+    open_minha_conta_mobile(driver, wait=wait)
+    mobile_click_strict(driver, MOBILE_NAV_INFO_CONTA, retries=4, sleep_between=0.25, wait=wait)
+    visible(driver, BTN_EDIT_EMAIL, wait=wait)
     account_change_email_flow_mobile(driver, wait, new_email=VALID_USER, current_password=NEW_PASS)
 
     # volta senha

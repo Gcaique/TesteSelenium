@@ -1,5 +1,10 @@
 import time
-from selenium.common.exceptions import (StaleElementReferenceException, ElementClickInterceptedException,TimeoutException, WebDriverException)
+from selenium.common.exceptions import (
+    StaleElementReferenceException,
+    ElementClickInterceptedException,
+    TimeoutException,
+    WebDriverException,
+)
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
@@ -9,13 +14,23 @@ from selenium.webdriver.common.actions.pointer_input import PointerInput
 from selenium.webdriver.common.actions import interaction
 from selenium.webdriver.common.keys import Keys
 
-from helpers.waiters import clickable, visible
-import time
-from selenium.webdriver.support import expected_conditions as EC
+from helpers.waiters import clickable, visible, DEFAULT_TIMEOUT
 
-def click(driver, locator, timeout=10):
+def _resolve_wait(driver, wait, timeout=None, poll=0.1):
+    """
+    Retorna um WebDriverWait, priorizando o fornecido (fixture). Usa timeout explícito
+    ou, como fallback, DEFAULT_TIMEOUT.
+    """
+    if wait is not None:
+        return wait
+    effective = timeout if timeout is not None else DEFAULT_TIMEOUT
+    return WebDriverWait(driver, effective, poll_frequency=poll)
+
+
+def click(driver, locator, timeout=None, wait=None):
     """Clique robusto com fallback JS"""
-    el = clickable(driver, locator, timeout)
+    w = _resolve_wait(driver, wait, timeout)
+    el = clickable(driver, locator, timeout=timeout, wait=w)
     try:
         el.click()
     except (ElementClickInterceptedException, StaleElementReferenceException):
@@ -28,9 +43,10 @@ def click(driver, locator, timeout=10):
         driver.execute_script("arguments[0].click();", el)
 
 
-def fill(driver, locator, value: str):
+def fill(driver, locator, value: str, timeout=None, wait=None):
     """Preenche input com fallback JS para clear"""
-    el = visible(driver, locator, timeout=10)
+    w = _resolve_wait(driver, wait, timeout)
+    el = visible(driver, locator, timeout=timeout, wait=w)
     try:
         el.clear()
     except Exception:
@@ -39,9 +55,10 @@ def fill(driver, locator, value: str):
     el.send_keys(value)
 
 
-def scroll_into_view(driver, locator, timeout=10):
+def scroll_into_view(driver, locator, timeout=None, wait=None):
     """Scroll até elemento e retorna ele"""
-    el = visible(driver, locator, timeout=timeout)
+    w = _resolve_wait(driver, wait, timeout)
+    el = visible(driver, locator, timeout=timeout, wait=w)
     driver.execute_script(
         "arguments[0].scrollIntoView({block:'center', inline:'center'});",
         el,
@@ -56,10 +73,10 @@ def scroll_and_click(driver, element):
     element.click()
 
 
-def try_click(driver, locator, timeout=2.0) -> bool:
+def try_click(driver, locator, timeout=None, wait=None) -> bool:
     """Tenta clicar sem quebrar o teste"""
     try:
-        click(driver, locator, timeout=timeout)
+        click(driver, locator, timeout=timeout, wait=wait)
         return True
     except Exception:
         return False
@@ -90,17 +107,17 @@ def safe_click(driver, wait, element):
         driver.execute_script("arguments[0].click();", element)
 
 
-def safe_click_loc(driver, wait, locator, timeout=10):
+def safe_click_loc(driver, wait, locator, timeout=None):
     """
     Pega o WebElement (clicável) e clica usando seu safe_click.
     """
-    w = WebDriverWait(driver, timeout)
+    w = _resolve_wait(driver, wait, timeout)
     el = w.until(EC.element_to_be_clickable(locator))
     safe_click(driver, w, el)
     return el
 
 
-def safe_click_loc_retry(driver, locator, timeout=10, retries=4, sleep_between=0.25):
+def safe_click_loc_retry(driver, locator, timeout=None, retries=4, sleep_between=0.25, wait=None):
     """
     Clica em um locator com retry REAL contra Stale/Intercept.
     Diferença do safe_click_loc: ele re-encontra o elemento a cada tentativa.
@@ -108,7 +125,7 @@ def safe_click_loc_retry(driver, locator, timeout=10, retries=4, sleep_between=0
     last_exc = None
     for _ in range(retries):
         try:
-            w = WebDriverWait(driver, timeout)
+            w = _resolve_wait(driver, wait, timeout)
             el = w.until(EC.element_to_be_clickable(locator))
             safe_click(driver, w, el)  # usa seu safe_click atual
             return el
@@ -129,7 +146,7 @@ def scroll_and_safe_click_loc(driver, wait, locator, timeout=10):
     3) Fallback: scroll_and_click direto
     """
     # 1) scroll + pega elemento visível
-    el = scroll_into_view(driver, locator, timeout=timeout)
+    el = scroll_into_view(driver, locator, timeout=timeout, wait=wait)
 
     # 2) tenta clicar “do seu jeito”
     try:
@@ -160,7 +177,7 @@ def _normalize_locator(locator_or_xpath):
     raise TypeError(f"Locator inválido: {type(locator_or_xpath)} -> {locator_or_xpath}")
 
 
-def scroll_to(driver, locator_or_xpath, timeout=8):
+def scroll_to(driver, locator_or_xpath, timeout=None, wait=None):
     target = _normalize_locator(locator_or_xpath)
 
     # se for WebElement, scroll direto
@@ -169,13 +186,15 @@ def scroll_to(driver, locator_or_xpath, timeout=8):
         return target
 
     # caso locator/xpath:
-    el = visible(driver, target, timeout=timeout)
+    w = _resolve_wait(driver, wait, timeout)
+    el = visible(driver, target, timeout=timeout, wait=w)
     driver.execute_script("arguments[0].scrollIntoView({block:'center'});", el)
     return el
 
 
-def fill_input(driver, wait, locator, value: str, timeout=10):
-    el = visible(driver, locator, timeout=timeout)
+def fill_input(driver, wait, locator, value: str, timeout=None):
+    w = _resolve_wait(driver, wait, timeout)
+    el = visible(driver, locator, timeout=timeout, wait=w)
     try:
         el.clear()
     except Exception:
@@ -190,9 +209,10 @@ def clear_and_type(driver, locator, texto):
     campo.send_keys(texto)
     time.sleep(1)
 
-def scroll_to_middle(driver, wait, locator, timeout=10):
+def scroll_to_middle(driver, wait, locator, timeout=None):
     """Faz scroll ate o elemento ficar centralizado na viewport."""
-    el = wait.until(EC.presence_of_element_located(locator))
+    w = _resolve_wait(driver, wait, timeout)
+    el = w.until(EC.presence_of_element_located(locator))
     driver.execute_script(
         "arguments[0].scrollIntoView({block: 'center', behavior: 'smooth'});",
         el,
@@ -200,9 +220,10 @@ def scroll_to_middle(driver, wait, locator, timeout=10):
     return el
 
 
-def scroll_to_top(driver, wait, locator, timeout=10):
+def scroll_to_top(driver, wait, locator, timeout=None):
     """Faz scroll ate o elemento ficar no topo da viewport."""
-    el = wait.until(EC.presence_of_element_located(locator))
+    w = _resolve_wait(driver, wait, timeout)
+    el = w.until(EC.presence_of_element_located(locator))
     driver.execute_script(
         "arguments[0].scrollIntoView({block: 'start', behavior: 'smooth'});",
         el,
@@ -235,13 +256,13 @@ def tap_element(driver, element):
     actions.perform()
 
 
-def mobile_click_strict(driver, locator, timeout=12, retries=4, sleep_between=0.25):
+def mobile_click_strict(driver, locator, timeout=None, retries=4, sleep_between=0.25, wait=None):
     last = None
-    wait = WebDriverWait(driver, timeout, poll_frequency=0.2)
+    w = _resolve_wait(driver, wait, timeout, poll=0.2)
 
     for _ in range(retries):
         try:
-            el = wait.until(lambda d: _first_displayed(d, locator))
+            el = w.until(lambda d: _first_displayed(d, locator))
 
             try:
                 driver.execute_script("arguments[0].scrollIntoView({block:'center'});", el)
@@ -249,7 +270,7 @@ def mobile_click_strict(driver, locator, timeout=12, retries=4, sleep_between=0.
             except Exception:
                 pass
 
-            el = wait.until(lambda d: _first_displayed(d, locator))
+            el = w.until(lambda d: _first_displayed(d, locator))
 
             # 1) CLICK normal primeiro (como era antes)
             try:
@@ -279,8 +300,9 @@ def mobile_click_strict(driver, locator, timeout=12, retries=4, sleep_between=0.
 
     raise last
 
-def scroll_into_view_loc_mobile(driver, locator, timeout=20):
-    end = time.time() + timeout
+def scroll_into_view_loc_mobile(driver, locator, timeout=None):
+    effective = timeout if timeout is not None else 20
+    end = time.time() + effective
     last_err = None
 
     while time.time() < end:
