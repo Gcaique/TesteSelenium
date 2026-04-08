@@ -30,39 +30,35 @@ VALID_PASS = "Min@1234"
 def test_15_loginLogout_mobile_sul(driver, setup_site, wait):
     # 1) Abrir modal de login
     click_if_present(driver, COOKIE_ACCEPT, seconds=20)
-    mobile_open_login_modal_from_dropdown(driver, timeout=12)
+    mobile_open_login_modal_from_dropdown(driver)
 
     # 2) Username inválido: email não encontrado
     submit_username_invalid(
         driver,
         "teste.12345@teste.com",
         "email não encontrado",
-        tokens=["verifique", "cpf", "cnpj", "e-mail", "email"],
-    )
+        tokens=["verifique", "cpf", "cnpj", "e-mail", "email"])
 
     # 3) Username inválido: cnpj mismatch/não encontrado
     submit_username_invalid(
         driver,
         "42.765.782/0001-08",
         "cnpj não encontrado",
-        tokens=["verifique", "e-mail", "email", "cpf", "cnpj"],
-    )
+        tokens=["verifique", "e-mail", "email", "cpf", "cnpj"])
 
     # 4) Username inválido: formato inválido
     submit_username_invalid(
         driver,
         "teste.teste",
         "formato inválido",
-        tokens=["insira", "e-mail", "email", "cpf", "cnpj", "invál", "inval"],
-    )
+        tokens=["insira", "e-mail", "email", "cpf", "cnpj", "invál", "inval"])
 
     # 5) Username inválido: cnpj fake
     submit_username_invalid(
         driver,
         "11.222.333/4444-55",
         "cnpj fake",
-        tokens=["insira", "e-mail", "email", "cpf", "cnpj", "invál", "inval"],
-    )
+        tokens=["insira", "e-mail", "email", "cpf", "cnpj", "invál", "inval"])
 
     # 6) Username válido: abrir senha
     submit_username_valid(driver, VALID_USER, "usuário válido")
@@ -87,16 +83,16 @@ def test_15_loginLogout_mobile_sul(driver, setup_site, wait):
 
     # 12) Últimos pedidos deslogado -> loga -> ver produtos
     go_home(driver)
-    click(driver, LAST_ORDERS, timeout=20)
+    click(driver, LAST_ORDERS, wait=wait)
 
-    visible(driver, MOBILE_LOGIN_DROPDOWN_OPENED, timeout=10)
-    click(driver, MOBILE_LOGIN_ACESSO, timeout=10)
+    visible(driver, MOBILE_LOGIN_DROPDOWN_OPENED, wait=wait)
+    click(driver, MOBILE_LOGIN_ACESSO, wait=wait)
     submit_username_valid(driver, VALID_USER, "login via últimos pedidos (username)")
     login_password(driver, VALID_PASS, "login via últimos pedidos (senha)", expect_success=True)
 
-    visible(driver, EMPTY_GRID_ORDERS, timeout=20)
+    visible(driver, EMPTY_GRID_ORDERS, wait=wait)
     try_close_hotjar(driver)
-    click(driver, EMPTY_GRID_ORDERS, timeout=10)
+    click(driver, EMPTY_GRID_ORDERS, wait=wait)
     time.sleep(3)
 
     # 13) Logout final

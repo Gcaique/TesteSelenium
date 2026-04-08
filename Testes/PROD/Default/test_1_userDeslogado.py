@@ -48,11 +48,11 @@ def test_1_userDeslogado(driver, setup_site, wait):
     wait.until(EC.visibility_of_element_located(FILTER_CONSERVACAO_OPEN))
 
     # Paginação
-    try_go_to_page(wait, driver, "2", timeout=10)
-    try_go_to_page(wait, driver, "3", timeout=10)
+    try_go_to_page(driver, wait, "2")
+    try_go_to_page(driver, wait, "3")
 
     # Garante filtro Congelado
-    aplicou_congelado = apply_filter_strict(driver, wait, FILTER_CONSERVACAO_OPEN, FILTER_CONSERVACAO_CONGELADO, timeout=12, retries=5)
+    aplicou_congelado = apply_filter_strict(driver, wait, FILTER_CONSERVACAO_OPEN, FILTER_CONSERVACAO_CONGELADO, retries=5)
 
     assert aplicou_congelado, "Busca (#4): não consegui aplicar o filtro Conservação = Congelado."
 
@@ -60,39 +60,39 @@ def test_1_userDeslogado(driver, setup_site, wait):
     wait.until(EC.visibility_of_element_located(FILTER_CLEAR_ALL))
 
     # Limpar filtros
-    limpou_busca = clear_filters_strict(driver, wait, FILTER_CLEAR_ALL, timeout=15, retries=5)
+    limpou_busca = clear_filters_strict(driver, wait, FILTER_CLEAR_ALL, retries=5)
 
     assert limpou_busca, "Busca (#4): não consegui limpar os filtros (Limpar Tudo)."
 
     # Ordenação A-Z
-    ordenou_az = sort_strict(driver, wait, SORTER_SELECT, "name_asc", timeout=12, retries=4)
+    ordenou_az = sort_strict(driver, wait, SORTER_SELECT, "name_asc", retries=4)
     assert ordenou_az, "Busca (#4): não consegui aplicar ordenação A-Z (name_asc)."
 
     # Ordenação Z-A
-    ordenou_za = sort_strict(driver, wait, SORTER_SELECT, "name_desc", timeout=12, retries=4)
+    ordenou_za = sort_strict(driver, wait, SORTER_SELECT, "name_desc", retries=4)
     assert ordenou_za, "Busca (#4): não consegui aplicar ordenação Z-A (name_desc)."
 
     # 5 Acessar categoria:
     # Paginação 2 e 3 (sem travar)
     click_when_clickable(wait, CATEGORY_MENU("Bovinos Premium"))
     wait_category_loaded(wait, driver)
-    try_go_to_page(wait, driver, "2", timeout=6)
-    try_go_to_page(wait, driver, "3", timeout=6)
+    try_go_to_page(driver, wait, "2")
+    try_go_to_page(driver, wait, "3")
 
     # Garante que os filtros carregaram na página
     wait.until(EC.visibility_of_element_located(FILTER_NACIONALIDADE))
     wait.until(EC.visibility_of_element_located(FILTER_CONSERVACAO_OPEN))
 
     # Aplica Nacionalidade
-    aplicou_nat = apply_filter_strict(driver, wait, FILTER_NACIONALIDADE, FILTER_NACIONALIDADE_OPTION_1, timeout=12, retries=5)
+    aplicou_nat = apply_filter_strict(driver, wait, FILTER_NACIONALIDADE, FILTER_NACIONALIDADE_OPTION_1, retries=5)
     assert aplicou_nat, "Não consegui aplicar filtro Nacionalidade."
 
     # Aplica Conservação
-    aplicou_cons = apply_filter_strict(driver, wait, FILTER_CONSERVACAO_OPEN, FILTER_CONSERVACAO_RESFRIADO, timeout=12, retries=5)
+    aplicou_cons = apply_filter_strict(driver, wait, FILTER_CONSERVACAO_OPEN, FILTER_CONSERVACAO_RESFRIADO, retries=5)
     assert aplicou_cons, "Não consegui aplicar filtro Conservação (Resfriado)."
 
     # Limpar filtros
-    limpou_promo = clear_filters_strict(driver, wait, FILTER_CLEAR_ALL, timeout=15, retries=5)
+    limpou_promo = clear_filters_strict(driver, wait, FILTER_CLEAR_ALL, retries=5)
     assert limpou_promo, "Não consegui limpar os filtros (Limpar Tudo)."
 
     # Pescados: ordenação
@@ -102,11 +102,11 @@ def test_1_userDeslogado(driver, setup_site, wait):
     wait.until(EC.visibility_of_element_located(SORTER_SELECT))
 
     # Ordenação A-Z
-    ok_pesc_az = sort_strict(driver, wait, SORTER_SELECT, "name_asc", timeout=12, retries=4)
+    ok_pesc_az = sort_strict(driver, wait, SORTER_SELECT, "name_asc", retries=4)
     assert ok_pesc_az, "Pescados: não consegui aplicar ordenação A-Z (name_asc)."
 
     # Ordenação Z-A
-    ok_pesc_za = sort_strict(driver, wait, SORTER_SELECT, "name_desc", timeout=12, retries=4)
+    ok_pesc_za = sort_strict(driver, wait, SORTER_SELECT, "name_desc", retries=4)
     assert ok_pesc_za, "Pescados: não consegui aplicar ordenação Z-A (name_desc)."
 
     # 6) Bovinos: apenas acessar
@@ -123,11 +123,11 @@ def test_1_userDeslogado(driver, setup_site, wait):
     # clica 1x e espera (rápido)
     safe_click(driver, wait, btn)
     try:
-        expect_login_popup(driver, wait, label="listagem", timeout=8, retries=0)
+        expect_login_popup(driver, wait, label="listagem", retries=0)
     except TimeoutException:
         # fallback: reclica 1x (às vezes o primeiro click não dispara)
         safe_click(driver, wait, btn)
-        expect_login_popup(driver, wait, label="listagem_retry", timeout=8, retries=0)
+        expect_login_popup(driver, wait, label="listagem_retry", retries=0)
 
     # fecha/recolhe o dropdown/modal do header pra seguir o fluxo
     click_when_clickable(wait, LOGIN_MENU)
@@ -145,11 +145,11 @@ def test_1_userDeslogado(driver, setup_site, wait):
         # 1º clique
         safe_click(driver, wait, btn)
         try:
-            expect_login_popup(driver, wait, label="pdp", timeout=8, retries=0)
+            expect_login_popup(driver, wait, label="pdp", retries=0)
         except TimeoutException:
             # 1 retry rápido
             safe_click(driver, wait, btn)
-            expect_login_popup(driver, wait, label="pdp_retry", timeout=8, retries=0)
+            expect_login_popup(driver, wait, label="pdp_retry", retries=0)
 
     else:
         print("[WARN] Não há produtos suficientes para abrir a PDP (10º item).")

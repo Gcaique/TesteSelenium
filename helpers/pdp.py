@@ -4,6 +4,7 @@ from selenium.webdriver.common.by import By
 from helpers.wishlist import wait_favorite_status
 from helpers.plp import open_product_with_avise_by_pagination, open_product_with_avise_by_pagination_mobile
 from helpers.actions import safe_click_loc,mobile_click_strict
+from helpers.waiters import _effective_timeout
 from selenium.webdriver.support.ui import WebDriverWait
 
 from locators.pdp import *
@@ -15,7 +16,7 @@ def add_current_pdp_product_to_favorites(driver, wait):
     e valida mudança de status.
     """
 
-    safe_click_loc(driver, wait, PDP_WISHLIST_BTN, timeout=12)
+    safe_click_loc(driver, wait, PDP_WISHLIST_BTN)
 
     assert wait_favorite_status(driver), \
         "Não confirmou alteração de status do favorito na PDP."
@@ -62,7 +63,7 @@ def add_current_pdp_product_to_favorites_mobile(driver, wait):
     btn = driver.find_element(*PDP_WISHLIST_BTN)
     before = btn.get_attribute("class")
 
-    mobile_click_strict(driver, PDP_WISHLIST_BTN, timeout=20, retries=4, sleep_between=0.25)
+    mobile_click_strict(driver, PDP_WISHLIST_BTN, timeout=_effective_timeout(wait, 20, default=20), retries=4, sleep_between=0.25, wait=wait)
 
     WebDriverWait(driver, 10).until(
         lambda d: d.find_element(*PDP_WISHLIST_BTN).get_attribute("class") != before

@@ -3,7 +3,7 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 
 from helpers.actions import *
-from helpers.waiters import wait_removed_element_stale
+from helpers.waiters import wait_removed_element_stale, _effective_timeout
 from helpers.popups import try_close_popups
 from helpers.minicart import *
 
@@ -12,12 +12,13 @@ from locators.header import LOGIN_NAME_CONTAINER, DD_FAVORITOS
 
 
 
-def wait_favorite_status(driver, timeout=12):
+def wait_favorite_status(driver, timeout=None):
     """
     Algumas telas mudam por title='Favorito', outras por class add-to-wishlist.
     Então aceitamos qualquer uma como confirmação.
     """
-    end = time.time() + timeout
+    eff = timeout if timeout is not None else DEFAULT_TIMEOUT
+    end = time.time() + eff
     while time.time() < end:
         if driver.find_elements(*WISHLIST_STATUS_FAVORITO):
             return True
@@ -29,24 +30,25 @@ def wait_favorite_status(driver, timeout=12):
 
 # Abrir lista de favoritos
 def open_favorites_page(driver, wait):
-    safe_click_loc(driver, wait, LOGIN_NAME_CONTAINER, timeout=12)
+    safe_click_loc(driver, wait, LOGIN_NAME_CONTAINER)
     time.sleep(0.3)
-    safe_click_loc(driver, wait, DD_FAVORITOS, timeout=12)
+    safe_click_loc(driver, wait, DD_FAVORITOS)
     time.sleep(2)
 
 
 # Interações nos cards da Lista de favoritos
 def wishlist_increment_by_index(driver, wait, idx: int):
-    safe_click_loc(driver, wait, WISHLIST_INCREMENT_BY_INDEX(idx), timeout=12)
+    safe_click_loc(driver, wait, WISHLIST_INCREMENT_BY_INDEX(idx))
 
 
 def wishlist_decrement_by_index(driver, wait, idx: int):
-    safe_click_loc(driver, wait, WISHLIST_DECREMENT_BY_INDEX(idx), timeout=12)
+    safe_click_loc(driver, wait, WISHLIST_DECREMENT_BY_INDEX(idx))
 
 
-def wishlist_set_qty_input_by_index(driver, idx: int, value: str, timeout=15):
+def wishlist_set_qty_input_by_index(driver, idx: int, value: str, timeout=None):
     """Ajusta qty em input numerico."""
-    inputs = WebDriverWait(driver, timeout).until(
+    eff = _effective_timeout(None, timeout, default=DEFAULT_TIMEOUT)
+    inputs = WebDriverWait(driver, eff).until(
         EC.presence_of_all_elements_located(WISHLIST_QTY_INPUTS)
     )
 
@@ -65,14 +67,14 @@ def wishlist_set_qty_input_by_index(driver, idx: int, value: str, timeout=15):
 
 def wishlist_add_item_to_cart_by_index(driver, wait, idx: int):
     '''Interação com botão de Adicionar do card de produto'''
-    safe_click_loc(driver, wait, WISHLIST_TOCART_BTN_BY_INDEX(idx), timeout=15)
+    safe_click_loc(driver, wait, WISHLIST_TOCART_BTN_BY_INDEX(idx))
     wait_minicart_loading(driver)
     time.sleep(1.5)
 
 
 def wishlist_add_all_to_cart(driver, wait):
     '''Interação com o botão Adicionar todos ao carrinho'''
-    safe_click_loc(driver, wait, WISHLIST_ADD_ALL_TO_CART, timeout=12)
+    safe_click_loc(driver, wait, WISHLIST_ADD_ALL_TO_CART)
     wait_minicart_loading(driver)
     time.sleep(1.5)
 
@@ -89,7 +91,7 @@ def wishlist_avise_me_flow(driver, wait):
     """
 
     # clica no Avise-me (estado "disabled")
-    scroll_and_safe_click_loc(driver, wait, BTN_AVISE_DISABLED, timeout=20)
+    scroll_and_safe_click_loc(driver, wait, BTN_AVISE_DISABLED)
 
     # espera trocar para enabled
     time.sleep(5)
@@ -103,20 +105,21 @@ def wishlist_avise_me_flow(driver, wait):
     )
 
     # clica no Avise-me enabled
-    scroll_and_safe_click_loc(driver, wait, BTN_AVISE_ENABLED, timeout=20)
+    scroll_and_safe_click_loc(driver, wait, BTN_AVISE_ENABLED)
 
     # aguarda alguma mudança/feedback pós clique
     time.sleep(4)
 
 
 # Remoção + Confirmação
-def wait_wishlist_after_remove(driver, timeout=30, poll=0.2):
+def wait_wishlist_after_remove(driver, timeout=None, poll=0.2):
     """
     Após a remoção ter aplicado (stale), espera a wishlist ficar 'estável':
       - se ainda houver itens -> toolbar volta e existe botão remover
       - se vazio -> não existe botão remover
     """
-    end = time.time() + timeout
+    eff = _effective_timeout(None, timeout, default=DEFAULT_TIMEOUT)
+    end = time.time() + eff
     while time.time() < end:
         has_remove = bool(driver.find_elements(*REMOVE_CARD_BTN_BY_INDEX(1)))
         has_toolbar = bool(driver.find_elements(*WISHLIST_TOOLBAR))
@@ -140,18 +143,19 @@ def remove_card_item_with_confirm(driver, wait, idx: int = 1):
     Espera a remoção realmente acontecer (stale) e depois estabilizar.
     """
     # pega o botão remover ANTES (referência para esperar stale)
-    remove_btn = visible(driver, REMOVE_CARD_BTN_BY_INDEX(idx), timeout=20)
+    t = getattr(wait, "_timeout", DEFAULT_TIMEOUT)
+    remove_btn = visible(driver, REMOVE_CARD_BTN_BY_INDEX(idx), wait=wait, timeout=_effective_timeout(wait, None))
 
     # clica remover + confirma
-    safe_click_loc(driver, wait, REMOVE_CARD_BTN_BY_INDEX(idx), timeout=15)
-    visible(driver, CONFIRM_MODAL_ACCEPT, timeout=15)
-    safe_click_loc(driver, wait, CONFIRM_MODAL_ACCEPT, timeout=15)
+    safe_click_loc(driver, wait, REMOVE_CARD_BTN_BY_INDEX(idx))
+    visible(driver, CONFIRM_MODAL_ACCEPT, wait=wait, timeout=_effective_timeout(wait, None))
+    safe_click_loc(driver, wait, CONFIRM_MODAL_ACCEPT)
 
     # espera a remoção aplicar de verdade
-    wait_removed_element_stale(driver, remove_btn, timeout=35)
+    wait_removed_element_stale(driver, remove_btn, timeout=_effective_timeout(wait, None))
 
     # espera a tela estabilizar
-    return wait_wishlist_after_remove(driver, timeout=35)
+    return wait_wishlist_after_remove(driver, timeout=_effective_timeout(wait, None))
 
 
 def remove_all_cards_wishlist(driver, wait, max_cycles=80):
@@ -174,19 +178,23 @@ def remove_all_cards_wishlist(driver, wait, max_cycles=80):
 #---------------------------------------------------------------
 # Interações nos cards da Lista de favoritos
 def wishlist_increment_by_index_mobile(driver, wait, idx: int):
-    mobile_click_strict(driver, WISHLIST_INCREMENT_BY_INDEX(idx), timeout=12, retries=4, sleep_between=0.25)
+    t = getattr(wait, "_timeout", DEFAULT_TIMEOUT)
+    mobile_click_strict(driver, WISHLIST_INCREMENT_BY_INDEX(idx), wait=wait, timeout=_effective_timeout(wait, None), retries=4, sleep_between=0.25)
 
 def wishlist_decrement_by_index_mobile(driver, wait, idx: int):
-    mobile_click_strict(driver, WISHLIST_DECREMENT_BY_INDEX(idx), timeout=12, retries=4, sleep_between=0.25)
+    t = getattr(wait, "_timeout", DEFAULT_TIMEOUT)
+    mobile_click_strict(driver, WISHLIST_DECREMENT_BY_INDEX(idx), wait=wait, timeout=_effective_timeout(wait, None), retries=4, sleep_between=0.25)
 
 def wishlist_add_all_to_cart_mobile(driver, wait):
     '''Interação com o botão Adicionar todos ao carrinho'''
-    mobile_click_strict(driver, WISHLIST_ADD_ALL_TO_CART, timeout=12, retries=4, sleep_between=0.25)
+    t = getattr(wait, "_timeout", DEFAULT_TIMEOUT)
+    mobile_click_strict(driver, WISHLIST_ADD_ALL_TO_CART, wait=wait, timeout=_effective_timeout(wait, None), retries=4, sleep_between=0.25)
     time.sleep(5)
 
 def wishlist_add_item_to_cart_by_index_mobile(driver, wait, idx: int):
     '''Interação com botão de Adicionar do card de produto'''
-    mobile_click_strict(driver, WISHLIST_TOCART_BTN_BY_INDEX(idx), timeout=15, retries=4, sleep_between=0.25)
+    t = getattr(wait, "_timeout", DEFAULT_TIMEOUT)
+    mobile_click_strict(driver, WISHLIST_TOCART_BTN_BY_INDEX(idx), wait=wait, timeout=_effective_timeout(wait, None), retries=4, sleep_between=0.25)
     time.sleep(5)
 
 def wishlist_avise_me_flow_mobile(driver, wait):
@@ -199,7 +207,7 @@ def wishlist_avise_me_flow_mobile(driver, wait):
     """
 
     # clica no Avise-me (estado "disabled")
-    mobile_click_strict(driver, BTN_AVISE_DISABLED, timeout=20, retries=4, sleep_between=0.25)
+    mobile_click_strict(driver, BTN_AVISE_DISABLED, timeout=_effective_timeout(wait, None), retries=4, sleep_between=0.25, wait=wait)
 
     # espera trocar para enabled
     time.sleep(5)
@@ -213,7 +221,7 @@ def wishlist_avise_me_flow_mobile(driver, wait):
     )
 
     # clica no Avise-me enabled
-    mobile_click_strict(driver, BTN_AVISE_ENABLED, timeout=20, retries=4, sleep_between=0.25)
+    mobile_click_strict(driver, BTN_AVISE_ENABLED, timeout=_effective_timeout(wait, None), retries=4, sleep_between=0.25, wait=wait)
 
     # aguarda alguma mudança/feedback pós clique
     time.sleep(4)

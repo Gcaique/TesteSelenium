@@ -78,12 +78,12 @@ def test_23_redefinir_senha_mobile_sul(driver, setup_site, wait):
     mostrar_confirmar_senha(driver)
 
     # 16) Corrige para senha sem maiúscula
-    limpar_e_preencher_nova_senha_mobile(driver, os.getenv("PASSWORD_WITHOUT_UPPERCASE"))
-    limpar_e_preencher_confirmar_senha_mobile(driver, os.getenv("PASSWORD_WITHOUT_UPPERCASE"))
+    limpar_e_preencher_nova_senha_mobile(driver, wait, os.getenv("PASSWORD_WITHOUT_UPPERCASE"))
+    limpar_e_preencher_confirmar_senha_mobile(driver, wait, os.getenv("PASSWORD_WITHOUT_UPPERCASE"))
 
     # 17) Corrige para senha correta
-    limpar_e_preencher_nova_senha_mobile(driver, os.getenv("NEW_PASSWORD"))
-    limpar_e_preencher_confirmar_senha_mobile(driver, os.getenv("NEW_PASSWORD"))
+    limpar_e_preencher_nova_senha_mobile(driver, wait, os.getenv("NEW_PASSWORD"))
+    limpar_e_preencher_confirmar_senha_mobile(driver, wait, os.getenv("NEW_PASSWORD"))
     time.sleep(1)
 
     # 18) Clica em Redefinir senha
@@ -93,6 +93,6 @@ def test_23_redefinir_senha_mobile_sul(driver, setup_site, wait):
     clicar_entrar_apos_redefinir(driver, wait)
 
     # 20) Faz login com a nova senha
-    mobile_click_strict(driver, MOBILE_LOGIN_ACESSO, 10, 4, 0.25)
+    mobile_click_strict(driver, MOBILE_LOGIN_ACESSO, retries=4, sleep_between=0.25, wait=wait)
     submit_username_valid(driver, VALID_USER,"usuário válido")
     login_password(driver, os.getenv("NEW_PASSWORD"), "senha válida", expect_success=True)

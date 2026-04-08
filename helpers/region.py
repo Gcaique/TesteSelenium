@@ -1,6 +1,6 @@
 from selenium.webdriver.support import expected_conditions as EC
 
-from helpers.waiters import visible
+from helpers.waiters import visible, _effective_timeout
 from helpers.actions import click, mobile_click_strict
 from helpers.actions import click_when_clickable
 
@@ -19,23 +19,25 @@ def cnpj_por_regiao(region: str) -> str:
     return SUL_CNPJ if region_lower == "sul" else DEFAULT_CNPJ
 
 
-def open_region_modal(driver):
-    click(driver, REGION_OPEN, timeout=10)
-    visible(driver, BTN_SUL_REGION, timeout=10)
+def open_region_modal(driver, wait=None, timeout=None):
+    t = _effective_timeout(wait, timeout, default=10)
+    click(driver, REGION_OPEN, timeout=t, wait=wait)
+    visible(driver, BTN_SUL_REGION, timeout=t, wait=wait)
 
 
-def switch_region(driver, to: str):
+def switch_region(driver, to: str, wait=None, timeout=None):
     if to not in ["sul", "default"]:
         raise ValueError("to deve ser 'sul' ou 'default'")
 
-    open_region_modal(driver)
+    t = _effective_timeout(wait, timeout, default=10)
+    open_region_modal(driver, wait=wait, timeout=t)
 
     if to == "sul":
-        click(driver, BTN_SUL_REGION, timeout=10)
+        click(driver, BTN_SUL_REGION, timeout=t, wait=wait)
     else:
-        click(driver, BTN_DEFAULT_REGION, timeout=10)
+        click(driver, BTN_DEFAULT_REGION, timeout=t, wait=wait)
 
-    visible(driver, SEARCH_INPUT, timeout=15)
+    visible(driver, SEARCH_INPUT, timeout=_effective_timeout(wait, None), wait=wait)
 
 
 def select_region(wait, region: str):
@@ -56,19 +58,21 @@ def select_region(wait, region: str):
 #---------------------------------------------------------------
 # 📱 MOBILE
 #---------------------------------------------------------------
-def open_region_modal_mobile(driver):
-    mobile_click_strict(driver, MOBILE_REGION_OPEN, timeout=10, retries=4, sleep_between=0.25)
-    visible(driver, BTN_SUL_REGION, timeout=15)
+def open_region_modal_mobile(driver, wait=None, timeout=None):
+    t = _effective_timeout(wait, timeout, default=10)
+    mobile_click_strict(driver, MOBILE_REGION_OPEN, timeout=t, retries=4, sleep_between=0.25)
+    visible(driver, BTN_SUL_REGION, timeout=_effective_timeout(wait, None), wait=wait)
 
-def switch_region_mobile(driver, to: str):
+def switch_region_mobile(driver, to: str, wait=None, timeout=None):
     if to not in ["sul", "default"]:
         raise ValueError("to deve ser 'sul' ou 'default'")
 
-    open_region_modal_mobile(driver)
+    t = _effective_timeout(wait, timeout, default=10)
+    open_region_modal_mobile(driver, wait=wait, timeout=t)
 
     if to == "sul":
-        mobile_click_strict(driver, BTN_SUL_REGION, timeout=10, retries=4, sleep_between=0.25)
+        mobile_click_strict(driver, BTN_SUL_REGION, timeout=t, retries=4, sleep_between=0.25)
     else:
-        mobile_click_strict(driver, BTN_DEFAULT_REGION, timeout=10, retries=4, sleep_between=0.25)
+        mobile_click_strict(driver, BTN_DEFAULT_REGION, timeout=t, retries=4, sleep_between=0.25)
 
-    visible(driver, SEARCH_INPUT, timeout=15)
+    visible(driver, SEARCH_INPUT, timeout=_effective_timeout(wait, None), wait=wait)

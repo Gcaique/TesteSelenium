@@ -45,7 +45,7 @@ def test_14_userDeslogado_mobile_sul(driver, setup_site, wait):
         "//div[@class='footer-content']"
     ]
     for xp in sections_xpaths:
-        el = visible(driver, (("xpath", xp)[0], xp), timeout=10)  # se seu visible aceita string/xpath, pode simplificar
+        el = visible(driver, (("xpath", xp)[0], xp), wait=wait)  # se seu visible aceita string/xpath, pode simplificar
         driver.execute_script("arguments[0].scrollIntoView({block:'center'});", el)
 
     # 4) Busca -> paginação -> filtro congelado -> limpar -> ordenação A-Z e Z-A
@@ -59,37 +59,37 @@ def test_14_userDeslogado_mobile_sul(driver, setup_site, wait):
     assert try_go_to_page_mobile(driver, wait, "3")
 
     # no mobile, antes de aplicar filtros, abre o painel “Filtro”
-    ok = open_filter_panel_mobile(driver, timeout=20, tries=4)
+    ok = open_filter_panel_mobile(driver, tries=4)
     if not ok:
         raise AssertionError("Não consegui abrir o painel de filtros no mobile")
-    mobile_click_strict(driver, MOBILE_FILTER_CONSERVACAO_OPEN, timeout=20, retries=4)
-    visible(driver, MOBILE_FILTER_CONSERVACAO_CONGELADO, timeout=20)
-    mobile_click_strict(driver, MOBILE_FILTER_CONSERVACAO_CONGELADO, timeout=20, retries=4)
+    mobile_click_strict(driver, MOBILE_FILTER_CONSERVACAO_OPEN, wait=wait, retries=4)
+    visible(driver, MOBILE_FILTER_CONSERVACAO_CONGELADO, wait=wait)
+    mobile_click_strict(driver, MOBILE_FILTER_CONSERVACAO_CONGELADO, wait=wait, retries=4)
     WebDriverWait(driver, 20).until(EC.url_contains("conservacao=Congelado"))
 
     wait.until(EC.visibility_of_element_located(SORTER_SELECT))
     wait.until(EC.visibility_of_element_located(FILTER_CLEAR_ALL))
 
     # Limpar filtros
-    assert clear_filters_strict(driver, wait, FILTER_CLEAR_ALL, timeout=15, retries=5), \
+    assert clear_filters_strict(driver, wait, FILTER_CLEAR_ALL, retries=5), \
         "Busca: não consegui limpar os filtros."
 
     # Ordenação A-Z / Z-A
-    assert sort_strict(driver, wait, SORTER_SELECT, "name_asc", timeout=12, retries=4), \
+    assert sort_strict(driver, wait, SORTER_SELECT, "name_asc", retries=4), \
         "Busca: não consegui ordenação A-Z."
     WebDriverWait(driver, 20).until(EC.url_contains("product_list_order=name_asc"))
-    assert sort_strict(driver, wait, SORTER_SELECT, "name_desc", timeout=12, retries=4), \
+    assert sort_strict(driver, wait, SORTER_SELECT, "name_desc", retries=4), \
         "Busca: não consegui ordenação Z-A."
     WebDriverWait(driver, 20).until(EC.url_contains("product_list_order=name_desc"))
 
     # 5) Categoria Marcas (mobile: hambúrguer -> categoria -> Ver todos)
     go_home(driver)
     time.sleep(5)
-    safe_click_loc_retry(driver, MOBILE_MENU_HAMBURGER, timeout=10, retries=4, sleep_between=0.25)
+    safe_click_loc_retry(driver, MOBILE_MENU_HAMBURGER, wait=wait, retries=4, sleep_between=0.25)
     time.sleep(2)
-    safe_click_loc_retry(driver, MOBILE_MENU_PARENT_NEXT("marcas"), timeout=10, retries=4, sleep_between=0.25)
+    safe_click_loc_retry(driver, MOBILE_MENU_PARENT_NEXT("marcas"), wait=wait, retries=4, sleep_between=0.25)
     time.sleep(1)
-    safe_click_loc_retry(driver, MOBILE_MENU_SEE_ALL, retries=4, sleep_between=0.25)
+    safe_click_loc_retry(driver, MOBILE_MENU_SEE_ALL, wait=wait, retries=4, sleep_between=0.25)
 
     # paginação
     wait_category_loaded(wait, driver)
@@ -97,59 +97,59 @@ def test_14_userDeslogado_mobile_sul(driver, setup_site, wait):
     assert try_go_to_page_mobile(driver, wait, "3")
 
     # abre painel “Filtro” no mobile antes de filtrar
-    ok = open_filter_panel_mobile(driver, timeout=20, tries=4)
+    ok = open_filter_panel_mobile(driver, tries=4)
     if not ok:
         raise AssertionError("Não consegui abrir o painel de filtros no mobile")
-    mobile_click_strict(driver, MOBILE_FILTER_CONSERVACAO_OPEN, timeout=20, retries=4)
-    visible(driver, MOBILE_FILTER_CONSERVACAO_CONGELADO, timeout=20)
-    mobile_click_strict(driver, MOBILE_FILTER_CONSERVACAO_CONGELADO, timeout=20, retries=4)
+    mobile_click_strict(driver, MOBILE_FILTER_CONSERVACAO_OPEN, wait=wait, retries=4)
+    visible(driver, MOBILE_FILTER_CONSERVACAO_CONGELADO, wait=wait)
+    mobile_click_strict(driver, MOBILE_FILTER_CONSERVACAO_CONGELADO, wait=wait, retries=4)
     WebDriverWait(driver, 20).until(EC.url_contains("conservacao=Congelado"))
 
     wait.until(EC.visibility_of_element_located(SORTER_SELECT))
     wait.until(EC.visibility_of_element_located(FILTER_CLEAR_ALL))
 
-    assert clear_filters_strict(driver, wait, FILTER_CLEAR_ALL, timeout=15, retries=5), \
+    assert clear_filters_strict(driver, wait, FILTER_CLEAR_ALL, retries=5), \
         "Não consegui limpar os filtros."
 
     # 6) Bovinos: ordenação
-    safe_click_loc_retry(driver, MOBILE_MENU_HAMBURGER, timeout=10, retries=4, sleep_between=0.25)
+    safe_click_loc_retry(driver, MOBILE_MENU_HAMBURGER, wait=wait, retries=4, sleep_between=0.25)
     time.sleep(2)
-    safe_click_loc_retry(driver, MOBILE_MENU_PARENT_NEXT("bovinos"), timeout=10, retries=4, sleep_between=0.25)
+    safe_click_loc_retry(driver, MOBILE_MENU_PARENT_NEXT("bovinos"), retries=4, sleep_between=0.25)
     time.sleep(1)
-    safe_click_loc_retry(driver, MOBILE_MENU_SEE_ALL, retries=4, sleep_between=0.25)
+    safe_click_loc_retry(driver, MOBILE_MENU_SEE_ALL, wait=wait, retries=4, sleep_between=0.25)
     wait_category_loaded(wait, driver)
     wait.until(EC.visibility_of_element_located(SORTER_SELECT))
-    assert sort_strict(driver, wait, SORTER_SELECT, "name_asc", timeout=12, retries=4)
+    assert sort_strict(driver, wait, SORTER_SELECT, "name_asc", retries=4)
     time.sleep(3)
-    assert sort_strict(driver, wait, SORTER_SELECT, "name_desc", timeout=12, retries=4)
+    assert sort_strict(driver, wait, SORTER_SELECT, "name_desc", retries=4)
     time.sleep(3)
 
     # 7) Bovinos: acessar e tentar comprar na lista (exige login)
-    safe_click_loc_retry(driver, MOBILE_MENU_HAMBURGER, timeout=10, retries=4, sleep_between=0.25)
+    safe_click_loc_retry(driver, MOBILE_MENU_HAMBURGER, wait=wait, retries=4, sleep_between=0.25)
     time.sleep(2)
-    safe_click_loc_retry(driver, MOBILE_MENU_PARENT_NEXT("bovinos"), timeout=10, retries=4, sleep_between=0.25)
+    safe_click_loc_retry(driver, MOBILE_MENU_PARENT_NEXT("bovinos"), wait=wait, retries=4, sleep_between=0.25)
     time.sleep(1)
-    safe_click_loc_retry(driver, MOBILE_MENU_SEE_ALL, retries=4, sleep_between=0.25)
+    safe_click_loc_retry(driver, MOBILE_MENU_SEE_ALL, wait=wait, retries=4, sleep_between=0.25)
     wait_category_loaded(wait, driver)
 
-    scroll_into_view(driver, MOBILE_BTN_ENTRAR_LISTA(1), timeout=10)
+    scroll_into_view(driver, MOBILE_BTN_ENTRAR_LISTA(1), wait=wait)
 
-    safe_click_loc_retry(driver, MOBILE_BTN_ENTRAR_LISTA(1), retries=4, sleep_between=0.25)
-    expect_login_popup_mobile(driver, wait, timeout=8)
+    safe_click_loc_retry(driver, MOBILE_BTN_ENTRAR_LISTA(1), wait=wait, retries=4, sleep_between=0.25)
+    expect_login_popup_mobile(driver, wait)
 
     # fecha dropdown/modal do header (no mobile, normalmente o mesmo LOGIN_MENU fecha)
     click_when_clickable(wait, LOGIN_MENU)
 
     # 8) PDP (10º item) e tentar Entrar
-    scroll_into_view(driver, PLP_PRODUCT_IMAGE_WRAPPER_BY_INDEX(9), timeout=8)
-    safe_click_loc_retry(driver, PLP_PRODUCT_IMAGE_WRAPPER_BY_INDEX(9), timeout=10, retries=4, sleep_between=0.25)
+    scroll_into_view(driver, PLP_PRODUCT_IMAGE_WRAPPER_BY_INDEX(9), wait=wait)
+    safe_click_loc_retry(driver, PLP_PRODUCT_IMAGE_WRAPPER_BY_INDEX(9), wait=wait, retries=4, sleep_between=0.25)
     btn_pdp = wait.until(EC.visibility_of_element_located(BTN_ENTRAR_PDP))
-    safe_click_loc_retry(driver, btn_pdp, timeout=10, retries=4, sleep_between=0.25)
+    safe_click_loc_retry(driver, btn_pdp, wait=wait, retries=4, sleep_between=0.25)
     try:
-        expect_login_popup_mobile(driver, wait, timeout=8)
+        expect_login_popup_mobile(driver, wait)
     except Exception:
-        safe_click_loc_retry(driver, btn_pdp, timeout=10, retries=4, sleep_between=0.25)
-        expect_login_popup_mobile(driver, wait, timeout=8)
+        safe_click_loc_retry(driver, btn_pdp, wait=wait, retries=4, sleep_between=0.25)
+        expect_login_popup_mobile(driver, wait)
 
     # 9) Últimos pedidos/produtos exigem login
     click_when_clickable(wait, LOGO)

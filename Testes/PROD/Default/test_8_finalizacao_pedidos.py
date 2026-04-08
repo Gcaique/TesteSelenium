@@ -56,7 +56,7 @@ def test_8_finalizacao_pedidos(driver, setup_site, wait):
     time.sleep(7)
 
     # 6) Aplicando cupom pelo input + removendo cupom + aplicando cupom pelo radio button
-    fill_input(driver, wait, INPUT_CUPOM, "automacao10", timeout=20)
+    fill_input(driver, wait, INPUT_CUPOM, "automacao10")
     click_when_clickable(wait, BTN_APLICAR_CUPOM)
     wait.until(EC.visibility_of_element_located(MENSAGEM_SUCESSO_CUPOM))
     wait.until(EC.invisibility_of_element_located(MENSAGEM_SUCESSO_CUPOM))
@@ -89,9 +89,9 @@ def test_8_finalizacao_pedidos(driver, setup_site, wait):
     wait_category_loaded(wait, driver)
 
     scroll_into_view(driver, TOOLBAR_AMOUNT)
-    safe_click_loc(driver, wait, QTY_INPUT_FIRST, timeout=10)
+    safe_click_loc(driver, wait, QTY_INPUT_FIRST)
     fill(driver, QTY_INPUT_FIRST, "9")
-    safe_click_loc(driver, wait, PLP_ADD_TO_CART_BY_INDEX(1), timeout=10)
+    safe_click_loc(driver, wait, PLP_ADD_TO_CART_BY_INDEX(1))
     wait_minicart_ready(driver)
 
     # 10) Acessando checkout
@@ -176,18 +176,18 @@ def test_8_finalizacao_pedidos(driver, setup_site, wait):
     click_when_clickable(wait, CARTAO)
     time.sleep(5)
 
-    fill_input(driver, wait, INPUT_NOME_CARTAO, "Teste Automatizado", timeout=20)
-    fill_input(driver, wait, INPUT_NUMERO_CARTAO, "5361 2006 8355 9262", timeout=20)
+    fill_input(driver, wait, INPUT_NOME_CARTAO, "Teste Automatizado")
+    fill_input(driver, wait, INPUT_NUMERO_CARTAO, "5361 2006 8355 9262")
     click_when_clickable(wait, SELECT_MES_CARTAO)
     time.sleep(0.5)
     click_when_clickable(wait, OPTION_MES_CARTAO)
     click_when_clickable(wait, SELECT_ANO_CARTAO)
     time.sleep(0.5)
     click_when_clickable(wait, OPTION_ANO_CARTAO)
-    fill_input(driver, wait, INPUT_CVV_CARTAO, "898", timeout=20)
+    fill_input(driver, wait, INPUT_CVV_CARTAO, "898")
 
     click_when_clickable(wait, BTN_FINALIZAR_COMPRA_CARTAO)
-    visible(driver, ERRO_CARTAO, timeout=20)
+    visible(driver, ERRO_CARTAO, wait=wait)
 
     # 22 Finalizar pedido com PIX
     click_when_clickable(wait, PIX)
