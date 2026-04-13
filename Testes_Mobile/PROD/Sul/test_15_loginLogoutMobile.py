@@ -23,7 +23,7 @@ VALID_USER = "caique.oliveira@infobase.com.br"
 VALID_PASS = "Min@1234"
 
 
-@pytest.mark.smoke
+@pytest.mark.regressao
 @pytest.mark.sul
 @pytest.mark.loginLogout
 @pytest.mark.mobile

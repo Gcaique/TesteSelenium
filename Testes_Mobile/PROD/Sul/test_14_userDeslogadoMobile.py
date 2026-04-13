@@ -21,7 +21,7 @@ from helpers.home import header_requires_login_mobile, go_home
 from helpers.dropdown import  mobile_open_quero_ser_cliente_from_dropdown, mobile_open_login_modal_from_dropdown
 
 
-@pytest.mark.smoke
+@pytest.mark.regressao
 @pytest.mark.sul
 @pytest.mark.deslogado
 @pytest.mark.mobile

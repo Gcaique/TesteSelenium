@@ -19,7 +19,7 @@ NEW_EMAIL = "smoketesting11@automatizacao.com.br"
 NEW_PASS = "Min@1234567"
 
 
-@pytest.mark.smoke
+@pytest.mark.regressao
 @pytest.mark.sul
 @pytest.mark.dashboard
 def test_18_dashboard_sul(driver, setup_site, wait):
