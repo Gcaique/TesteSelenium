@@ -16,7 +16,7 @@ VALID_USER = "caique.oliveira4@infobase.com.br"
 VALID_PASS = "Min@1234"
 
 
-@pytest.mark.smoke
+@pytest.mark.regressao
 @pytest.mark.default
 @pytest.mark.favoritos
 def test_6_lista_de_favoritos(driver, setup_site, wait):
@@ -32,7 +32,7 @@ def test_6_lista_de_favoritos(driver, setup_site, wait):
     add_favorite_from_category_first_item(driver, wait, CATEGORY_PESCADOS)
 
     # 4) Busca "peixe" e favorita o item 6 (igual script)
-    search_and_add_favorite_by_index(driver, wait, term="peixe", index=6)
+    search_and_add_favorite_by_index(driver, wait, term="peixe", index=4)
 
     # 5) Favorita na PDP um produto fora de estoque
     open_out_of_stock_product_and_add_to_favorites(driver, wait, category_locator=CATEGORY_CORDEIROS, pages=(1,2,3,4,5,6)) # Para alterar a categoria é só alterar 'category_locator'

@@ -22,7 +22,7 @@ VALID_USER = "smoketesting2@automatizacao.com.br"
 VALID_PASS = "Min@1234"
 
 
-@pytest.mark.smoke
+@pytest.mark.regressao
 @pytest.mark.sul
 @pytest.mark.favoritos
 @pytest.mark.mobile

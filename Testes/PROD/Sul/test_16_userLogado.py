@@ -36,7 +36,7 @@ VALID_USER = "smoketesting@automatizacao.com.br"
 VALID_PASS = "Min@1234"
 
 
-@pytest.mark.smoke
+@pytest.mark.regressao
 @pytest.mark.sul
 @pytest.mark.logado
 def test_16_user_logado_sul(driver, setup_site, wait):
