@@ -15,7 +15,7 @@ from helpers.home import *
 from helpers.auth import *
 
 
-@pytest.mark.smoke
+@pytest.mark.regressao
 @pytest.mark.default
 @pytest.mark.deslogado
 def test_1_userDeslogado(driver, setup_site, wait):

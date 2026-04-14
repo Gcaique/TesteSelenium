@@ -23,7 +23,7 @@ NEW_EMAIL = "caique.oliveira31@infobase.com.br"
 NEW_PASS = "Min@1234567"
 
 
-@pytest.mark.smoke
+@pytest.mark.regressao
 @pytest.mark.default
 @pytest.mark.dashboard
 @pytest.mark.mobile
