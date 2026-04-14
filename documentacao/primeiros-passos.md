@@ -17,7 +17,7 @@ Opcional:
 Abra o terminal no seu computador e rode:
 
 ```bash
-git clone <seu_repo>
+git clone https://github.com/Gcaique/TesteSelenium.git
 cd TesteSelenium
 ```
 

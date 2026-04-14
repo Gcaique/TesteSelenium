@@ -1,9 +1,12 @@
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options as ChromeOptions
 from selenium.webdriver.firefox.options import Options as FirefoxOptions
+from selenium.webdriver.edge.options import Options as EdgeOptions
 from dotenv import load_dotenv
 import os
 import re
+import platform
+import shutil
 from pathlib import Path
 
 from selenium.webdriver.chrome.service import Service as ChromeService
@@ -11,6 +14,9 @@ from webdriver_manager.chrome import ChromeDriverManager
 
 from selenium.webdriver.firefox.service import Service as FirefoxService
 from webdriver_manager.firefox import GeckoDriverManager
+
+from selenium.webdriver.edge.service import Service as EdgeService
+from webdriver_manager.microsoft import EdgeChromiumDriverManager
 
 
 # ============================
@@ -113,7 +119,7 @@ def _get_sauce_hub():
 # ======================
 def driver_local(navegador="chrome", headless=False, resolucao="1920x1080"):
     """
-    Cria driver local (Chrome/Firefox).
+    Cria driver local (Chrome/Firefox/Safari).
     """
     nav = (navegador or "").strip().lower()
     width, height = parse_resolucao(resolucao)
@@ -157,7 +163,17 @@ def driver_local(navegador="chrome", headless=False, resolucao="1920x1080"):
         driver.set_window_size(width, height)
         return driver
 
-    raise Exception("Navegador local não suportado (use chrome|firefox).")
+    if nav == "safari":
+        # Safari local usa o safaridriver (WebDriver built-in do macOS).
+        if headless:
+            raise Exception("Safari local não suporta headless. Rode sem --headless ou use um grid remoto.")
+
+        # Pré-requisito no macOS (uma vez): `safaridriver --enable`
+        driver = webdriver.Safari()
+        driver.set_window_size(width, height)
+        return driver
+
+    raise Exception("Navegador local não suportado (use chrome|firefox|safari).")
 
 
 # ============================

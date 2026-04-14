@@ -94,7 +94,7 @@ Escolhe o navegador:
 
 - Desktop: `chrome`, `firefox`, `edge`, `safari` (dependendo da plataforma escolhida).
 - Mobile: normalmente `safari` em iOS e `chrome` em Android.
-- `local`: normalmente use `chrome` ou `firefox` (navegadores instalados na sua máquina).
+- `local`: normalmente use `chrome` ou `firefox` (navegadores instalados na sua máquina). Caso a máquina seja um MacOs pode utilizar o navegador `safari`
 - Providers (`lt`, `bs`, `sauce`): o navegador roda remoto (grid na nuvem). A disponibilidade de `edge/safari` depende do provider e do **Sistema Operacional** selecionado.
 
 ![Navegador](imagens/imagem09.png)
@@ -103,7 +103,7 @@ Escolhe o navegador:
 
 Define em qual sistema/plataforma o navegador (ou device) será provisionado.
 
-- `local`: este campo tende a ter pouco ou nenhum efeito prático, porque o teste roda na sua máquina. O que manda é o navegador instalado localmente (ex.: Chrome/Firefox).
+- `local`: este campo não tem nenhum efeito prático, porque o teste roda na sua máquina. O que manda é o navegador instalado localmente (ex.: Chrome/Firefox).
 - Providers (`lt`, `bs`, `sauce`): este campo vira parte das "capabilities" do grid remoto, ou seja, define em qual sistema o provider vai abrir o navegador/device.
 
 Regras práticas:
