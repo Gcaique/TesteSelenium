@@ -13,7 +13,7 @@ VALID_USER = "hub.teste2-bruno-popup@minervafoods.com"
 VALID_PASS = "Min@1234"
 
 
-@pytest.mark.smoke
+@pytest.mark.regressao
 @pytest.mark.default
 @pytest.mark.mapa
 def test_13_mapa_de_corte(driver, setup_site, wait):

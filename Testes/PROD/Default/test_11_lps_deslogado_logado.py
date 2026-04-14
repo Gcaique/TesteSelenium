@@ -15,7 +15,7 @@ VALID_USER = "caique.oliveira@infobase.com.br"
 VALID_PASS = "Min@1234"
 
 
-@pytest.mark.smoke
+@pytest.mark.regressao
 @pytest.mark.default
 @pytest.mark.lp
 def test_11_lp_marcas(driver, setup_site, wait):

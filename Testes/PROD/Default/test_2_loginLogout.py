@@ -1,4 +1,7 @@
+import time
+
 import pytest
+from git import refresh
 
 from helpers.auth import *
 from helpers.waiters import *
@@ -13,7 +16,7 @@ VALID_USER = "caique.oliveira@infobase.com.br"
 VALID_PASS = "Min@1234"
 
 
-@pytest.mark.smoke
+@pytest.mark.regressao
 @pytest.mark.default
 @pytest.mark.loginLogout
 def test_2_loginLogout(driver, setup_site, wait):

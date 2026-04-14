@@ -20,7 +20,7 @@ VALID_USER = "caique.oliveira4@infobase.com.br"
 VALID_PASS = "Min@1234"
 
 
-@pytest.mark.smoke
+@pytest.mark.regressao
 @pytest.mark.default
 @pytest.mark.cart
 def test_7_minicart_carrinho(driver, setup_site, wait):
