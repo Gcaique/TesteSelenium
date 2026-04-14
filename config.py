@@ -113,7 +113,7 @@ def _get_sauce_hub():
 # ======================
 def driver_local(navegador="chrome", headless=False, resolucao="1920x1080"):
     """
-    Cria driver local (Chrome/Firefox).
+    Cria driver local (Chrome/Firefox/Safari).
     """
     nav = (navegador or "").strip().lower()
     width, height = parse_resolucao(resolucao)
@@ -157,7 +157,17 @@ def driver_local(navegador="chrome", headless=False, resolucao="1920x1080"):
         driver.set_window_size(width, height)
         return driver
 
-    raise Exception("Navegador local não suportado (use chrome|firefox).")
+    if nav == "safari":
+        # Safari local usa o safaridriver (WebDriver built-in do macOS).
+        if headless:
+            raise Exception("Safari local não suporta headless. Rode sem --headless ou use um grid remoto.")
+
+        # Pré-requisito no macOS (uma vez): `safaridriver --enable`
+        driver = webdriver.Safari()
+        driver.set_window_size(width, height)
+        return driver
+
+    raise Exception("Navegador local não suportado (use chrome|firefox|safari).")
 
 
 # ============================

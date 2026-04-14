@@ -16,7 +16,7 @@ VALID_USER = "smoketesting2@automatizacao.com.br"
 VALID_PASS = "Min@1234"
 
 
-@pytest.mark.smoke
+@pytest.mark.regressao
 @pytest.mark.sul
 @pytest.mark.favoritos
 def test_19_lista_de_favoritos_sul(driver, setup_site, wait):
@@ -32,7 +32,7 @@ def test_19_lista_de_favoritos_sul(driver, setup_site, wait):
     add_favorite_from_category_first_item(driver, wait, CATEGORY_MARCAS)
 
     # 4) Busca "peixe" e favorita o item 6 (igual script)
-    search_and_add_favorite_by_index(driver, wait, term="peixe", index=6)
+    search_and_add_favorite_by_index(driver, wait, term="peixe", index=1)
 
     # 5) Favorita na PDP um produto fora de estoque
     open_out_of_stock_product_and_add_to_favorites(driver, wait, category_locator=CATEGORY_BOVINOS, pages=(1,2,3,4,5,6)) # Para alterar a categoria é só alterar 'category_locator'
