@@ -1,0 +1,65 @@
+name: E2E - Primeiro Acesso (Smoke)
+
+on:
+  pull_request:
+    branches: [stg, stg2, main]
+    types: [opened, synchronize, reopened, ready_for_review]
+
+concurrency:
+  group: e2e-primeiro-acesso-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  primeiro-acesso:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: "pip"
+
+      - name: Install deps
+        run: pip install -r requirements.txt
+
+      - name: Resolve target env
+        run: |
+          if [ "${{ github.base_ref }}" = "stg" ]; then
+            echo "TARGET_ENV=stg1" >> $GITHUB_ENV
+          elif [ "${{ github.base_ref }}" = "stg2" ]; then
+            echo "TARGET_ENV=stg2" >> $GITHUB_ENV
+          elif [ "${{ github.base_ref }}" = "main" ]; then
+            echo "TARGET_ENV=prod" >> $GITHUB_ENV
+          else
+            echo "Unsupported base_ref: ${{ github.base_ref }}"
+            exit 1
+          fi
+
+      - name: Run test (headless/local)
+        env:
+          URL_STG1: ${{ vars.URL_STG1 }}
+          URL_STG2: ${{ vars.URL_STG2 }}
+          URL: ${{ vars.URL }}
+          PYTEST_ARTIFACTS_ROOT: artifacts
+        run: >
+          pytest
+          -q
+          Testes/PROD/Default/test_4_primeiroAcesso.py
+          --grid local
+          --headless
+          --target-env ${{ env.TARGET_ENV }}
+          --timeout 15
+          --maxfail=1
+          --record-screen
+          --junitxml=artifacts/junit.xml
+
+      - name: Upload artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: artifacts
+          path: artifacts
+
