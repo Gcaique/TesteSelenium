@@ -567,11 +567,11 @@ def account_whatsapp_toggle_flow_mobile(driver, wait):
     """
     # definir como principal
     visible(driver, BTN_DEFINIR_COMO_PRINCIPAL, wait=wait)
-    safe_click_loc(driver, wait, BTN_DEFINIR_COMO_PRINCIPAL)
+    mobile_click_strict(driver, BTN_DEFINIR_COMO_PRINCIPAL, wait=wait)
 
     # confirmar modal
     visible(driver, BTN_MODAL_DEFINIR, wait=wait)
-    safe_click_loc(driver, wait, BTN_MODAL_DEFINIR)
+    mobile_click_strict(driver, BTN_MODAL_DEFINIR, wait=wait)
 
     # aguarda sucesso
     visible(driver, ALERT_SUCCESS_PHONE, wait=wait)
@@ -580,10 +580,10 @@ def account_whatsapp_toggle_flow_mobile(driver, wait):
     # WhatsApp toggle 2x
     visible(driver, WHATSAPP_SWITCH, wait=wait)
 
-    safe_click_loc(driver, wait, WHATSAPP_SWITCH)
+    mobile_click_strict(driver, WHATSAPP_SWITCH, wait=wait)
     wait.until(EC.invisibility_of_element_located(BODY_AJAX_LOADING))
 
-    safe_click_loc(driver, wait, WHATSAPP_SWITCH)
+    mobile_click_strict(driver, WHATSAPP_SWITCH, wait=wait)
     wait.until(EC.invisibility_of_element_located(BODY_AJAX_LOADING))
 
 def account_change_email_flow_mobile(driver, wait, new_email, current_password):

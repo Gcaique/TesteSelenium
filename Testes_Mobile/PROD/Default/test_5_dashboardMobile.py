@@ -1,4 +1,5 @@
 import time
+import os
 
 import pytest
 
@@ -11,16 +12,16 @@ from helpers.minicart import minicart_visible
 from helpers.popups import try_close_popups
 from helpers.dashboard import *
 from helpers.auth import (login_expect_email_not_found_mobile, login_expect_wrong_password, login_password)
+from helpers.credentials import get_creds
 
 
 # =========================
 # Credenciais
 # =========================
-VALID_USER = "caique.oliveira3@infobase.com.br"
-VALID_PASS = "Min@1234"
+VALID_USER, VALID_PASS = get_creds("CAIQUE_OLIVEIRA3")
 
-NEW_EMAIL = "caique.oliveira31@infobase.com.br"
-NEW_PASS = "Min@1234567"
+NEW_EMAIL = os.getenv("NEW_EMAIL_DASHBOARD")
+NEW_PASS = os.getenv("NEW_PASS_DASHBOARD")
 
 
 @pytest.mark.regressao
