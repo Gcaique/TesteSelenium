@@ -15,13 +15,13 @@ from helpers.checkout import avancar_shipping_mobile, selecionar_boleto_e_finali
 from helpers.dropdown import open_dropdown_item
 from helpers.actions import mobile_click_strict, visible
 from helpers.waiters import _effective_timeout
+from helpers.credentials import get_creds
 
 
 # =========================
 # Credenciais
 # =========================
-VALID_USER = "smoketesting2@automatizacao.com.br"
-VALID_PASS = "Min@1234"
+VALID_USER, VALID_PASS = get_creds("SMOKETESTING2")
 
 
 @pytest.mark.smoke

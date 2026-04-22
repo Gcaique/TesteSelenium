@@ -13,6 +13,7 @@ from helpers.dropdown import validate_user_dropdown_mobile
 from helpers.region import switch_region_mobile
 from helpers.avise_me import open_pdp_from_first_avise_in_plp, find_avise_me_plp_mobile
 from helpers.plp import open_filter_panel_mobile, scroll_to_avise, clear_filters_strict
+from helpers.credentials import get_creds
 
 from locators.header import SEARCH_INPUT, SEE_ALL_LINK, MOBILE_SEARCH_SUGGEST_ADD_1
 from locators.home import CAROUSEL_1, ADD_BTN_FIRST_CAROUSEL
@@ -26,8 +27,7 @@ from locators.common import COOKIE_ACCEPT
 # =========================
 # Credenciais
 # =========================
-VALID_USER = "smoketesting@automatizacao.com.br"
-VALID_PASS = "Min@1234"
+VALID_USER, VALID_PASS = get_creds("SMOKETESTING")
 
 
 @pytest.mark.regressao

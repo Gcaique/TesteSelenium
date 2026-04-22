@@ -4,13 +4,13 @@ from helpers.mapa_de_corte import *
 from helpers.auth import ensure_logged_in, logout
 from helpers.popups import try_close_popups
 from helpers.minicart import minicart_visible
+from helpers.credentials import get_creds
 
 
 # =========================
 # Credenciais
 # =========================
-VALID_USER = "hub.teste2-bruno-popup@minervafoods.com"
-VALID_PASS = "Min@1234"
+VALID_USER, VALID_PASS = get_creds("HUB_TESTE2_BRUNO_POPUP")
 
 
 @pytest.mark.regressao

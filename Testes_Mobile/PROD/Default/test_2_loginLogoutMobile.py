@@ -14,13 +14,13 @@ from helpers.popups import *
 from helpers.navigation import validate_navigation_by_auth_state_mobile
 from helpers.dropdown import mobile_open_login_modal_from_dropdown
 from helpers.home import go_home
+from helpers.credentials import get_creds
 
 
 # =========================
 # Credenciais
 # =========================
-VALID_USER = "caique.oliveira@infobase.com.br"
-VALID_PASS = "Min@1234"
+VALID_USER, VALID_PASS = get_creds("CAIQUE_OLIVEIRA")
 
 
 @pytest.mark.regressao

@@ -7,13 +7,13 @@ from helpers.plp import add_favorite_from_category_first_item, search_and_add_fa
 from helpers.pdp import open_out_of_stock_product_and_add_to_favorites
 
 from locators.plp import *
+from helpers.credentials import get_creds
 
 
 # =========================
 # Credenciais
 # =========================
-VALID_USER = "caique.oliveira4@infobase.com.br"
-VALID_PASS = "Min@1234"
+VALID_USER, VALID_PASS = get_creds("CAIQUE_OLIVEIRA4")
 
 
 @pytest.mark.regressao

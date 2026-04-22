@@ -14,13 +14,13 @@ from helpers.popups import try_close_popups
 from helpers.checkout import avancar_shipping_mobile, selecionar_boleto_e_finalizar_mobile, ir_para_home
 from helpers.dropdown import open_dropdown_item
 from helpers.actions import mobile_click_strict, visible
+from helpers.credentials import get_creds
 
 
 # =========================
 # Credenciais
 # =========================
-VALID_USER = "smoketesting@automatizacao.com.br"
-VALID_PASS = "Min@1234"
+VALID_USER, VALID_PASS = get_creds("SMOKETESTING")
 
 
 @pytest.mark.smoke
