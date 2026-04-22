@@ -10,6 +10,7 @@ from helpers.auth import *
 from helpers.popups import *
 from helpers.minicart import *
 from helpers.checkout import *
+from helpers.credentials import get_creds
 
 from conftest import click_if_present
 
@@ -17,8 +18,7 @@ from conftest import click_if_present
 # =========================
 # Credenciais
 # =========================
-VALID_USER = "smoketesting1@automatizacao.com.br"
-VALID_PASS = "Min@1234"
+VALID_USER, VALID_PASS = get_creds("SMOKETESTING1")
 
 
 @pytest.mark.smoke

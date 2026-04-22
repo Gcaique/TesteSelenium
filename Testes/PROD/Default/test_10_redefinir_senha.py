@@ -3,12 +3,13 @@ import os
 
 from helpers.redefinir_senha import *
 from helpers.auth import open_login, submit_username_valid, login_password, clicar_esqueci_senha
+from helpers.credentials import get_user
 
 
 # =========================
 # Credenciais
 # =========================
-VALID_USER = "caique.oliveira@infobase.com.br"
+VALID_USER = get_user("CAIQUE_OLIVEIRA")
 
 
 @pytest.mark.smoke

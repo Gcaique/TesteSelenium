@@ -9,11 +9,11 @@ from helpers.auth import submit_username_valid, login_password
 from helpers.popups import try_close_popups
 from helpers.checkout import avancar_shipping, selecionar_boleto_e_finalizar, ir_para_home
 from helpers.dropdown import open_dropdown_item
+from helpers.credentials import get_creds
 
 
 # Dados de teste
-VALID_USER = "smoketesting2@automatizacao.com.br"
-VALID_PASS = "Min@1234"
+VALID_USER, VALID_PASS = get_creds("SMOKETESTING2")
 
 
 @pytest.mark.smoke

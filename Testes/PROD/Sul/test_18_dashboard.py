@@ -1,4 +1,5 @@
 import pytest
+import os
 
 from helpers.auth import ensure_logged_in, logout
 from helpers.minicart import minicart_visible
@@ -6,17 +7,17 @@ from helpers.minicart import minicart_visible
 from helpers.dashboard import *
 
 from helpers.auth import (login_expect_email_not_found, login_expect_wrong_password, login_password)
-from helpers.waiters import _effective_timeout
+
+from helpers.credentials import get_creds
 
 
 # =========================
 # Credenciais
 # =========================
-VALID_USER = "smoketesting1@automatizacao.com.br"
-VALID_PASS = "Min@1234"
+VALID_USER, VALID_PASS = get_creds("SMOKETESTING1")
 
-NEW_EMAIL = "smoketesting11@automatizacao.com.br"
-NEW_PASS = "Min@1234567"
+NEW_EMAIL = os.getenv("NEW_EMAIL_DASHBOARD_SUL")
+NEW_PASS = os.getenv("NEW_PASS_DASHBOARD")
 
 
 @pytest.mark.regressao
