@@ -7,13 +7,13 @@ from helpers.auth import *
 from helpers.waiters import *
 from helpers.popups import *
 from helpers.navigation import *
+from helpers.credentials import get_creds
 
 
 # =========================
 # Credenciais
 # =========================
-VALID_USER = "caique.oliveira@infobase.com.br"
-VALID_PASS = "Min@1234"
+VALID_USER, VALID_PASS = get_creds("CAIQUE_OLIVEIRA")
 
 
 @pytest.mark.regressao

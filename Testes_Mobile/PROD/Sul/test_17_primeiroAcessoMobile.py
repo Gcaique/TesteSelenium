@@ -11,12 +11,13 @@ from locators.common import COOKIE_ACCEPT
 
 from helpers.firstAcess import *
 from helpers.waiters import minicart_visible
+from helpers.credentials import get_user
 
 
 # =========================
 # Credenciais
 # =========================
-VALID_USER = "caique.oliveira5@infobase.com.br"
+VALID_USER = get_user("CAIQUE_OLIVEIRA5")
 
 
 @pytest.mark.smoke
@@ -51,13 +52,13 @@ def test_17_primeiro_acesso_mobile_sul(driver, setup_site, wait):
     create_password(driver, wait, "automatizacao@teste", "Min@1234", "Min@1234")
 
     # 7) Criar senha inválida
-    create_password_invalid(driver, wait, "caique.oliveira2@infobase.com.br", "min@123", "Min@1234")
+    create_password_invalid(driver, wait, VALID_USER, "min@123", "Min@1234")
 
     # 8) Criar confirmar senha inválida
-    create_password_invalid(driver, wait, "caique.oliveira2@infobase.com.br", "Min@1234", "min@1234")
+    create_password_invalid(driver, wait, VALID_USER, "Min@1234", "min@1234")
 
     # 9) Criar credenciais finais válidas
-    create_password(driver, wait, "caique.oliveira2@infobase.com.br", "Min@1234", "Min@1234")
+    create_password(driver, wait, VALID_USER, "Min@1234", "Min@1234")
 
     # 10) Apresentação da modal de conclusão
     close_success_modal(driver, wait)

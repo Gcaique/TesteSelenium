@@ -9,6 +9,7 @@ from helpers.dropdown import open_dropdown_item
 from helpers.region import switch_region
 from helpers.minicart import wait_minicart_loading, wait_minicart_ready, minicart_visible
 from helpers.avise_me import open_pdp_from_first_avise_in_plp, toggle_avise_me_requires_refresh
+from helpers.credentials import get_creds
 
 from locators.header import SEARCH_INPUT, SEE_ALL_LINK, SEARCH_SUGGEST_ADD_2
 from locators.home import CAROUSEL_1, QTY_INPUT_FIRST, ADD_BTN_FIRST_CAROUSEL
@@ -32,8 +33,7 @@ from locators.header import (
 # =========================
 # Credenciais
 # =========================
-VALID_USER = "hub.teste2-bruno-popup@minervafoods.com"
-VALID_PASS = "Min@1234"
+VALID_USER, VALID_PASS = get_creds("HUB_TESTE2_BRUNO_POPUP")
 
 
 @pytest.mark.regressao

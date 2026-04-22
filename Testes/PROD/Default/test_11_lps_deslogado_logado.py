@@ -6,13 +6,13 @@ from helpers.lp_deslogado_logado import *
 from helpers.auth import submit_username_valid, login_password
 from helpers.minicart import remove_simple_delete
 from helpers.popups import try_close_popups
+from helpers.credentials import get_creds
 
 
 # =========================
 # Credenciais
 # =========================
-VALID_USER = "caique.oliveira@infobase.com.br"
-VALID_PASS = "Min@1234"
+VALID_USER, VALID_PASS = get_creds("CAIQUE_OLIVEIRA")
 
 
 @pytest.mark.regressao

@@ -14,12 +14,12 @@ from helpers.pdp import open_out_of_stock_product_and_add_to_favorites_mobile
 from helpers.waiters import _effective_timeout
 
 from locators.plp import *
+from helpers.credentials import get_creds
 
 # =========================
 # Credenciais
 # =========================
-VALID_USER = "smoketesting2@automatizacao.com.br"
-VALID_PASS = "Min@1234"
+VALID_USER, VALID_PASS = get_creds("SMOKETESTING2")
 
 
 @pytest.mark.regressao
