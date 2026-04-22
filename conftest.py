@@ -64,8 +64,9 @@ def pytest_addoption(parser):
     parser.addoption("--base-url", action="store", default="", help="URL base (sobrepõe target-env)")
     parser.addoption("--target-env", action="store", default="prod", choices=["prod", "stg1", "stg2", "outro"], help="Ambiente destino (mapeado em .env)")
     parser.addoption("--region", action="store", default="outras", help="outras|sul")
-    parser.addoption("--username", action="store", default=os.getenv("USERNAME", ""), help="Login")
-    parser.addoption("--password", action="store", default=os.getenv("PASSWORD", ""), help="Senha")
+    # Prefer E2E_* vars to avoid colliding with OS-level USERNAME on Windows.
+    parser.addoption("--username", action="store", default=os.getenv("E2E_USERNAME", os.getenv("USERNAME", "")), help="Login")
+    parser.addoption("--password", action="store", default=os.getenv("E2E_PASSWORD", os.getenv("PASSWORD", "")), help="Senha")
     parser.addoption("--timeout", action="store", default=10, type=int, help="Timeout padrão do WebDriverWait")
     parser.addoption("--grid", action="store", default="bs", help="lt|bs|sauce|local")
     parser.addoption("--headless", action="store_true", help="Executa browser local em modo headless")

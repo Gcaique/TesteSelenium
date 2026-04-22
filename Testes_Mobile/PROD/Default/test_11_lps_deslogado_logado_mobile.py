@@ -9,13 +9,13 @@ from conftest import click_if_present
 
 from locators.common import COOKIE_ACCEPT
 from locators.cart import MOBILE_MINICART_ICON, MOBILE_MINICART_OPENED
+from helpers.credentials import get_creds
 
 
 # =========================
 # Credenciais
 # =========================
-VALID_USER = "caique.oliveira@infobase.com.br"
-VALID_PASS = "Min@1234"
+VALID_USER, VALID_PASS = get_creds("CAIQUE_OLIVEIRA")
 
 
 @pytest.mark.regressao

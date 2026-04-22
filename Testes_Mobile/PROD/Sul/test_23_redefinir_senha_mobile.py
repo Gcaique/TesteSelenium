@@ -9,12 +9,13 @@ from locators.common import COOKIE_ACCEPT
 from helpers.redefinir_senha import *
 from helpers.auth import submit_username_valid, login_password, clicar_esqueci_senha
 from helpers.dropdown import mobile_open_login_modal_from_dropdown
+from helpers.credentials import get_user
 
 
 # =========================
 # Credenciais
 # =========================
-VALID_USER = "caique.oliveira2@infobase.com.br"
+VALID_USER = get_user("CAIQUE_OLIVEIRA2")
 
 
 @pytest.mark.smoke
