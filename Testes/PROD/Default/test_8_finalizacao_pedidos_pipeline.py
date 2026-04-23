@@ -64,6 +64,7 @@ def test_8_finalizacao_pedidos_pipeline(driver, setup_site, wait):
 
     # 8) Finalizando pedido com BOLETO
     scroll_into_view(driver, BOLETO)
+    click_when_clickable(wait, BOLETO)
     click_when_clickable(wait, BOLETO_SELECT)
     click_when_clickable(wait, BOLETO_OPTION_21)
     time.sleep(5)
