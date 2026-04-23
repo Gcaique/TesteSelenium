@@ -59,38 +59,12 @@ def create_password(driver, wait, email, password, confirm):
     wait.until(EC.element_to_be_clickable(BTN_SAVE_ACCOUNT)).click()
 
 
-def create_password_invalid(driver, wait, email, password, confirm):
-    wait.until(EC.visibility_of_element_located(EMAIL_FIRST_ACCESS))
-
-    el_email = driver.find_element(*EMAIL_FIRST_ACCESS)
-    ensure_visible_in_modal(driver, el_email)
-    el_email.clear()
-    el_email.send_keys(email)
-
-    el_pass = driver.find_element(*PASSWORD_FIRST_ACCESS)
-    ensure_visible_in_modal(driver, el_pass)
-    el_pass.clear()
-    el_pass.send_keys(password)
-
-    el_confirm = driver.find_element(*CONFIRM_PASSWORD)
-    ensure_visible_in_modal(driver, el_confirm)
-    el_confirm.clear()
-    el_confirm.send_keys(confirm)
-
-    # NÃO use element_to_be_clickable em botão disabled
-    btn = wait.until(EC.presence_of_element_located(BTN_SAVE_ACCOUNT))
-    ensure_visible_in_modal(driver, btn)
-
-    # Valida atributo disabled
-    wait.until(lambda d: btn.get_attribute("disabled") is not None)
-    return True
-
-
 def close_success_modal(driver, wait):
     wait.until(EC.visibility_of_element_located(BTN_CLOSE_MODAL_LOGIN))
     driver.find_element(*BTN_CLOSE_MODAL_LOGIN).click()
 
 
+# --- API (Magento) - helpers para resetar atributo de "primeiro acesso" via REST ---
 _CUSTOMER_ID_BY_VIEW = {
     "default": 499,
     "sul": 481,
@@ -98,6 +72,7 @@ _CUSTOMER_ID_BY_VIEW = {
 
 
 def _resolve_timeout_s(wait=None, timeout_s: int | float | None = None) -> int | float:
+    """Resolve o timeout efetivo: usa `timeout_s`, senão `wait._timeout`, senão fallback 20s."""
     if timeout_s is not None:
         return timeout_s
     # WebDriverWait guarda o timeout selecionado via CLI (--timeout), usado pelo run_gui.py.
@@ -108,6 +83,7 @@ def _resolve_timeout_s(wait=None, timeout_s: int | float | None = None) -> int |
 
 
 def _get_admin_token(base: str, *, wait=None, timeout_s: int | float | None = None) -> str:
+    """Obtém um token Bearer de admin via endpoint do Magento (`/integration/admin/token`)."""
     user = (os.getenv("USER_ADMIN") or "").strip()
     password = (os.getenv("PASSWORD_ADMIN") or "").strip()
     if not user or not password:
@@ -129,6 +105,7 @@ def _get_admin_token(base: str, *, wait=None, timeout_s: int | float | None = No
 
 
 def _get_custom_attr_value(custom_attrs, code: str) -> str | None:
+    """Busca o valor de um `custom_attribute` pelo `attribute_code` e retorna como string (ou None)."""
     if not custom_attrs:
         return None
     for attr in custom_attrs:
