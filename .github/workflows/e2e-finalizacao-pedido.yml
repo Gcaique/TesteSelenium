@@ -12,7 +12,7 @@ concurrency:
 jobs:
   finalizacao-pedido:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 15
 
     steps:
       - uses: actions/checkout@v4
@@ -41,7 +41,7 @@ jobs:
           --grid local
           --headless
           --target-env prod
-          --timeout 20
+          --timeout 30
           --maxfail=1
           --record-screen
           --junitxml=artifacts/junit.xml
