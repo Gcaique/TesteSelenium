@@ -23,7 +23,7 @@ VALID_USER, VALID_PASS = get_creds("CAIQUE_OLIVEIRA2")
 @pytest.mark.primeiroAcesso
 def test_4_primeiro_acesso(driver, setup_site, wait):
     # Garante pre-condicao via API: primeiro_acesso precisa estar "0" para este customer.
-    reset_first_acess(view="default", wait=wait)
+    #reset_first_acess(view="default", wait=wait)
 
     # 1) Abre login
     wait.until(EC.element_to_be_clickable(LOGIN_MENU)).click()
