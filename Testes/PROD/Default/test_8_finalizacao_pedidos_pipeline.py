@@ -33,7 +33,7 @@ def test_8_finalizacao_pedidos_pipeline(driver, setup_site, wait):
     wait_minicart_ready(driver)
 
     # 3) Acessando categoria + Adicionando produto no carrinho
-    click_when_clickable(wait, CATEGORY_MENU("Bovinos Premium"))
+    click_when_clickable(wait, CATEGORY_MENU("Bovinos"))
     wait_category_loaded(wait, driver)
 
     scroll_into_view(driver, TOOLBAR_AMOUNT)
@@ -63,6 +63,7 @@ def test_8_finalizacao_pedidos_pipeline(driver, setup_site, wait):
     time.sleep(5)
 
     # 8) Finalizando pedido com BOLETO
+    scroll_into_view(driver, BOLETO_SELECT)
     click_when_clickable(wait, BOLETO_SELECT)
     click_when_clickable(wait, BOLETO_OPTION_21)
     time.sleep(5)
