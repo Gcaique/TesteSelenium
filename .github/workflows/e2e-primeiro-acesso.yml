@@ -2,7 +2,7 @@ name: E2E - Primeiro Acesso (Smoke)
 
 on:
   push:
-    branches: [main]
+    branches: [dev]
   workflow_dispatch:
 
 concurrency:
@@ -29,6 +29,13 @@ jobs:
         env:
           URL: ${{ vars.URL }}
           PYTEST_ARTIFACTS_ROOT: artifacts
+          # Primeiro acesso (definir em Settings -> Secrets and variables -> Actions)
+          TOKEN: ${{ secrets.TOKEN }}
+          # Credenciais usadas por get_creds("CAIQUE_OLIVEIRA2") (definir como secrets)
+          E2E_CAIQUE_OLIVEIRA2_USER: ${{ secrets.E2E_CAIQUE_OLIVEIRA2_USER }}
+          E2E_CAIQUE_OLIVEIRA2_PASS: ${{ secrets.E2E_CAIQUE_OLIVEIRA2_PASS }}
+          # Na CI, falhar (em vez de skip) quando faltar credencial
+          E2E_REQUIRE_CREDS: "1"
         run: >
           pytest
           -q
