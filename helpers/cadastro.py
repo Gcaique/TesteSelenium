@@ -1,3 +1,4 @@
+import os
 import time
 
 from selenium.webdriver.support import expected_conditions as EC
@@ -95,8 +96,10 @@ def validar_token_invalido(driver, wait):
 def validar_token_valido(driver, wait):
     "Inserir token válido e avançar para próxima etapa"
     campo = wait.until(EC.visibility_of_element_located(INPUT_TOKEN_SMS))
-    campo.clear()
-    campo.send_keys("456798")
+    token = (os.getenv("TOKEN") or "").strip()
+    if not token:
+        raise RuntimeError("Defina TOKEN no .env.")
+    campo.send_keys(token)
 
     # Validação → Fotos
     continuar(driver, wait)
