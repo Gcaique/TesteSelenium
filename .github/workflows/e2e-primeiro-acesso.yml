@@ -29,6 +29,10 @@ jobs:
         env:
           URL: ${{ vars.URL }}
           PYTEST_ARTIFACTS_ROOT: artifacts
+          # Magento API (helpers/firstAcess.py)
+          FIRST_ACCESS_API_BASE_URL: ${{ vars.FIRST_ACCESS_API_BASE_URL }}
+          USER_ADMIN: ${{ secrets.USER_ADMIN }}
+          PASSWORD_ADMIN: ${{ secrets.PASSWORD_ADMIN }}
           # Primeiro acesso (definir em Settings -> Secrets and variables -> Actions)
           TOKEN: ${{ secrets.TOKEN }}
           # Credenciais usadas por get_creds("CAIQUE_OLIVEIRA2") (definir como secrets)
