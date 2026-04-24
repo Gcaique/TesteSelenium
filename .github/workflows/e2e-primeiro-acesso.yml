@@ -25,7 +25,7 @@ jobs:
       - name: Install deps
         run: pip install -r requirements.txt
 
-      - name: Run test (main -> PROD)
+      - name: Run test (dev -> PROD)
         env:
           URL: ${{ vars.URL }}
           PYTEST_ARTIFACTS_ROOT: artifacts
