@@ -15,6 +15,7 @@ USER_EMAIL = "automatizacao1@smoketesting.com"
 
 
 @pytest.mark.smoke
+@pytest.mark.regressao
 @pytest.mark.sul
 @pytest.mark.cadastro
 def test_22_cadastro_sul(driver, setup_site, wait):

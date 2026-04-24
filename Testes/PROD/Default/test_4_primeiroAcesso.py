@@ -19,6 +19,7 @@ VALID_USER, VALID_PASS = get_creds("CAIQUE_OLIVEIRA2")
 
 @pytest.mark.smoke
 @pytest.mark.pipeline
+@pytest.mark.regressao
 @pytest.mark.default
 @pytest.mark.primeiroAcesso
 def test_4_primeiro_acesso(driver, setup_site, wait):

@@ -1,0 +1,62 @@
+name: E2E - Redefinir Senha
+
+on:
+  push:
+    branches: [dev]
+  workflow_dispatch:
+
+concurrency:
+  group: e2e-redefinir-senha-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  redefinir-senha:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: "pip"
+
+      - name: Install deps
+        run: pip install -r requirements.txt
+
+      - name: Run test (dev -> PROD)
+        env:
+          URL: ${{ vars.URL }}
+          URL_ADMIN: ${{ vars.URL_ADMIN }}
+          PYTEST_ARTIFACTS_ROOT: artifacts
+          # Na CI, falhar (em vez de skip) quando faltar credencial
+          E2E_REQUIRE_CREDS: "1"
+          # get_user("CAIQUE_OLIVEIRA") -> exige E2E_CAIQUE_OLIVEIRA_USER
+          E2E_CAIQUE_OLIVEIRA_USER: ${{ secrets.E2E_CAIQUE_OLIVEIRA_USER }}
+          # Admin
+          USER_ADMIN: ${{ secrets.USER_ADMIN }}
+          PASSWORD_ADMIN: ${{ secrets.PASSWORD_ADMIN }}
+          # Senhas do fluxo de redefinição
+          PASSWORD_LOWER: ${{ secrets.PASSWORD_LOWER }}
+          PASSWORD_WITHOUT_UPPERCASE: ${{ secrets.PASSWORD_WITHOUT_UPPERCASE }}
+          NEW_PASSWORD: ${{ secrets.NEW_PASSWORD }}
+        run: >
+          pytest
+          -q
+          Testes/PROD/Default/test_10_redefinir_senha.py
+          --grid local
+          --headless
+          --target-env prod
+          --timeout 30
+          --maxfail=1
+          --record-screen
+          --junitxml=artifacts/junit.xml
+
+      - name: Upload artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: artifacts
+          path: artifacts
+

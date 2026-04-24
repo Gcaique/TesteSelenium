@@ -19,6 +19,7 @@ VALID_USER, VALID_PASS = get_creds("HUB_TESTE2_BRUNO_POPUP")
 
 
 @pytest.mark.smoke
+@pytest.mark.regressao
 @pytest.mark.default
 @pytest.mark.checkout
 def test_8_finalizacao_pedidos(driver, setup_site, wait):
