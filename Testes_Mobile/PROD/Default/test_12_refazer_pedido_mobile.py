@@ -24,6 +24,7 @@ VALID_USER, VALID_PASS = get_creds("SMOKETESTING")
 
 
 @pytest.mark.smoke
+@pytest.mark.regressao
 @pytest.mark.default
 @pytest.mark.refazer
 @pytest.mark.mobile
