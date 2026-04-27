@@ -13,6 +13,8 @@ VALID_USER = get_user("CAIQUE_OLIVEIRA")
 
 
 @pytest.mark.smoke
+@pytest.mark.pipeline
+@pytest.mark.regressao
 @pytest.mark.default
 @pytest.mark.redefinir_senha
 def test_10_redefinir_senha(driver, setup_site, wait):

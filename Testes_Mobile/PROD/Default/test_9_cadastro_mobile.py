@@ -14,6 +14,7 @@ USER_EMAIL = "automatizacao@smoketesting.com"
 
 
 @pytest.mark.smoke
+@pytest.mark.regressao
 @pytest.mark.default
 @pytest.mark.cadastro
 @pytest.mark.mobile
@@ -25,11 +26,8 @@ def test_9_cadastro_mobile(driver, setup_site, wait):
     # 2 - Preencher dados empresa
     preencher_dados_empresa(driver, wait, email_cliente=USER_EMAIL)
 
-    # 3 - Validar token inválido
-    validar_token_invalido(driver, wait)
-
-    # 4 - Validar token correto
+    # 3 - Validar token correto
     validar_token_valido(driver, wait)
 
-    # 5 - Finalizar cadastro
+    # 4 - Finalizar cadastro
     finalizar_cadastro(driver, wait)

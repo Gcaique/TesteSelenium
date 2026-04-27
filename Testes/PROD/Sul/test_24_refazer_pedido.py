@@ -17,6 +17,7 @@ VALID_USER, VALID_PASS = get_creds("SMOKETESTING2")
 
 
 @pytest.mark.smoke
+@pytest.mark.regressao
 @pytest.mark.sul
 @pytest.mark.refazer
 def test_24_refazer_pedido_sul(driver, setup_site, wait):
