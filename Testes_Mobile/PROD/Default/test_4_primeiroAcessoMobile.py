@@ -1,4 +1,5 @@
 import time
+import os
 
 import pytest
 from selenium.webdriver.support import expected_conditions as EC
@@ -11,20 +12,24 @@ from locators.common import COOKIE_ACCEPT
 
 from helpers.firstAcess import *
 from helpers.waiters import minicart_visible
-from helpers.credentials import get_user
+from helpers.credentials import get_creds
 
 
 # =========================
 # Credenciais
 # =========================
-VALID_USER = get_user("CAIQUE_OLIVEIRA2")
+VALID_USER, VALID_PASS = get_creds("CAIQUE_OLIVEIRA2")
 
 
 @pytest.mark.smoke
+@pytest.mark.regressao
 @pytest.mark.default
 @pytest.mark.primeiroAcesso
 @pytest.mark.mobile
 def test_4_primeiro_acesso_mobile(driver, setup_site, wait):
+    # Garante pre-condicao via API: primeiro_acesso precisa estar "0" para este customer (visão Default).
+    reset_first_acess(view="default", wait=wait)
+
     # 1) Abre login
     click_if_present(driver, COOKIE_ACCEPT, seconds=20)
     wait.until(EC.element_to_be_clickable(LOGIN_MENU)).click()
@@ -42,26 +47,17 @@ def test_4_primeiro_acesso_mobile(driver, setup_site, wait):
     # 3) Modal de seleção de e-mail
     send_code_by_email(driver, wait)
 
-    # 4) Modal de inserção do token / token iválido
-    validate_token(driver, wait, "456789")
+    # 4) Token válido
+    token_valid = (os.getenv("TOKEN") or "").strip()
+    if not token_valid:
+        pytest.fail('Defina TOKEN no .env/secrets para validar o token do primeiro acesso.')
+    validate_token(driver, wait, token_valid)
 
-    # 5) Token válido
-    validate_token(driver, wait, "456798")
+    # 5) Criar credenciais finais válidas
+    create_password(driver, wait, VALID_USER, VALID_PASS, VALID_PASS)
 
-    # 6) Criar email inválido
-    create_password(driver, wait, "automatizacao@teste", "Min@1234", "Min@1234")
-
-    # 7) Criar senha inválida
-    create_password_invalid(driver, wait, VALID_USER, "min@123", "Min@1234")
-
-    # 8) Criar confirmar senha inválida
-    create_password_invalid(driver, wait, VALID_USER, "Min@1234", "min@1234")
-
-    # 9) Criar credenciais finais válidas
-    create_password(driver, wait, VALID_USER, "Min@1234", "Min@1234")
-
-    # 10) Apresentação da modal de conclusão
+    # 6) Apresentação da modal de conclusão
     close_success_modal(driver, wait)
 
-    # 11) Apresentação da Home Page Logada
+    # 7) Apresentação da Home Page Logada
     WebDriverWait(driver, 20).until(lambda d: minicart_visible(d), message="Era para estar logado após primeiro acesso.")

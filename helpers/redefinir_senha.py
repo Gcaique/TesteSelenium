@@ -4,7 +4,7 @@ from selenium.webdriver.support import expected_conditions as EC
 
 from locators.redefinir_senha import *
 
-from helpers.actions import clear_and_type, mobile_click_strict
+from helpers.actions import clear_and_type, mobile_click_strict, safe_click_loc
 from helpers.waiters import _effective_timeout, DEFAULT_TIMEOUT
 
 def clicar_sms_modal(driver, wait):
@@ -55,7 +55,8 @@ def login_admin(driver, wait, usuario, senha):
 def navegar_email_logs(driver, wait):
     """Navega ate a pagina de Email Logs no admin."""
     wait.until(EC.element_to_be_clickable(ADMIN_MENU_STORES)).click()
-    wait.until(EC.element_to_be_clickable(ADMIN_SUBMENU_EMAIL_LOGS)).click()
+    wait.until(EC.element_to_be_clickable(ADMIN_SUBMENU_EMAIL_LOGS))
+    safe_click_loc(driver, wait, ADMIN_SUBMENU_EMAIL_LOGS)
     time.sleep(5)
 
 def filtrar_email_logs(driver, wait, email_destinatario):

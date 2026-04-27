@@ -19,6 +19,7 @@ VALID_USER, VALID_PASS = get_creds("SMOKETESTING1")
 
 
 @pytest.mark.smoke
+@pytest.mark.regressao
 @pytest.mark.sul
 @pytest.mark.checkout
 def test_21_finalizacao_pedidos_sul(driver, setup_site, wait):
