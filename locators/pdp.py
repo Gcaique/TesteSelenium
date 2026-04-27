@@ -1,7 +1,7 @@
 from selenium.webdriver.common.by import By
 
 # PDP (entrada na PDP + ações)
-FIRST_PRODUCT_PLP = (By.XPATH, "(//*[contains(@id,'product-item-info')][.//button[@title='Adicionar']]//span[@class='product-image-wrapper'])[1]") # Serve para acessar o primeiro produto de outras categorias com estoque disponivel
+FIRST_PRODUCT_PLP = (By.XPATH, "(//*[contains(@id,'product-item-info')][.//button[@id='ecom:plp:product_card:button_add_to_cart']]//span[@class='product-image-wrapper'])[1]") # Serve para acessar o primeiro produto de outras categorias com estoque disponivel
 PDP_INCREMENT = (By.XPATH, "(//button[@class='increment-qty hj-product_card-increment_qty'])[1]")
 PDP_ADD_TO_CART = (By.ID, "product-addtocart-button")
 PRODUCT_TITLES = (By.XPATH, "//*[contains(@id,'product-item-info')]//strong")

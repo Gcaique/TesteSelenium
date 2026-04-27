@@ -1,4 +1,4 @@
-name: E2E - Primeiro Acesso
+name: E2E - Finalização Pedido
 
 on:
   push:
@@ -6,13 +6,13 @@ on:
   workflow_dispatch:
 
 concurrency:
-  group: e2e-primeiro-acesso-${{ github.ref }}
+  group: e2e-finalizacao-pedido-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
-  primeiro-acesso:
+  finalizacao-pedido:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 15
 
     steps:
       - uses: actions/checkout@v4
@@ -29,25 +29,19 @@ jobs:
         env:
           URL: ${{ vars.URL }}
           PYTEST_ARTIFACTS_ROOT: artifacts
-          # Magento API (helpers/firstAcess.py)
-          FIRST_ACCESS_API_BASE_URL: ${{ vars.FIRST_ACCESS_API_BASE_URL }}
-          USER_ADMIN: ${{ secrets.USER_ADMIN }}
-          PASSWORD_ADMIN: ${{ secrets.PASSWORD_ADMIN }}
-          # Primeiro acesso (definir em Settings -> Secrets and variables -> Actions)
-          TOKEN: ${{ secrets.TOKEN }}
-          # Credenciais usadas por get_creds("CAIQUE_OLIVEIRA2") (definir como secrets)
-          E2E_CAIQUE_OLIVEIRA2_USER: ${{ secrets.E2E_CAIQUE_OLIVEIRA2_USER }}
-          E2E_CAIQUE_OLIVEIRA2_PASS: ${{ secrets.E2E_CAIQUE_OLIVEIRA2_PASS }}
           # Na CI, falhar (em vez de skip) quando faltar credencial
           E2E_REQUIRE_CREDS: "1"
+          # Credenciais usadas por get_creds("HUB_TESTE2_BRUNO_POPUP") (definir como secrets)
+          E2E_HUB_TESTE2_BRUNO_POPUP_USER: ${{ secrets.E2E_HUB_TESTE2_BRUNO_POPUP_USER }}
+          E2E_HUB_TESTE2_BRUNO_POPUP_PASS: ${{ secrets.E2E_HUB_TESTE2_BRUNO_POPUP_PASS }}
         run: >
           pytest
           -q
-          Testes/PROD/Default/test_4_primeiroAcesso.py
+          Testes/PROD/Default/test_8_finalizacao_pedidos_pipeline.py
           --grid local
           --headless
           --target-env prod
-          --timeout 15
+          --timeout 30
           --maxfail=1
           --record-screen
           --junitxml=artifacts/junit.xml
@@ -58,3 +52,4 @@ jobs:
         with:
           name: artifacts
           path: artifacts
+

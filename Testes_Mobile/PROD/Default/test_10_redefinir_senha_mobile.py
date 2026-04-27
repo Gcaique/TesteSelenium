@@ -19,6 +19,7 @@ VALID_USER = get_user("CAIQUE_OLIVEIRA")
 
 
 @pytest.mark.smoke
+@pytest.mark.regressao
 @pytest.mark.default
 @pytest.mark.redefinir_senha
 @pytest.mark.mobile

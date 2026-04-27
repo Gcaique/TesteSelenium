@@ -11,7 +11,11 @@ from helpers.credentials import get_user
 # =========================
 VALID_USER = get_user("CAIQUE_OLIVEIRA2")
 
+
+@pytest.mark.smoke
+@pytest.mark.regressao
 @pytest.mark.sul
+@pytest.mark.redefinir_senha
 def test_23_redefinir_senha_sul(driver, setup_site, wait):
     # 1) Abre login
     open_login(driver)
