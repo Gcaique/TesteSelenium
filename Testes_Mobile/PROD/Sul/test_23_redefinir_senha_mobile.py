@@ -23,7 +23,7 @@ VALID_USER = get_user("CAIQUE_OLIVEIRA2")
 @pytest.mark.sul
 @pytest.mark.redefinir_senha
 @pytest.mark.mobile
-def test_23_redefinir_senha_mobile_sul(driver, setup_site, wait):
+def test_23_redefinir_senha_mobile_sul(driver, setup_site, wait, admin_url):
     # 1) Abre login
     click_if_present(driver, COOKIE_ACCEPT, seconds=20)
     mobile_open_login_modal_from_dropdown(driver, timeout=12)
@@ -60,7 +60,7 @@ def test_23_redefinir_senha_mobile_sul(driver, setup_site, wait):
     clicar_recebi_link(driver, wait)
 
     # 11) Acessa o painel administrativo
-    driver.get(os.getenv("URL_ADMIN"))
+    driver.get(admin_url)
 
     # 12) Login no painel administrativo
     login_admin(driver, wait, os.getenv("USER_ADMIN"), os.getenv("PASSWORD_ADMIN"))
