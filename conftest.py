@@ -50,6 +50,12 @@ URLS = {
     "stg2": os.getenv("URL_STG2"),
 }
 
+ADMIN_URLS = {
+    "prod": os.getenv("URL_ADMIN"),
+    "stg1": os.getenv("URL_ADMIN_STG1"),
+    "stg2": os.getenv("URL_ADMIN_STG2"),
+}
+
 
 def pytest_addoption(parser):
     """
@@ -117,6 +123,22 @@ def base_url(request):
 
     pytest.fail(
         f"URL não definida para target-env '{target_env}'. Configure URL_{target_env.upper()} no .env ou use --base-url."
+    )
+
+
+@pytest.fixture(scope="session")
+def admin_url(request):
+    """
+    O que faz:
+    - Disponibiliza a URL do painel administrativo para o target-env atual.
+    """
+    target_env = request.config.getoption("--target-env") or "prod"
+    resolved = ADMIN_URLS.get(target_env)
+    if resolved:
+        return resolved
+
+    pytest.fail(
+        f"URL admin não definida para target-env '{target_env}'. Configure URL_ADMIN_{target_env.upper()} no .env."
     )
 
 
