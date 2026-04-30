@@ -180,15 +180,27 @@ def test_7_minicart_carrinho_mobile(driver, setup_site, wait):
 
     # 15) Finalizar compra pelo carrinho
     wait.until(EC.presence_of_all_elements_located(CART_PROCEED_CHECKOUT))
-    btn_checkout = driver.find_element(*CART_PROCEED_CHECKOUT)
-    driver.execute_script("arguments[0].scrollIntoView({block:'center'});", btn_checkout)
-    driver.execute_script("arguments[0].click();", btn_checkout)
+    for attempt in range(2):
+        mobile_click_strict(driver, CART_PROCEED_CHECKOUT, wait=wait, retries=4, sleep_between=0.25)
 
-    wait.until(EC.presence_of_all_elements_located(BTN_CONTINUAR_SHIPPING))
+        try:
+            wait.until(EC.visibility_of_element_located(BTN_CONTINUAR_SHIPPING))
+            break
+        except TimeoutException:
+            if attempt == 1:
+                pytest.fail("Botão de continuar shipping não apareceu apos 2 tentativas no carrinho.")
 
-    # 16) Voltar direto para o carrinho
-    driver.get(os.getenv("URL") + "checkout/cart/")
-    wait.until(EC.url_contains("/checkout/cart"))
+    # 17) Voltar direto para o carrinho
+    for attempt in range(2):
+        driver.back()
+
+        try:
+            wait.until(EC.url_contains("/checkout/cart"))
+            wait.until(EC.element_to_be_clickable(SUMARY_EXPAND_ARROW))
+            break
+        except TimeoutException:
+            if attempt == 1:
+                pytest.fail("Não foi possivel voltar para /checkout/cart após 2 tentativas com driver.back().")
 
     # 17) Limpar carrinho
     mobile_click_strict(driver, SUMARY_EXPAND_ARROW, wait=wait, retries=4, sleep_between=0.25)

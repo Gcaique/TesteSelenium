@@ -2,6 +2,7 @@ import os
 import time
 
 import pytest
+from selenium.common.exceptions import TimeoutException
 from selenium.webdriver.common.keys import Keys
 
 from locators.checkout import *
@@ -138,16 +139,27 @@ def test_7_minicart_carrinho(driver, setup_site, wait):
     time.sleep(5)
 
     # 16) Finalizar compra pelo carrinho
-    wait.until(EC.presence_of_all_elements_located(CART_PROCEED_CHECKOUT))
-    btn_checkout = driver.find_element(*CART_PROCEED_CHECKOUT)
-    driver.execute_script("arguments[0].scrollIntoView({block:'center'});", btn_checkout)
-    driver.execute_script("arguments[0].click();", btn_checkout)
+    for attempt in range(2):
+        safe_click_loc(driver, wait, CART_PROCEED_CHECKOUT)
 
-    wait.until(EC.presence_of_all_elements_located(BTN_CONTINUAR_SHIPPING))
+        try:
+            wait.until(EC.visibility_of_element_located(BTN_CONTINUAR_SHIPPING))
+            break
+        except TimeoutException:
+            if attempt == 1:
+                pytest.fail("Botão de continuar shipping nao apareceu após 2 tentativas no carrinho.")
 
     # 17) Voltar direto para o carrinho
-    driver.get(os.getenv("URL") + "checkout/cart/")
-    wait.until(EC.url_contains("/checkout/cart"))
+    for attempt in range(2):
+        driver.back()
+
+        try:
+            wait.until(EC.url_contains("/checkout/cart"))
+            wait.until(EC.element_to_be_clickable(EMPTY_CART_BTN))
+            break
+        except TimeoutException:
+            if attempt == 1:
+                pytest.fail("Não foi possivel voltar para /checkout/cart após 2 tentativas com driver.back().")
 
     # 18) Limpar carrinho
     click_when_clickable(wait, EMPTY_CART_BTN)
